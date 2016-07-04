@@ -4,9 +4,10 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.extension.file.api;
+package org.mule.extension.file.internal;
 
 import static java.nio.file.StandardOpenOption.WRITE;
+import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.internal.command.LocalCopyCommand;
 import org.mule.extension.file.internal.command.LocalCreateDirectoryCommand;
 import org.mule.extension.file.internal.command.LocalDeleteCommand;

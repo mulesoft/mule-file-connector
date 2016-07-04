@@ -4,13 +4,18 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.extension.file.api;
+package org.mule.extension.file.internal;
 
 import static java.lang.String.format;
 import static org.mule.runtime.core.config.i18n.MessageFactory.createStaticMessage;
-import org.mule.extension.file.internal.DirectoryListener;
-import org.mule.extension.file.internal.LocalFilePredicateBuilder;
+import org.mule.extension.file.api.DeletedFileAttributes;
+import org.mule.extension.file.api.EventedFileAttributes;
+import org.mule.extension.file.api.FileEventType;
+import org.mule.extension.file.api.ListenerFileAttributes;
+import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.api.LocalFilePredicateBuilder;
 import org.mule.runtime.core.api.lifecycle.InitialisationException;
+import org.mule.runtime.extension.api.annotation.Export;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.Operations;
 import org.mule.runtime.extension.api.annotation.Parameter;
@@ -43,6 +48,7 @@ import org.slf4j.LoggerFactory;
 @SubTypeMapping(baseType = FilePredicateBuilder.class, subTypes = LocalFilePredicateBuilder.class)
 @Providers(LocalFileConnectionProvider.class)
 @Sources(DirectoryListener.class)
+@Export(classes = {LocalFileAttributes.class, FileEventType.class, ListenerFileAttributes.class, EventedFileAttributes.class, DeletedFileAttributes.class})
 public class FileConnector extends FileConnectorConfig
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileConnector.class);
