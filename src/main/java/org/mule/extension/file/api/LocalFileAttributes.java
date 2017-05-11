@@ -22,7 +22,7 @@ import java.time.ZoneId;
 /**
  * Implementation of {@link FileAttributes} for files obtained from a local file system.
  *
- * @since 4.0
+ * @since 1.0
  */
 public class LocalFileAttributes extends AbstractFileAttributes {
 

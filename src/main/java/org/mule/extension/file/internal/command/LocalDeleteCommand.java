@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A {@link LocalFileCommand} which implements the {@link DeleteCommand} contract
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalDeleteCommand extends LocalFileCommand implements DeleteCommand {
 

@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
  * <li>{@link #getEventType()}</li>
  * </ul>
  *
- * @since 4.0
+ * @since 1.0
  */
 public class DeletedFileAttributes extends ListenerFileAttributes {
 

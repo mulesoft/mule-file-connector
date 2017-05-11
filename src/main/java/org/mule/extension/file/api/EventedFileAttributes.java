@@ -14,7 +14,7 @@ import org.mule.extension.file.common.api.FileAttributes;
  * Because a {@link FileAttributes} is a snapshot of a file's attributes at a specific point of time, the purpose of this class is
  * to associate such state to a particular event type which took it into that state
  *
- * @since 4.0
+ * @since 1.0
  */
 public interface EventedFileAttributes extends FileAttributes {
 

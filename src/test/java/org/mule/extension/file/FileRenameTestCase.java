@@ -8,7 +8,7 @@ package org.mule.extension.file;
 
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.test.allure.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;

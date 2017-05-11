@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A {@link PathLock} backed by a {@link FileLock} obtained through a {@link FileChannel}
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalPathLock implements PathLock {
 

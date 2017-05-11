@@ -43,7 +43,7 @@ import java.nio.file.Path;
  * <p>
  * Also, for any method returning {@link FileAttributes} instances, a {@link LocalFileAttributes} will be used.
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalFileSystem extends AbstractFileSystem {
 

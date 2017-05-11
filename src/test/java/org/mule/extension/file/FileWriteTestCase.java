@@ -11,7 +11,7 @@ import static org.mule.extension.file.common.api.FileWriteMode.CREATE_NEW;
 import static org.mule.extension.file.common.api.FileWriteMode.OVERWRITE;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.test.allure.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static java.nio.charset.Charset.availableCharsets;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
 import static org.hamcrest.CoreMatchers.equalTo;

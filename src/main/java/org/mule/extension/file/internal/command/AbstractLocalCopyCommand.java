@@ -28,7 +28,7 @@ import java.nio.file.StandardCopyOption;
  * <p>
  * This command also handles the concern of the target path already existing and whether or not overwrite it.
  *
- * @since 4.0
+ * @since 1.0
  */
 abstract class AbstractLocalCopyCommand extends LocalFileCommand {
 

@@ -18,7 +18,7 @@ import java.nio.file.Path;
 /**
  * A {@link AbstractLocalCopyCommand} which implements the {@link MoveCommand} contract
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalMoveCommand extends AbstractLocalCopyCommand implements MoveCommand {
 

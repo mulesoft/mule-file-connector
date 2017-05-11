@@ -6,7 +6,7 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.test.allure.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 

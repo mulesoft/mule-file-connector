@@ -25,7 +25,7 @@ import java.nio.file.Path;
  * invoke the {@link PathLock#tryLock()} method on it, it's the responsibility of whomever is creating this instance to determine
  * if that lock is to be acquired.
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class FileInputStream extends AbstractFileInputStream {
 

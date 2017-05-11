@@ -17,7 +17,7 @@ import java.nio.file.Path;
 /**
  * A {@link LocalFileCommand} which implements the {@link CreateDirectoryCommand} contract
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalCreateDirectoryCommand extends LocalFileCommand implements CreateDirectoryCommand {
 

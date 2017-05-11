@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 /**
  * A {@link LocalFileCommand} which implements the {@link ListCommand}
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalListCommand extends LocalFileCommand implements ListCommand {
 

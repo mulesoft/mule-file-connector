@@ -21,7 +21,7 @@ import java.util.function.Predicate;
  * <p>
  * It adds capabilities to consider creation, update and access timestamps.
  *
- * @since 4.0
+ * @since 1.0
  */
 @Alias("matcher")
 @XmlHints(allowTopLevelDefinition = true)

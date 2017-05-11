@@ -28,7 +28,7 @@ import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
  * This class serves as both extension definition and configuration. Operations are based on the standard
  * {@link BaseFileSystemOperations}
  *
- * @since 4.0
+ * @since 1.0
  */
 @Extension(name = "File", description = "Connector to manipulate files on a locally mounted file system")
 @Operations({FileOperations.class})

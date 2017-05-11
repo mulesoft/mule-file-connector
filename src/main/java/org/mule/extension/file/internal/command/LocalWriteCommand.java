@@ -32,7 +32,7 @@ import java.nio.file.StandardOpenOption;
 /**
  * A {@link LocalFileCommand} which implements the {@link WriteCommand} contract
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalWriteCommand extends LocalFileCommand implements WriteCommand {
 

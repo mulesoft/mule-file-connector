@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 /**
  * A {@link ConnectionProvider} which provides instances of {@link FileSystem} from instances of {@link FileConnector}
  *
- * @since 4.0
+ * @since 1.0
  */
 @DisplayName("Local FileSystem Connection")
 public final class LocalFileConnectionProvider extends FileSystemProvider<LocalFileSystem>

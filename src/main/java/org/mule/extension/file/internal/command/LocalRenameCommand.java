@@ -19,7 +19,7 @@ import java.nio.file.Path;
 /**
  * A {@link LocalFileCommand} which implements the {@link RenameCommand} contract
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class LocalRenameCommand extends LocalFileCommand implements RenameCommand {
 

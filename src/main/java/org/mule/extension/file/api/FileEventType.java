@@ -15,7 +15,7 @@ import java.nio.file.WatchEvent.Kind;
 /**
  * Enumerates types of events which can occur on a file
  *
- * @since 4.0
+ * @since 1.0
  */
 public enum FileEventType {
 

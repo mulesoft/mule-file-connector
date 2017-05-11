@@ -11,7 +11,7 @@ import java.nio.file.Path;
 /**
  * A specialization of {@link LocalFileAttributes} which also implements {@link EventedFileAttributes}
  *
- * @since 4.0
+ * @since 1.0
  */
 public class ListenerFileAttributes extends LocalFileAttributes implements EventedFileAttributes {
 

@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 /**
  * Base class for implementations of {@link FileCommand} which operate on a local file system
  *
- * @since 4.0
+ * @since 1.0
  */
 abstract class LocalFileCommand extends FileCommand<LocalFileSystem> {
 

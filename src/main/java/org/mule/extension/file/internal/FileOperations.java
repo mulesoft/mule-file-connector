@@ -41,7 +41,7 @@ import javax.activation.MimetypesFileTypeMap;
 /**
  * File connector operations.
  *
- * @since 4.0
+ * @since 1.0
  */
 public final class FileOperations extends BaseFileSystemOperations {
 

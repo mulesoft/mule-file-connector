@@ -125,7 +125,7 @@ import org.slf4j.LoggerFactory;
  * using a poll element</li>
  * </ul>
  *
- * @since 4.0
+ * @since 1.0
  */
 @Alias(DirectoryListener.DIRECTORY_LISTENER)
 public class DirectoryListener extends Source<InputStream, ListenerFileAttributes> implements FlowConstructAware {

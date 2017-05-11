@@ -15,7 +15,7 @@ import org.mule.runtime.extension.api.exception.ModuleException;
  * {@link ConnectionException} implementation to communicate errors occurred creating a connection for
  * {@link FileConnector}
  *
- * @since 4.0
+ * @since 1.0
  */
 public class FileConnectionException extends ConnectionException {
 

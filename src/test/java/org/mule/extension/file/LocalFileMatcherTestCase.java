@@ -9,7 +9,7 @@ package org.mule.extension.file;
 import static org.mockito.Mockito.when;
 import static org.mule.extension.file.common.api.matcher.MatchPolicy.INCLUDE;
 import static org.mule.extension.file.common.api.matcher.MatchPolicy.REQUIRE;
-import static org.mule.test.allure.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.test.extension.file.common.FileMatcherContractTestCase;
