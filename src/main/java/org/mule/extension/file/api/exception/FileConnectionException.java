@@ -20,11 +20,6 @@ import org.mule.runtime.extension.api.exception.ModuleException;
 public class FileConnectionException extends ConnectionException {
 
   public FileConnectionException(String s, FileError fileError) {
-    super(s, new ModuleException(null, fileError));
+    super(s, new ModuleException(s, fileError));
   }
-
-  public FileConnectionException(String s, Throwable e) {
-    super(s, e);
-  }
-
 }
