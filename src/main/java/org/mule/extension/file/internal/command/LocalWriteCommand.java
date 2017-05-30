@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
+import static org.apache.commons.io.IOUtils.copy;
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.command.WriteCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
@@ -17,7 +18,6 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.util.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +59,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
     PathLock pathLock = lock ? fileSystem.lock(path, openOptions) : new NullPathLock();
 
     try (OutputStream out = getOutputStream(path, openOptions, mode)) {
-      IOUtils.copy(content, out);
+      copy(content, out);
     } catch (AccessDeniedException e) {
       throw new FileAccessDeniedException(format("Could not write to file '%s' because access was denied by the operating system",
                                                  path),

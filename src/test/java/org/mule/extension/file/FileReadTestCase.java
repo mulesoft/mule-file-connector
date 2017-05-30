@@ -77,7 +77,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
     assertThat(payload.isLocked(), is(false));
 
     byte[] readContent = new byte[new Long(binaryFile.length()).intValue()];
-    IOUtils.read(payload, readContent);
+    org.apache.commons.io.IOUtils.read(payload, readContent);
     assertThat(new String(readContent), is(HELLO_WORLD));
   }
 

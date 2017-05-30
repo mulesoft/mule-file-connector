@@ -76,7 +76,7 @@ public class FileWriteTypeTestCase extends FileConnectorTestCase {
 
     @Override
     public void write(Event event, OutputStream out) throws IOException {
-      IOUtils.write(HELLO_WORLD, out);
+      org.apache.commons.io.IOUtils.write(HELLO_WORLD, out);
     }
   }
 
