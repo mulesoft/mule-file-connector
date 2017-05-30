@@ -30,7 +30,6 @@ import org.mule.extension.file.internal.command.LocalRenameCommand;
 import org.mule.extension.file.internal.command.LocalWriteCommand;
 import org.mule.extension.file.internal.lock.LocalPathLock;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.util.ArrayUtils;
 
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -114,7 +113,7 @@ public final class LocalFileSystem extends AbstractFileSystem {
 
   @Override
   protected PathLock createLock(Path path, Object... params) {
-    return new LocalPathLock(path, ArrayUtils.isEmpty(params) ? new OpenOption[] {WRITE} : (OpenOption[]) params);
+    return new LocalPathLock(path, params.length == 0 ? new OpenOption[] {WRITE} : (OpenOption[]) params);
   }
 
   /**
