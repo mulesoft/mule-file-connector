@@ -6,14 +6,14 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
-import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.runtime.api.metadata.MediaType.JSON;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
+import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
+import static org.mule.runtime.api.metadata.MediaType.JSON;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
@@ -21,7 +21,6 @@ import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.core.api.Event;
-import org.mule.runtime.core.util.FileUtils;
 import org.mule.runtime.core.util.IOUtils;
 
 import java.io.File;
@@ -65,7 +64,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
     final byte[] binaryPayload = HELLO_WORLD.getBytes();
     final String binaryFileName = "binary.bin";
     File binaryFile = new File(temporaryFolder.getRoot(), binaryFileName);
-    FileUtils.writeByteArrayToFile(binaryFile, binaryPayload);
+    writeByteArrayToFile(binaryFile, binaryPayload);
 
     Event response = getPath(binaryFile.getAbsolutePath(), false);
 

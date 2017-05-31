@@ -6,24 +6,23 @@
  */
 package org.mule.extension.file;
 
+import static java.nio.charset.Charset.availableCharsets;
+import static org.apache.commons.io.FileUtils.readFileToByteArray;
+import static org.apache.commons.io.FileUtils.writeStringToFile;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.FileWriteMode.APPEND;
 import static org.mule.extension.file.common.api.FileWriteMode.CREATE_NEW;
 import static org.mule.extension.file.common.api.FileWriteMode.OVERWRITE;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-import static java.nio.charset.Charset.availableCharsets;
-import static org.apache.commons.io.FileUtils.readFileToByteArray;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.core.api.Event;
-import org.mule.runtime.core.util.FileUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -114,7 +113,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   @Test
   public void writeOnReadFile() throws Exception {
     File file = temporaryFolder.newFile();
-    FileUtils.writeStringToFile(file, "overwrite me!");
+    writeStringToFile(file, "overwrite me!");
 
     Event event = flowRunner("readAndWrite").withVariable("path", file.getAbsolutePath()).run();
 
@@ -175,7 +174,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
   private String doWriteOnExistingFile(FileWriteMode mode) throws Exception {
     File file = temporaryFolder.newFile();
-    FileUtils.writeStringToFile(file, HELLO_WORLD);
+    writeStringToFile(file, HELLO_WORLD);
 
     doWrite(file.getAbsolutePath(), HELLO_WORLD, mode, false);
     return readPathAsString(file.getAbsolutePath());

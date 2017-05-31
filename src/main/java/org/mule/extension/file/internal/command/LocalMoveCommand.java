@@ -6,6 +6,7 @@
  */
 package org.mule.extension.file.internal.command;
 
+import static org.apache.commons.io.FileUtils.moveDirectory;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.core.util.FileUtils;
 import org.mule.extension.file.common.api.FileConnectorConfig;
@@ -56,7 +57,7 @@ public final class LocalMoveCommand extends AbstractLocalCopyCommand implements 
           alreadyExistsException(targetPath);
         }
       }
-      FileUtils.moveDirectory(source.toFile(), targetPath.toFile());
+      moveDirectory(source.toFile(), targetPath.toFile());
     } else {
       Files.move(source, targetPath, options);
     }
