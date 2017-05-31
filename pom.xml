@@ -36,10 +36,12 @@
             <classifier>mule-plugin</classifier>
         </dependency>
 
+        <!-- Dependency provided by file common -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commonsIoVersion}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
