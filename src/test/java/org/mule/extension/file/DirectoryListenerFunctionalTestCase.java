@@ -9,7 +9,7 @@ package org.mule.extension.file;
 import static org.mule.extension.file.api.FileEventType.CREATE;
 import static org.mule.extension.file.api.FileEventType.DELETE;
 import static org.mule.extension.file.api.FileEventType.UPDATE;
-import static org.mule.runtime.core.util.FileUtils.deleteTree;
+import static org.mule.runtime.core.api.util.FileUtils.deleteTree;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.apache.commons.io.FileUtils.write;
 import static org.hamcrest.CoreMatchers.containsString;

@@ -7,7 +7,7 @@
 package org.mule.extension.file.internal.lock;
 
 import static java.lang.String.format;
-import static org.mule.runtime.core.util.IOUtils.closeQuietly;
+import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
