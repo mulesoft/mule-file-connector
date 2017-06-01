@@ -8,9 +8,9 @@ package org.mule.extension.file;
 
 import static org.mule.functional.junit4.rules.ExpectedError.none;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mule.runtime.core.util.IOUtils.closeQuietly;
 
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
