@@ -6,9 +6,8 @@
  */
 package org.mule.extension.file;
 
+import static org.apache.commons.io.FileUtils.write;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-
-import org.mule.runtime.core.util.FileUtils;
 
 import java.io.File;
 
@@ -50,12 +49,12 @@ public class FileDeleteTestCase extends FileConnectorTestCase {
   public void deleteFolder() throws Exception {
     File directory = temporaryFolder.newFolder();
     File child = new File(directory, "file");
-    FileUtils.write(child, "child");
+    write(child, "child");
 
     File subFolder = new File(directory, "subfolder");
     subFolder.mkdir();
     File grandChild = new File(subFolder, GRAND_CHILD);
-    FileUtils.write(grandChild, GRAND_CHILD);
+    write(grandChild, GRAND_CHILD);
 
     assertExists(true, child, subFolder, grandChild);
 

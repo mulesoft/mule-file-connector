@@ -6,10 +6,10 @@
  */
 package org.mule.extension.file.internal.command;
 
+import static org.apache.commons.io.FileUtils.copyDirectory;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.CopyCommand;
 import org.mule.extension.file.internal.LocalFileSystem;
-import org.mule.runtime.core.util.FileUtils;
 
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
@@ -49,7 +49,7 @@ public final class LocalCopyCommand extends AbstractLocalCopyCommand implements 
   @Override
   protected void doExecute(Path source, Path targetPath, boolean overwrite, CopyOption[] options) throws Exception {
     if (Files.isDirectory(source)) {
-      FileUtils.copyDirectory(source.toFile(), targetPath.toFile());
+      copyDirectory(source.toFile(), targetPath.toFile());
     } else {
       Files.copy(source, targetPath, options);
     }

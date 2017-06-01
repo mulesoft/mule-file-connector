@@ -13,7 +13,6 @@ import static org.junit.Assert.assertThat;
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.message.OutputHandler;
-import org.mule.runtime.core.util.IOUtils;
 import org.mule.test.runner.RunnerDelegateTo;
 
 import java.io.ByteArrayInputStream;
@@ -76,7 +75,7 @@ public class FileWriteTypeTestCase extends FileConnectorTestCase {
 
     @Override
     public void write(Event event, OutputStream out) throws IOException {
-      IOUtils.write(HELLO_WORLD, out);
+      org.apache.commons.io.IOUtils.write(HELLO_WORLD, out);
     }
   }
 

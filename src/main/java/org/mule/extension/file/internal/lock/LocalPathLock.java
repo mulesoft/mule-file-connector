@@ -7,10 +7,10 @@
 package org.mule.extension.file.internal.lock;
 
 import static java.lang.String.format;
+import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
-import org.mule.runtime.core.util.IOUtils;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -99,7 +99,7 @@ public final class LocalPathLock implements PathLock {
         lock = null;
       }
     }
-    IOUtils.closeQuietly(channel);
+    closeQuietly(channel);
     channel = null;
   }
 }
