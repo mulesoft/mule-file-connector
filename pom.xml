@@ -49,6 +49,11 @@
             <artifactId>commons-lang</artifactId>
             <version>${commonsLangVersion}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commonsIoVersion}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
