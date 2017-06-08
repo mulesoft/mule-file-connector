@@ -32,10 +32,12 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.yandex.qatools.allure.annotations.Features;
 
 @Features(FILE_EXTENSION)
+@Ignore("MULE-12731")
 public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   private static final String MATCHERLESS_LISTENER_FOLDER_NAME = "matcherless";

@@ -128,6 +128,7 @@ import org.slf4j.LoggerFactory;
  * @since 1.0
  */
 @Alias(DirectoryListener.DIRECTORY_LISTENER)
+//TODO: MULE-12731: Define what to do with this
 public class DirectoryListener extends Source<InputStream, ListenerFileAttributes> implements FlowConstructAware {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
