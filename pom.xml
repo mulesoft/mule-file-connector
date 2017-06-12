@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.mule.extensions</groupId>
         <artifactId>mule-core-modules-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.0-BETA-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,10 +19,10 @@
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
 
     <properties>
-        <muleVersion>4.0.0-SNAPSHOT</muleVersion>
+        <muleVersion>4.0.0-BETA-SNAPSHOT</muleVersion>
         <commonsLangVersion>2.4</commonsLangVersion>
         <commonsIoVersion>2.4</commonsIoVersion>
-        <fileCommonsVersion>1.0.0-SNAPSHOT</fileCommonsVersion>
+        <fileCommonsVersion>0.8.0-SNAPSHOT</fileCommonsVersion>
         <guavaVersion>18.0</guavaVersion>
 
         <formatterConfigPath>formatter.xml</formatterConfigPath>
