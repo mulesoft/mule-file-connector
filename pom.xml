@@ -19,10 +19,9 @@
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
 
     <properties>
-        <muleVersion>4.0.0-SNAPSHOT</muleVersion>
         <commonsLangVersion>3.6</commonsLangVersion>
         <commonsIoVersion>2.4</commonsIoVersion>
-        <fileCommonsVersion>1.0.0-SNAPSHOT</fileCommonsVersion>
+        <muleFileCommonsVersion>1.0.0-SNAPSHOT</muleFileCommonsVersion>
         <guavaVersion>18.0</guavaVersion>
 
         <formatterConfigPath>formatter.xml</formatterConfigPath>
@@ -32,7 +31,7 @@
         <dependency>
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-module-file-extension-common</artifactId>
-            <version>${fileCommonsVersion}</version>
+            <version>${muleFileCommonsVersion}</version>
             <classifier>mule-plugin</classifier>
         </dependency>
 
@@ -64,7 +63,7 @@
         <dependency>
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-module-file-extension-common</artifactId>
-            <version>${fileCommonsVersion}</version>
+            <version>${muleFileCommonsVersion}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
