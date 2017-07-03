@@ -15,24 +15,21 @@ import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PA
 import static org.mule.runtime.api.connection.ConnectionValidationResult.success;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extension.file.api.exception.FileConnectionException;
-import org.mule.extension.file.common.api.FileSystemProvider;
 import org.mule.extension.file.common.api.FileSystem;
+import org.mule.extension.file.common.api.FileSystemProvider;
 import org.mule.runtime.api.connection.CachedConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionValidationResult;
-import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
+import org.slf4j.Logger;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
 
 /**
  * A {@link ConnectionProvider} which provides instances of {@link FileSystem} from instances of {@link FileConnector}
@@ -44,9 +41,6 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
     implements CachedConnectionProvider<LocalFileSystem> {
 
   private static final Logger LOGGER = getLogger(LocalFileConnectionProvider.class);
-
-  @Inject
-  private MuleContext muleContext;
 
   /**
    * The directory to be considered as the root of every relative path used with this connector. If not provided, it will default
@@ -67,7 +61,7 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
   @Override
   public LocalFileSystem connect() throws ConnectionException {
     validateWorkingDir();
-    return new LocalFileSystem(workingDir, muleContext);
+    return new LocalFileSystem(workingDir);
   }
 
   /**

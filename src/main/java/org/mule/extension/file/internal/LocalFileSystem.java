@@ -29,7 +29,6 @@ import org.mule.extension.file.internal.command.LocalReadCommand;
 import org.mule.extension.file.internal.command.LocalRenameCommand;
 import org.mule.extension.file.internal.command.LocalWriteCommand;
 import org.mule.extension.file.internal.lock.LocalPathLock;
-import org.mule.runtime.core.api.MuleContext;
 
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -58,7 +57,7 @@ public final class LocalFileSystem extends AbstractFileSystem {
   /**
    * Creates a new instance
    */
-  public LocalFileSystem(String basePath, MuleContext muleContext) {
+  public LocalFileSystem(String basePath) {
     super(basePath);
 
     copyCommand = new LocalCopyCommand(this);
@@ -68,7 +67,7 @@ public final class LocalFileSystem extends AbstractFileSystem {
     moveCommand = new LocalMoveCommand(this);
     readCommand = new LocalReadCommand(this);
     renameCommand = new LocalRenameCommand(this);
-    writeCommand = new LocalWriteCommand(this, muleContext);
+    writeCommand = new LocalWriteCommand(this);
   }
 
   @Override

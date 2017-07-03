@@ -26,6 +26,7 @@ import org.mule.extension.file.common.api.FileSystem;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.matcher.NullFilePayloadPredicate;
 import org.mule.extension.file.internal.command.DirectoryListenerCommand;
+import org.mule.runtime.api.cluster.ClusterService;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.message.Message;
@@ -49,8 +50,8 @@ import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,8 +76,8 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Listens for near real-time events that happens on files contained inside a directory or on the directory itself. The events are
@@ -128,7 +129,7 @@ import org.slf4j.LoggerFactory;
  * @since 1.0
  */
 @Alias(DirectoryListener.DIRECTORY_LISTENER)
-//TODO: MULE-12731: Define what to do with this
+// TODO: MULE-12731: Define what to do with this
 public class DirectoryListener extends Source<InputStream, ListenerFileAttributes> implements FlowConstructAware {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
@@ -187,6 +188,9 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   private LocalFileMatcher predicateBuilder;
 
   @Inject
+  private ClusterService clusterService;
+
+  @Inject
   private MuleContext muleContext;
 
   @Inject
@@ -210,7 +214,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
 
   @Override
   public void onStart(SourceCallback<InputStream, ListenerFileAttributes> sourceCallback) throws MuleException {
-    if (!muleContext.isPrimaryPollingInstance()) {
+    if (!clusterService.isPrimaryPollingInstance()) {
       LOGGER.debug("{} source on flow {} not started because this is a secondary cluster node", DIRECTORY_LISTENER,
                    flowConstruct.getName());
       initialiseClusterListener(sourceCallback);
@@ -471,6 +475,10 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   @Override
   public void setFlowConstruct(FlowConstruct flowConstruct) {
     this.flowConstruct = flowConstruct;
+  }
+
+  public void setClusterService(ClusterService clusterService) {
+    this.clusterService = clusterService;
   }
 
   /**
