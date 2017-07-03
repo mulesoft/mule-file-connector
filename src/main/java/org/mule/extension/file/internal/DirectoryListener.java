@@ -50,8 +50,8 @@ import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,8 +76,8 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Listens for near real-time events that happens on files contained inside a directory or on the directory itself. The events are

@@ -26,10 +26,10 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
-import org.slf4j.Logger;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.slf4j.Logger;
 
 /**
  * A {@link ConnectionProvider} which provides instances of {@link FileSystem} from instances of {@link FileConnector}

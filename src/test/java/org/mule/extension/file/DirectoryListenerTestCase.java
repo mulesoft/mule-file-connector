@@ -30,7 +30,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
 import ru.yandex.qatools.allure.annotations.Features;
 
 @Features(FILE_EXTENSION)
