@@ -17,7 +17,6 @@ import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.LocalFileSystem;
-import org.mule.runtime.core.api.MuleContext;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,14 +35,11 @@ import java.nio.file.StandardOpenOption;
  */
 public final class LocalWriteCommand extends LocalFileCommand implements WriteCommand {
 
-  private final MuleContext muleContext;
-
   /**
    * {@inheritDoc}
    */
-  public LocalWriteCommand(LocalFileSystem fileSystem, MuleContext muleContext) {
+  public LocalWriteCommand(LocalFileSystem fileSystem) {
     super(fileSystem);
-    this.muleContext = muleContext;
   }
 
   /**
