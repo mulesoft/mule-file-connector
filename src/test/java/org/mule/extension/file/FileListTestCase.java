@@ -130,8 +130,8 @@ public class FileListTestCase extends FileConnectorTestCase {
 
   private List<Message> doList(String flowName, String path, boolean recursive) throws Exception {
     Message messages =
-            (Message) flowRunner(flowName).withVariable("path", path).withVariable("recursive", recursive).run()
-                    .getMessage().getPayload().getValue();
+        (Message) flowRunner(flowName).withVariable("path", path).withVariable("recursive", recursive).run()
+            .getMessage().getPayload().getValue();
     assertThat(messages.getPayload(), is(notNullValue()));
     assertThat(messages.getPayload().getValue(), instanceOf(List.class));
     return (List<Message>) messages.getPayload().getValue();
