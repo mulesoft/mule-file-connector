@@ -6,9 +6,8 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-
+import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 
 import java.io.File;
@@ -23,8 +22,8 @@ public class FileCreateDirectoryTestCase extends FileConnectorTestCase {
   private static final String DIRECTORY = "validDirectory";
 
   @Override
-  protected String getConfigFile() {
-    return "file-create-directory-config.xml";
+  protected String[] getConfigFiles() {
+    return new String[] {"file-create-directory-config.xml", "file-read-config.xml"};
   }
 
   @Test

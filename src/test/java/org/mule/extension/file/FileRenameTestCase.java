@@ -6,14 +6,13 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
-import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
+import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -30,8 +29,8 @@ public class FileRenameTestCase extends FileConnectorTestCase {
   private static final String RENAME_TO_DIRECTORY = "directoryToBeOverwritten";
 
   @Override
-  protected String getConfigFile() {
-    return "file-rename-config.xml";
+  protected String[] getConfigFiles() {
+    return new String[] {"file-rename-config.xml", "file-read-config.xml"};
   }
 
   @Test
