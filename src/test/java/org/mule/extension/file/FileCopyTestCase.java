@@ -6,14 +6,13 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
-import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.write;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
+import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 
@@ -35,8 +34,8 @@ public class FileCopyTestCase extends FileConnectorTestCase {
   protected String sourcePath;
 
   @Override
-  protected String getConfigFile() {
-    return "file-copy-config.xml";
+  protected String[] getConfigFiles() {
+    return new String[] {"file-copy-config.xml", "file-read-config.xml"};
   }
 
   @Override

@@ -36,8 +36,8 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   private static final String TEST_FILENAME = "test.txt";
 
   @Override
-  protected String getConfigFile() {
-    return "file-write-config.xml";
+  protected String[] getConfigFiles() {
+    return new String[] {"file-write-config.xml", "file-read-config.xml"};
   }
 
   @Test

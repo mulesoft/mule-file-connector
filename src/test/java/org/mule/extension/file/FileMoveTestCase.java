@@ -6,9 +6,9 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 
 import java.io.File;
 
@@ -18,8 +18,8 @@ import ru.yandex.qatools.allure.annotations.Features;
 public class FileMoveTestCase extends FileCopyTestCase {
 
   @Override
-  protected String getConfigFile() {
-    return "file-move-config.xml";
+  protected String[] getConfigFiles() {
+    return new String[] {"file-move-config.xml", "file-read-config.xml"};
   }
 
   @Override
