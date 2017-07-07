@@ -5,6 +5,8 @@
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
         http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 
+    <import file="file-read-config.xml"/>
+
     <flow name="write">
         <file:write config-ref="file" path="#[path]" mode="#[mode]" createParentDirectories="#[createParent]" encoding="#[encoding]"/>
     </flow>
