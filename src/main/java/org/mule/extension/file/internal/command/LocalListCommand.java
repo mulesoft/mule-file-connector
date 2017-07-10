@@ -7,15 +7,14 @@
 package org.mule.extension.file.internal.command;
 
 import static java.lang.String.format;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ListCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.internal.LocalFileSystem;
-import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.extension.api.runtime.operation.Result;
-
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -45,7 +44,6 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
   public List<Result<InputStream, FileAttributes>> list(FileConnectorConfig config,
                                                         String directoryPath,
                                                         boolean recursive,
-                                                        MediaType mediaType,
                                                         Predicate<FileAttributes> matcher) {
     Path path = resolveExistingPath(directoryPath);
     if (!Files.isDirectory(path)) {
@@ -53,7 +51,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     }
 
     List<Result<InputStream, FileAttributes>> accumulator = new LinkedList<>();
-    doList(config, path.toFile(), accumulator, recursive, mediaType, matcher);
+    doList(config, path.toFile(), accumulator, recursive, matcher);
 
     return accumulator;
   }
@@ -62,7 +60,6 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                       File parent,
                       List<Result<InputStream, FileAttributes>> accumulator,
                       boolean recursive,
-                      MediaType mediaType,
                       Predicate<FileAttributes> matcher) {
 
     if (!parent.canRead()) {
@@ -82,10 +79,10 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
         accumulator.add(Result.<InputStream, FileAttributes>builder().output(null).attributes(attributes).build());
 
         if (recursive) {
-          doList(config, child, accumulator, recursive, mediaType, matcher);
+          doList(config, child, accumulator, recursive, matcher);
         }
       } else {
-        accumulator.add(fileSystem.read(config, child.getAbsolutePath(), mediaType, false));
+        accumulator.add(fileSystem.read(config, child.getAbsolutePath(), false));
       }
     }
   }
