@@ -34,9 +34,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 @Ignore("MULE-12731")
 public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 

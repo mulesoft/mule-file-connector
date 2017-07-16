@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileListTestCase extends FileConnectorTestCase {
 
   @Override

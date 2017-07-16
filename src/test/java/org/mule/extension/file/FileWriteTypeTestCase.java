@@ -23,9 +23,9 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 @RunnerDelegateTo(Parameterized.class)
 public class FileWriteTypeTestCase extends FileConnectorTestCase {
 

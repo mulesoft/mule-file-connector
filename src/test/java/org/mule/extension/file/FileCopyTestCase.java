@@ -20,9 +20,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileCopyTestCase extends FileConnectorTestCase {
 
   private static final String SOURCE_FILE_NAME = "test.txt";
