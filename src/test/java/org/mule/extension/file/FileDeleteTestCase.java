@@ -12,9 +12,9 @@ import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION
 import java.io.File;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileDeleteTestCase extends FileConnectorTestCase {
 
   private static final String GRAND_CHILD = "grandChild";

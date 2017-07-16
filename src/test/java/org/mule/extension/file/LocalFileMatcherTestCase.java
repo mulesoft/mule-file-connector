@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class LocalFileMatcherTestCase
     extends FileMatcherContractTestCase<LocalFileMatcher, LocalFileAttributes> {
 

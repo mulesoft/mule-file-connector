@@ -33,9 +33,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {
 
   @Override

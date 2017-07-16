@@ -28,9 +28,9 @@ import java.io.File;
 import java.util.Arrays;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileWriteTestCase extends FileConnectorTestCase {
 
   private static final String TEST_FILENAME = "test.txt";

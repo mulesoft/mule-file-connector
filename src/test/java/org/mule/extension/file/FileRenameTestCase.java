@@ -20,9 +20,9 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 import java.io.File;
 
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
+import io.qameta.allure.Feature;
 
-@Features(FILE_EXTENSION)
+@Feature(FILE_EXTENSION)
 public class FileRenameTestCase extends FileConnectorTestCase {
 
   private static final String RENAME_TO = "renamed";

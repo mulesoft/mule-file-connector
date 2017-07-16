@@ -27,11 +27,11 @@ import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import ru.yandex.qatools.allure.annotations.Features;
-import ru.yandex.qatools.allure.annotations.Stories;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
-@Features(FILE_EXTENSION)
-@Stories("Negative Connectivity Testing")
+@Feature(FILE_EXTENSION)
+@Story("Negative Connectivity Testing")
 public class FileNegativeConnectivityTestCase extends FileConnectorTestCase {
 
   private static final Matcher<Exception> CONNECTION_EXCEPTION_MATCHER =
