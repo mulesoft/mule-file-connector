@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
+import io.qameta.allure.Issue;
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
 import org.mule.runtime.api.message.Message;
@@ -38,6 +39,7 @@ import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 @Ignore("MULE-12731")
+@Issue("MULE-12731")
 public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   private static final String MATCHERLESS_LISTENER_FOLDER_NAME = "matcherless";
