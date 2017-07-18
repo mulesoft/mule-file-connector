@@ -24,6 +24,7 @@ import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListe
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +34,7 @@ import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 @RunWith(MockitoJUnitRunner.class)
+@Ignore("MULE-12731")
 public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
 
   private DirectoryListener directoryListener;
