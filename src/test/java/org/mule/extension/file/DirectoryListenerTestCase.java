@@ -19,7 +19,6 @@ import static org.mule.runtime.core.api.config.MuleProperties.OBJECT_MULE_CONTEX
 import org.mule.extension.file.internal.DirectoryListener;
 import org.mule.runtime.api.cluster.ClusterService;
 import org.mule.runtime.core.api.MuleContext;
-import org.mule.runtime.core.api.construct.FlowConstruct;
 import org.mule.runtime.core.api.context.notification.ServerNotification;
 import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListener;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
@@ -42,9 +41,6 @@ public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
   private SourceCallback sourceCallback;
 
   @Mock(answer = RETURNS_DEEP_STUBS)
-  private FlowConstruct flowConstruct;
-
-  @Mock(answer = RETURNS_DEEP_STUBS)
   private MuleContext mockMuleContext;
 
   @Mock(answer = RETURNS_DEEP_STUBS)
@@ -53,7 +49,6 @@ public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
   @Override
   protected void doSetUp() throws Exception {
     directoryListener = new DirectoryListener();
-    directoryListener.setFlowConstruct(flowConstruct);
     directoryListener.setClusterService(clusterService);
 
     when(mockMuleContext.isPrimaryPollingInstance()).thenReturn(false);

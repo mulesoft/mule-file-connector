@@ -17,7 +17,6 @@ import static org.mule.extension.file.api.FileEventType.DELETE;
 import static org.mule.extension.file.api.FileEventType.UPDATE;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-
 import org.mule.extension.file.api.DeletedFileAttributes;
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
@@ -36,8 +35,6 @@ import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.core.api.DefaultMuleException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationException;
-import org.mule.runtime.core.api.construct.FlowConstruct;
-import org.mule.runtime.core.api.construct.FlowConstructAware;
 import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListener;
 import org.mule.runtime.core.api.scheduler.SchedulerService;
 import org.mule.runtime.extension.api.annotation.Alias;
@@ -47,14 +44,14 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.runtime.extension.api.runtime.FlowInfo;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
+
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.inject.Inject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.ClosedWatchServiceException;
@@ -75,6 +72,11 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Listens for near real-time events that happens on files contained inside a directory or on the directory itself. The events are
@@ -127,7 +129,7 @@ import java.util.function.Predicate;
  */
 @Alias(DirectoryListener.DIRECTORY_LISTENER)
 // TODO: MULE-12731: Define what to do with this
-public class DirectoryListener extends Source<InputStream, ListenerFileAttributes> implements FlowConstructAware {
+public class DirectoryListener extends Source<InputStream, ListenerFileAttributes> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
   static final String DIRECTORY_LISTENER = "directory-listener";
@@ -196,7 +198,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   @Connection
   private FileSystem fileSystem;
 
-  private FlowConstruct flowConstruct;
+  private FlowInfo flowInfo;
   private WatchService watcher;
   private Predicate<LocalFileAttributes> matcher;
   private Set<FileEventType> enabledEventTypes = new HashSet<>();
@@ -213,7 +215,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   public void onStart(SourceCallback<InputStream, ListenerFileAttributes> sourceCallback) throws MuleException {
     if (!clusterService.isPrimaryPollingInstance()) {
       LOGGER.debug("{} source on flow {} not started because this is a secondary cluster node", DIRECTORY_LISTENER,
-                   flowConstruct.getName());
+                   flowInfo.getName());
       initialiseClusterListener(sourceCallback);
       return;
     }
@@ -224,7 +226,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
     matcher = predicateBuilder != null ? predicateBuilder.build() : new NullFilePayloadPredicate<>();
 
     listenerExecutor = schedulerService.customScheduler(muleContext.getSchedulerBaseConfig().withMaxConcurrentTasks(1)
-        .withName(format("%s.file.listener", flowConstruct.getName())));
+        .withName(format("%s.file.listener", flowInfo.getName())));
 
     submittedListenerTask = listenerExecutor.submit(() -> listen(sourceCallback));
 
@@ -379,7 +381,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
       watcher.close();
     } catch (IOException e) {
       if (LOGGER.isWarnEnabled()) {
-        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow " + flowConstruct.getName(),
+        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow " + flowInfo.getName(),
                     e);
       }
     }
@@ -453,7 +455,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
 
     if (enabledEventTypes.isEmpty()) {
       throw new ConfigurationException(createStaticMessage(format("File listener in flow '%s' has disabled all notification types. At least one should be enabled",
-                                                                  flowConstruct.getName())));
+                                                                  flowInfo.getName())));
     }
   }
 
@@ -467,11 +469,6 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
     if (condition) {
       types.add(supplier.get());
     }
-  }
-
-  @Override
-  public void setFlowConstruct(FlowConstruct flowConstruct) {
-    this.flowConstruct = flowConstruct;
   }
 
   public void setClusterService(ClusterService clusterService) {
