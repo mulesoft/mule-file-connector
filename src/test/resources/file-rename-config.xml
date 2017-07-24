@@ -6,12 +6,12 @@
         http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 
     <flow name="rename">
-        <file:rename config-ref="file" path="#[path]" to="#[to]" overwrite="#[overwrite]"/>
+        <file:rename config-ref="file" path="#[vars.path]" to="#[vars.to]" overwrite="#[vars.overwrite]"/>
     </flow>
 
     <flow name="readAndRename">
-        <file:read config-ref="file" path="#[path]" />
-        <file:rename config-ref="file" path="#[path]" to="#[to]"/>
+        <file:read config-ref="file" path="#[vars.path]" />
+        <file:rename config-ref="file" path="#[vars.path]" to="#[vars.to]"/>
     </flow>
 
 </mule>

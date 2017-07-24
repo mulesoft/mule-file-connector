@@ -12,16 +12,16 @@
     <file:matcher name="globalMatcher" directories="REQUIRE" filenamePattern="sub*" />
 
     <flow name="list">
-        <file:list config-ref="file" directoryPath="#[path]" recursive="#[recursive]" />
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" />
     </flow>
 
     <flow name="listWithEmbeddedPredicate">
-        <file:list config-ref="file" directoryPath="#[path]" recursive="#[recursive]">
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]">
             <file:matcher filenamePattern="*[1-2]*.html" />
         </file:list>
     </flow>
 
     <flow name="listWithGlobalMatcher">
-        <file:list config-ref="file" directoryPath="#[path]" recursive="#[recursive]" matcher="globalMatcher"/>
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" matcher="globalMatcher"/>
     </flow>
 </mule>
