@@ -6,12 +6,12 @@
         http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 
     <flow name="move">
-        <file:move config-ref="file" sourcePath="#[source]" targetPath="#[target]" overwrite="#[overwrite]" createParentDirectories="#[createParent]" renameTo="#[renameTo]"/>
+        <file:move config-ref="file" sourcePath="#[vars.source]" targetPath="#[vars.target]" overwrite="#[vars.overwrite]" createParentDirectories="#[vars.createParent]" renameTo="#[vars.renameTo]"/>
     </flow>
 
     <flow name="readAndDo">
-        <file:read config-ref="file" path="#[source]"/>
-        <file:move config-ref="file" sourcePath="#[source]" targetPath="#[target]" overwrite="#[overwrite]" createParentDirectories="#[createParent]" renameTo="#[renameTo]"/>
+        <file:read config-ref="file" path="#[vars.source]"/>
+        <file:move config-ref="file" sourcePath="#[vars.source]" targetPath="#[vars.target]" overwrite="#[vars.overwrite]" createParentDirectories="#[vars.createParent]" renameTo="#[vars.renameTo]"/>
     </flow>
 
 </mule>
