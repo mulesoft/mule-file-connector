@@ -27,6 +27,8 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.matcher.NullFilePayloadPredicate;
 import org.mule.extension.file.internal.command.DirectoryListenerCommand;
 import org.mule.runtime.api.cluster.ClusterService;
+import org.mule.runtime.api.component.location.ComponentLocation;
+import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.message.Message;
@@ -44,7 +46,6 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
-import org.mule.runtime.extension.api.runtime.FlowInfo;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
@@ -196,9 +197,10 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   private SchedulerService schedulerService;
 
   @Connection
-  private FileSystem fileSystem;
+  private ConnectionProvider<FileSystem> fileSystemProvider;
 
-  private FlowInfo flowInfo;
+  private FileSystem fileSystem;
+  private ComponentLocation location;
   private WatchService watcher;
   private Predicate<LocalFileAttributes> matcher;
   private Set<FileEventType> enabledEventTypes = new HashSet<>();
@@ -213,9 +215,10 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
 
   @Override
   public void onStart(SourceCallback<InputStream, ListenerFileAttributes> sourceCallback) throws MuleException {
+    fileSystem = fileSystemProvider.connect();
     if (!clusterService.isPrimaryPollingInstance()) {
       LOGGER.debug("{} source on flow {} not started because this is a secondary cluster node", DIRECTORY_LISTENER,
-                   flowInfo.getName());
+                   location.getRootContainerName());
       initialiseClusterListener(sourceCallback);
       return;
     }
@@ -226,7 +229,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
     matcher = predicateBuilder != null ? predicateBuilder.build() : new NullFilePayloadPredicate<>();
 
     listenerExecutor = schedulerService.customScheduler(muleContext.getSchedulerBaseConfig().withMaxConcurrentTasks(1)
-        .withName(format("%s.file.listener", flowInfo.getName())));
+        .withName(format("%s.file.listener", location.getRootContainerName())));
 
     submittedListenerTask = listenerExecutor.submit(() -> listen(sourceCallback));
 
@@ -364,6 +367,9 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
 
     closeWatcherService();
     shutdownScheduler();
+    if (fileSystem != null) {
+      fileSystemProvider.disconnect(fileSystem);
+    }
   }
 
   private void shutdownScheduler() {
@@ -381,7 +387,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
       watcher.close();
     } catch (IOException e) {
       if (LOGGER.isWarnEnabled()) {
-        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow " + flowInfo.getName(),
+        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow " + location.getRootContainerName(),
                     e);
       }
     }
@@ -455,7 +461,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
 
     if (enabledEventTypes.isEmpty()) {
       throw new ConfigurationException(createStaticMessage(format("File listener in flow '%s' has disabled all notification types. At least one should be enabled",
-                                                                  flowInfo.getName())));
+                                                                  location.getRootContainerName())));
     }
   }
 
