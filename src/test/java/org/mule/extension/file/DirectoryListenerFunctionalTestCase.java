@@ -192,8 +192,8 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   public static void onMessage(MessageContext messageContext) {
     Object payload = messageContext.getPayload() != null ? messageContext.getPayload() : null;
-    Message message = Message.builder().payload(payload).mediaType(messageContext.getDataType().getMediaType())
-        .attributes(messageContext.getAttributes()).build();
+    Message message = Message.builder().value(payload).mediaType(messageContext.getDataType().getMediaType())
+        .attributesValue(messageContext.getAttributes()).build();
     receivedMessages.add(message);
   }
 }
