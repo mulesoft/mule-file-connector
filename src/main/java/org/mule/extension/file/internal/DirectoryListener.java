@@ -387,7 +387,8 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
       watcher.close();
     } catch (IOException e) {
       if (LOGGER.isWarnEnabled()) {
-        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow " + location.getRootContainerName(),
+        LOGGER.warn("Found exception trying to close watcher service for directory listener on flow "
+            + location.getRootContainerName(),
                     e);
       }
     }
