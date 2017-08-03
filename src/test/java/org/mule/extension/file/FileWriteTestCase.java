@@ -72,7 +72,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   @Test
   public void createNewOnExistingFile() throws Exception {
     expectedError.expectError(NAMESPACE, FILE_ALREADY_EXISTS, FileAlreadyExistsException.class,
-                              "Use a different write mode or point to a path which doesn't exists");
+                              "Use a different write mode or point to a path which doesn't exist");
     doWriteOnExistingFile(CREATE_NEW);
   }
 

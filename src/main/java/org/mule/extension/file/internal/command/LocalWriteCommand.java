@@ -75,7 +75,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
     } catch (FileAlreadyExistsException e) {
       throw new org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException(format(
                                                                                                 "Cannot write to path '%s' because it already exists and write mode '%s' was selected. "
-                                                                                                    + "Use a different write mode or point to a path which doesn't exists",
+                                                                                                    + "Use a different write mode or point to a path which doesn't exist",
                                                                                                 path, mode),
                                                                                          e);
     }

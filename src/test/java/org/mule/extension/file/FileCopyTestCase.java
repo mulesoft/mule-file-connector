@@ -90,7 +90,7 @@ public class FileCopyTestCase extends FileConnectorTestCase {
 
   @Test
   public void toNonExistingFolderWithoutCreateParent() throws Exception {
-    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "destination path doesn't exists");
+    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "destination path doesn't exist");
     String target = temporaryFolder.newFile().getAbsolutePath() + "a/b/c";
     doExecute(target, false, false);
   }
