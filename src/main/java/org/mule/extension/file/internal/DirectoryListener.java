@@ -193,7 +193,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   private ClusterService clusterService;
 
   @Inject
-  private NotificationListenerRegistry notificationsRegistrer;
+  private NotificationListenerRegistry notificationslistenerRegistry;
 
   @Inject
   private MuleContext muleContext;
@@ -250,7 +250,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
         } catch (Exception e) {
           throw new MuleRuntimeException(e);
         }
-      }, notificationsRegistrer);
+      }, notificationslistenerRegistry);
 
       clusterListener.register();
     }
