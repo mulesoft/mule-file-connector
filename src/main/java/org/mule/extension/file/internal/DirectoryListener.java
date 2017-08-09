@@ -17,6 +17,7 @@ import static org.mule.extension.file.api.FileEventType.DELETE;
 import static org.mule.extension.file.api.FileEventType.UPDATE;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+
 import org.mule.extension.file.api.DeletedFileAttributes;
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
@@ -37,6 +38,7 @@ import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.core.api.DefaultMuleException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationException;
+import org.mule.runtime.core.api.context.notification.NotificationListenerRegistry;
 import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListener;
 import org.mule.runtime.core.api.scheduler.SchedulerService;
 import org.mule.runtime.extension.api.annotation.Alias;
@@ -191,6 +193,9 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   private ClusterService clusterService;
 
   @Inject
+  private NotificationListenerRegistry notificationslistenerRegistry;
+
+  @Inject
   private MuleContext muleContext;
 
   @Inject
@@ -245,7 +250,7 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
         } catch (Exception e) {
           throw new MuleRuntimeException(e);
         }
-      }, muleContext);
+      }, notificationslistenerRegistry);
 
       clusterListener.register();
     }
