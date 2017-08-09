@@ -19,16 +19,17 @@ import static org.mule.extension.file.common.api.FileWriteMode.CREATE_NEW;
 import static org.mule.extension.file.common.api.FileWriteMode.OVERWRITE;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
+
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
-import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.InternalEvent;
 
 import java.io.File;
 import java.util.Arrays;
 
-import org.junit.Test;
 import io.qameta.allure.Feature;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileWriteTestCase extends FileConnectorTestCase {
@@ -115,7 +116,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     File file = temporaryFolder.newFile();
     writeStringToFile(file, "overwrite me!");
 
-    Event event = flowRunner("readAndWrite").withVariable("path", file.getAbsolutePath()).run();
+    InternalEvent event = flowRunner("readAndWrite").withVariable("path", file.getAbsolutePath()).run();
 
     assertThat(event.getMessageAsString(muleContext), equalTo(HELLO_WORLD));
   }

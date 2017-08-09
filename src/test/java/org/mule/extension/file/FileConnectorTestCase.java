@@ -6,18 +6,18 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.functional.junit4.rules.ExpectedError.none;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.functional.junit4.rules.ExpectedError.none;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
 import org.mule.functional.junit4.rules.ExpectedError;
+import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
-import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.tck.junit4.rule.SystemProperty;
 
@@ -25,11 +25,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.qameta.allure.Feature;
 import org.apache.commons.io.FileUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCase {
