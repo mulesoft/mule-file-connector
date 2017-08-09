@@ -14,13 +14,14 @@ import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.runtime.api.metadata.MediaType.JSON;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
+import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
-import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
@@ -32,8 +33,8 @@ import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import org.junit.Test;
 import io.qameta.allure.Feature;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {

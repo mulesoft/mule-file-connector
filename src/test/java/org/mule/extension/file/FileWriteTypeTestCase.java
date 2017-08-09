@@ -6,12 +6,12 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 
 import org.mule.extension.file.common.api.FileWriteMode;
-import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.api.InternalEvent;
 import org.mule.runtime.core.api.message.OutputHandler;
 import org.mule.test.runner.RunnerDelegateTo;
 
@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import io.qameta.allure.Feature;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 @RunnerDelegateTo(Parameterized.class)
@@ -74,7 +74,7 @@ public class FileWriteTypeTestCase extends FileConnectorTestCase {
   private static class TestOutputHandler implements OutputHandler {
 
     @Override
-    public void write(Event event, OutputStream out) throws IOException {
+    public void write(InternalEvent event, OutputStream out) throws IOException {
       org.apache.commons.io.IOUtils.write(HELLO_WORLD, out);
     }
   }
