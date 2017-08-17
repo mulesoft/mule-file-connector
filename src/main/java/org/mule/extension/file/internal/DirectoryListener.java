@@ -277,7 +277,10 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
         }
       }
     } catch (Exception e) {
-      sourceCallback.onSourceException(e);
+      LOGGER.error(format("Directory listener at flow '%s' found exception listening for File System changes. "
+          + "Some events might have been lost. Error was: ",
+                          location.getRootContainerName(), e.getMessage()),
+                   e);
     }
   }
 
