@@ -50,7 +50,8 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
   @Parameter
   @Optional
   @DisplayName("Working Directory")
-  @Summary("Directory to be considered as the root of every relative path used with this connector")
+  @Summary("Directory to be considered as the root of every relative path used with this connector. Defaults to the user's home")
+  @org.mule.runtime.extension.api.annotation.param.display.Path
   private String workingDir;
 
   /**
