@@ -29,7 +29,7 @@ import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
  *
  * @since 1.0
  */
-@Extension(name = "File", description = "Connector to manipulate files on a locally mounted file system")
+@Extension(name = "File")
 @Operations({FileOperations.class})
 @ConnectionProviders(LocalFileConnectionProvider.class)
 @ErrorTypes(FileError.class)
