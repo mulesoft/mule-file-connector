@@ -55,13 +55,6 @@ public class FileCopyTestCase extends FileConnectorTestCase {
   }
 
   @Test
-  public void nullTarget() throws Exception {
-    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class,
-                              "target path cannot be null nor blank");
-    doExecute(null, false, false);
-  }
-
-  @Test
   public void copyToItselfWithoutOverwrite() throws Exception {
     expectedError.expectError(NAMESPACE, FILE_ALREADY_EXISTS, FileAlreadyExistsException.class, "already exists");
     doExecute(getFlowName(), sourcePath, sourcePath, false, false, null);
