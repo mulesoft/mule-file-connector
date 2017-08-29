@@ -139,7 +139,8 @@ public class FileReadTestCase extends FileConnectorTestCase {
     BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
     assertTime(filePayload.getCreationTime(), attributes.creationTime());
     assertThat(filePayload.getName(), equalTo(file.getFileName().toString()));
-    assertThat(filePayload.getLastAccessTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), lessThanOrEqualTo(attributes.lastAccessTime().toInstant().toEpochMilli()));
+    assertThat(filePayload.getLastAccessTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+               lessThanOrEqualTo(attributes.lastAccessTime().toInstant().toEpochMilli()));
     assertTime(filePayload.getLastModifiedTime(), attributes.lastModifiedTime());
     assertThat(filePayload.getPath(), is(file.toAbsolutePath().toString()));
     assertThat(filePayload.getSize(), is(attributes.size()));
