@@ -9,6 +9,7 @@ package org.mule.extension.file;
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
@@ -34,7 +35,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import io.qameta.allure.Feature;
+import org.hamcrest.Matchers;
+import org.hamcrest.core.Is;
 import org.junit.Test;
+import org.mockito.internal.matchers.GreaterOrEqual;
 
 @Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {
@@ -135,7 +139,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
     BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
     assertTime(filePayload.getCreationTime(), attributes.creationTime());
     assertThat(filePayload.getName(), equalTo(file.getFileName().toString()));
-    assertTime(filePayload.getLastAccessTime(), attributes.lastAccessTime());
+    assertThat(filePayload.getLastAccessTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), lessThanOrEqualTo(attributes.lastAccessTime().toInstant().toEpochMilli()));
     assertTime(filePayload.getLastModifiedTime(), attributes.lastModifiedTime());
     assertThat(filePayload.getPath(), is(file.toAbsolutePath().toString()));
     assertThat(filePayload.getSize(), is(attributes.size()));
