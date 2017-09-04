@@ -6,6 +6,14 @@
  */
 package org.mule.extension.file;
 
+import io.qameta.allure.Feature;
+import org.junit.Test;
+import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
+import org.mule.extension.file.common.api.exceptions.IllegalPathException;
+
+import java.io.File;
+import java.io.IOException;
+
 import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.write;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -13,14 +21,6 @@ import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
-import org.mule.extension.file.common.api.exceptions.IllegalPathException;
-
-import java.io.File;
-import java.io.IOException;
-
-import org.junit.Test;
-import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 public class FileCopyTestCase extends FileConnectorTestCase {

@@ -6,15 +6,16 @@
  */
 package org.mule.extension.file.internal.command;
 
-import static org.apache.commons.io.FileUtils.moveDirectory;
-import org.mule.extension.file.internal.LocalFileSystem;
-import org.mule.runtime.core.api.util.FileUtils;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.MoveCommand;
+import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.runtime.core.api.util.FileUtils;
 
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static org.apache.commons.io.FileUtils.moveDirectory;
 
 /**
  * A {@link AbstractLocalCopyCommand} which implements the {@link MoveCommand} contract
@@ -68,6 +69,6 @@ public final class LocalMoveCommand extends AbstractLocalCopyCommand implements 
    */
   @Override
   protected String getAction() {
-    return "moving";
+    return "move";
   }
 }
