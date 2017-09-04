@@ -56,6 +56,36 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
     String targetFileName = isBlank(renameTo) ? source.getFileName().toString() : renameTo;
 
     CopyOption copyOption = null;
+    targetPath = buildTargetPath(overwrite, createParentDirectory, source, targetPath, targetFileName);
+
+    if (Files.exists(targetPath)) {
+      if (overwrite) {
+        copyOption = StandardCopyOption.REPLACE_EXISTING;
+      } else {
+        throw alreadyExistsException(targetPath);
+      }
+    }
+
+    try {
+      doExecute(source, targetPath, overwrite, copyOption != null ? new CopyOption[] {copyOption} : new CopyOption[] {});
+    } catch (FileAlreadyExistsException e) {
+      throw new org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException(format("Can't %s '%s' to '%s' because the destination path "
+          + "already exists. Consider setting the 'overwrite' parameter to 'true'", getAction(), source.toAbsolutePath(),
+                                                                                                targetPath.toAbsolutePath()));
+    } catch (Exception e) {
+      throw exception(format("An error occurred while executing '%s' operation on file '%s' to '%s': %s", getAction(), source,
+                             targetPath,
+                             e.getMessage()),
+                      e);
+    }
+  }
+
+  /**
+   * Validates and constructs the target path (creating parent directories if its configured, failing if the file already exists and overwrite is not set).
+   * This construction depends on whether the original target and the source are directories, files or a mix between those options.
+   */
+  private Path buildTargetPath(boolean overwrite, boolean createParentDirectory, Path source, Path targetPath,
+                               String targetFileName) {
     if (Files.exists(targetPath)) {
       if (Files.isDirectory(targetPath)) {
         if (Files.isDirectory(source) && source.getFileName().equals(targetPath.getFileName()) && !overwrite) {
@@ -71,24 +101,12 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
         targetPath.toFile().mkdirs();
         targetPath = targetPath.resolve(targetFileName);
       } else {
-        throw new IllegalPathException(format("Can't copy '%s' to '%s' because the destination path " + "doesn't exists",
+        throw new IllegalPathException(format("Can't %s '%s' to '%s' because the destination path " + "doesn't exists",
+                                              getAction(),
                                               source.toAbsolutePath(), targetPath.toAbsolutePath()));
       }
     }
-
-    if (Files.exists(targetPath) && overwrite) {
-      copyOption = StandardCopyOption.REPLACE_EXISTING;
-    }
-
-    try {
-      doExecute(source, targetPath, overwrite, copyOption != null ? new CopyOption[] {copyOption} : new CopyOption[] {});
-    } catch (FileAlreadyExistsException e) {
-      throw new org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException(format("Can't copy '%s' to '%s' because the destination path "
-          + "already exists. Consider setting the 'overwrite' parameter to 'true'", source.toAbsolutePath(),
-                                                                                                targetPath.toAbsolutePath()));
-    } catch (Exception e) {
-      throw exception(format("Found exception %s file '%s' to '%s': %s", getAction(), source, targetPath, e.getMessage()), e);
-    }
+    return targetPath;
   }
 
   /**
