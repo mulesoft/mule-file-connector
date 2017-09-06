@@ -6,24 +6,24 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.api.FileEventType.CREATE;
-import static org.mule.extension.file.api.FileEventType.DELETE;
-import static org.mule.extension.file.api.FileEventType.UPDATE;
-import static org.mule.runtime.core.api.util.FileUtils.deleteTree;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.apache.commons.io.FileUtils.write;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
-
-import io.qameta.allure.Issue;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.api.FileEventType.CREATE;
+import static org.mule.extension.file.api.FileEventType.DELETE;
+import static org.mule.extension.file.api.FileEventType.UPDATE;
+import static org.mule.runtime.core.api.util.FileUtils.deleteTree;
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
+import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.util.Reference;
+import org.mule.runtime.core.api.InternalEvent;
 import org.mule.runtime.core.api.construct.Flow;
-import org.mule.runtime.core.el.context.MessageContext;
+import org.mule.runtime.core.api.processor.Processor;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
 
@@ -33,9 +33,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import io.qameta.allure.Feature;
+import io.qameta.allure.Issue;
 import org.junit.Ignore;
 import org.junit.Test;
-import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 @Ignore("MULE-12731")
@@ -190,10 +191,12 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     return messageHolder.get();
   }
 
-  public static void onMessage(MessageContext messageContext) {
-    Object payload = messageContext.getPayload() != null ? messageContext.getPayload() : null;
-    Message message = Message.builder().value(payload).mediaType(messageContext.getDataType().getMediaType())
-        .attributesValue(messageContext.getAttributes()).build();
-    receivedMessages.add(message);
+  public static class TestProcessor implements Processor {
+
+    @Override
+    public InternalEvent process(InternalEvent event) throws MuleException {
+      receivedMessages.add(event.getMessage());
+      return event;
+    }
   }
 }
