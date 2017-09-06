@@ -61,6 +61,18 @@ public class FileCopyTestCase extends FileConnectorTestCase {
   }
 
   @Test
+  public void copyToSameFolderWithoutOverwrite() throws Exception {
+    expectedError.expectError(NAMESPACE, FILE_ALREADY_EXISTS, FileAlreadyExistsException.class, "already exists");
+    doExecute(getFlowName(), sourcePath, temporaryFolder.getRoot().getAbsolutePath(), false, false, null);
+  }
+
+  @Test
+  public void copyToSameFolderWithOverwrite() throws Exception {
+    doExecute(getFlowName(), sourcePath, temporaryFolder.getRoot().getAbsolutePath(), true, false, null);
+    assertThat(readPathAsString(sourcePath), equalTo(HELLO_WORLD));
+  }
+
+  @Test
   public void copyReadFile() throws Exception {
     String target = temporaryFolder.newFolder().getAbsolutePath();
     doExecute("readAndDo", target, false, false, null);
