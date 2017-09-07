@@ -11,7 +11,7 @@ import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 
 import org.mule.extension.file.common.api.FileWriteMode;
-import org.mule.runtime.core.api.InternalEvent;
+import org.mule.runtime.core.api.event.BaseEvent;
 import org.mule.runtime.core.api.message.OutputHandler;
 import org.mule.test.runner.RunnerDelegateTo;
 
@@ -74,7 +74,7 @@ public class FileWriteTypeTestCase extends FileConnectorTestCase {
   private static class TestOutputHandler implements OutputHandler {
 
     @Override
-    public void write(InternalEvent event, OutputStream out) throws IOException {
+    public void write(BaseEvent event, OutputStream out) throws IOException {
       org.apache.commons.io.IOUtils.write(HELLO_WORLD, out);
     }
   }
