@@ -6,7 +6,6 @@
  */
 package org.mule.extension.file.internal.command;
 
-import static org.apache.commons.io.FileUtils.copyDirectory;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.CopyCommand;
 import org.mule.extension.file.internal.LocalFileSystem;
@@ -14,6 +13,8 @@ import org.mule.extension.file.internal.LocalFileSystem;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static org.apache.commons.io.FileUtils.copyDirectory;
 
 /**
  * A {@link AbstractLocalCopyCommand} which implements the {@link CopyCommand} contract
@@ -60,6 +61,6 @@ public final class LocalCopyCommand extends AbstractLocalCopyCommand implements 
    */
   @Override
   protected String getAction() {
-    return "copying";
+    return "copy";
   }
 }
