@@ -102,8 +102,7 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
         targetPath = targetPath.resolve(targetFileName);
       } else {
         throw new IllegalPathException(format("Can't %s '%s' to '%s' because the destination path " + "doesn't exists",
-                                              getAction(),
-                                              source.toAbsolutePath(), targetPath.toAbsolutePath()));
+                                              getAction(), source.toAbsolutePath(), targetPath.toAbsolutePath()));
       }
     }
     return targetPath;
