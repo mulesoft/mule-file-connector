@@ -21,8 +21,8 @@ import org.mule.extension.file.api.ListenerFileAttributes;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.util.Reference;
-import org.mule.runtime.core.api.InternalEvent;
 import org.mule.runtime.core.api.construct.Flow;
+import org.mule.runtime.core.api.event.BaseEvent;
 import org.mule.runtime.core.api.processor.Processor;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
@@ -194,7 +194,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   public static class TestProcessor implements Processor {
 
     @Override
-    public InternalEvent process(InternalEvent event) throws MuleException {
+    public BaseEvent process(BaseEvent event) throws MuleException {
       receivedMessages.add(event.getMessage());
       return event;
     }
