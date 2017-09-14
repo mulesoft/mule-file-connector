@@ -9,7 +9,6 @@ package org.mule.extension.file.internal;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
-
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
@@ -34,9 +33,11 @@ import org.mule.runtime.extension.api.annotation.param.display.Path;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
-import javax.activation.MimetypesFileTypeMap;
+
 import java.io.InputStream;
 import java.util.List;
+
+import javax.activation.MimetypesFileTypeMap;
 
 /**
  * File connector operations.
@@ -59,7 +60,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    * @param recursive     whether to include the contents of sub-directories. Defaults to false.
    * @param matcher     a matcher used to filter the output list
    * @return a {@link List} of {@link Message messages} each one containing each file's content in the payload and metadata in the attributes
-   * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exists or is not a directory
+   * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exist or is not a directory
    */
   @Summary("List all the files from given directory")
   @Throws(FileListErrorTypeProvider.class)
@@ -91,7 +92,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    * @param path       the path to the file to be read
    * @param lock       whether or not to lock the file. Defaults to false.
    * @return the file's content and metadata on a {@link FileAttributes} instance
-   * @throws IllegalArgumentException if the file at the given path doesn't exists
+   * @throws IllegalArgumentException if the file at the given path doesn't exist
    */
   @Summary("Obtains the content and metadata of a file at a given path")
   @Throws(FileReadErrorTypeProvider.class)
@@ -141,7 +142,7 @@ public final class FileOperations extends BaseFileSystemOperations {
   /**
    * Copies the file at the {@code sourcePath} into the {@code targetPath}.
    * <p>
-   * If {@code targetPath} doesn't exists, and neither does its parent, then an attempt will be made to create depending on the
+   * If {@code targetPath} doesn't exist, and neither does its parent, then an attempt will be made to create depending on the
    * value of the {@code createParentFolder} argument. If such argument is {@false}, then an {@link IllegalArgumentException} will
    * be thrown.
    * <p>
@@ -171,7 +172,7 @@ public final class FileOperations extends BaseFileSystemOperations {
   /**
    * Moves the file at the {@code sourcePath} into the {@code targetPath}.
    * <p>
-   * If {@code targetPath} doesn't exists, and neither does its parent, then an attempt will be made to create depending on the
+   * If {@code targetPath} doesn't exist, and neither does its parent, then an attempt will be made to create depending on the
    * value of the {@code createParentFolder} argument. If such argument is {@code false}, then an {@link IllegalArgumentException}
    * will be thrown.
    * <p>
@@ -204,7 +205,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    *
    * @param fileSystem a reference to the host {@link FileSystem}
    * @param path       the path to the file to be deleted
-   * @throws IllegalArgumentException if {@code filePath} doesn't exists or is locked
+   * @throws IllegalArgumentException if {@code filePath} doesn't exist or is locked
    */
   @Summary("Deletes a file")
   @Throws(FileDeleteErrorTypeProvider.class)

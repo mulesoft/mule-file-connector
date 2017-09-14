@@ -87,7 +87,7 @@ public class FileRenameTestCase extends FileConnectorTestCase {
 
   @Test
   public void renameUnexisting() throws Exception {
-    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "doesn't exists");
+    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "doesn't exist");
     doRename("not-there.txt");
   }
 

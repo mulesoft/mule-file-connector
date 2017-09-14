@@ -94,7 +94,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
 
   @Test
   public void readUnexisting() throws Exception {
-    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "doesn't exists");
+    expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "doesn't exist");
     readPath("files/not-there.txt");
   }
 

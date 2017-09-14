@@ -46,7 +46,7 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
    * @param sourcePath the path to be copied
    * @param target the path to the target destination
    * @param overwrite whether to overwrite existing target paths
-   * @param createParentDirectory whether to create the target's parent directory if it doesn't exists
+   * @param createParentDirectory whether to create the target's parent directory if it doesn't exist
    * @param renameTo the new file name, {@code null} if the file doesn't need to be renamed
    */
   protected final void execute(String sourcePath, String target, boolean overwrite, boolean createParentDirectory,
@@ -101,7 +101,7 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
         targetPath.toFile().mkdirs();
         targetPath = targetPath.resolve(targetFileName);
       } else {
-        throw new IllegalPathException(format("Can't %s '%s' to '%s' because the destination path " + "doesn't exists",
+        throw new IllegalPathException(format("Can't %s '%s' to '%s' because the destination path " + "doesn't exist",
                                               getAction(), source.toAbsolutePath(), targetPath.toAbsolutePath()));
       }
     }
