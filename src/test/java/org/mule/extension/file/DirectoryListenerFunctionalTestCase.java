@@ -16,6 +16,7 @@ import static org.mule.extension.file.api.FileEventType.CREATE;
 import static org.mule.extension.file.api.FileEventType.DELETE;
 import static org.mule.extension.file.api.FileEventType.UPDATE;
 import static org.mule.runtime.core.api.util.FileUtils.deleteTree;
+
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
 import org.mule.runtime.api.exception.MuleException;
@@ -27,16 +28,20 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.inject.Inject;
+
 import io.qameta.allure.Feature;
 import io.qameta.allure.Issue;
-import org.junit.Ignore;
-import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 @Ignore("MULE-12731")
@@ -55,6 +60,9 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   private static List<Message> receivedMessages;
 
+  @Inject
+  private Collection<Flow> flows;
+
   private File matcherLessFolder;
   private File withMatcherFolder;
   private String listenerFolder;
@@ -62,6 +70,11 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   @Override
   protected String getConfigFile() {
     return "directory-listener-config.xml";
+  }
+
+  @Override
+  protected boolean doTestClassInjection() {
+    return true;
   }
 
   @Override
@@ -89,7 +102,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   @Test
   public void stopAndRestart() throws Exception {
-    muleContext.getRegistry().lookupObjects(Flow.class).forEach(flow -> {
+    flows.forEach(flow -> {
       try {
         flow.stop();
         flow.start();

@@ -6,6 +6,7 @@
  */
 package org.mule.extension.file;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -33,6 +34,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
@@ -41,6 +46,9 @@ import io.qameta.allure.Feature;
 public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
 
   private DirectoryListener directoryListener;
+
+  @Inject
+  private NotificationListenerRegistry listenersRegistry;
 
   @Mock(answer = RETURNS_DEEP_STUBS)
   private SourceCallback sourceCallback;
@@ -52,12 +60,16 @@ public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
   private ClusterService clusterService;
 
   @Override
+  protected Map<String, Object> getStartUpRegistryObjects() {
+    when(mockMuleContext.isPrimaryPollingInstance()).thenReturn(false);
+    return singletonMap(OBJECT_MULE_CONTEXT, mockMuleContext);
+  }
+
+  @Override
   protected void doSetUp() throws Exception {
     directoryListener = new DirectoryListener();
     directoryListener.setClusterService(clusterService);
 
-    when(mockMuleContext.isPrimaryPollingInstance()).thenReturn(false);
-    muleContext.getRegistry().registerObject(OBJECT_MULE_CONTEXT, mockMuleContext);
     muleContext.getInjector().inject(directoryListener);
   }
 
@@ -80,8 +92,7 @@ public class DirectoryListenerTestCase extends AbstractMuleContextTestCase {
 
     directoryListener.onStart(sourceCallback);
 
-    verify(mockMuleContext.getRegistry().lookupObject(NotificationListenerRegistry.class))
-        .registerListener(listenerCaptor.capture());
+    verify(listenersRegistry).registerListener(listenerCaptor.capture());
     PrimaryNodeLifecycleNotificationListener listener = listenerCaptor.getValue();
     assertThat(listener, is(notNullValue()));
 
