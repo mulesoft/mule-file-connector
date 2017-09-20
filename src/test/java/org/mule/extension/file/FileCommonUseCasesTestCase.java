@@ -8,28 +8,24 @@ package org.mule.extension.file;
 
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.runtime.core.api.util.UUID.getUUID;
+
 import org.mule.functional.listener.ExceptionListener;
-import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.source.SchedulerMessageSource;
 import org.mule.tck.probe.PollingProber;
 import org.mule.tck.probe.Probe;
 
-import java.io.File;
+import org.junit.Test;
 
-import javax.inject.Inject;
+import java.io.File;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
-import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
 
   private static final String LIST_AND_DELETE_FILES_FLOW = "listAndDeleteFiles";
-
-  @Inject
-  private ConfigurationComponentLocator configurationComponentLocator;
 
   @Override
   protected String getConfigFile() {
@@ -44,7 +40,7 @@ public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
     File firstFile = createInputFile();
     File secondFile = createInputFile();
 
-    SchedulerMessageSource schedulerMessageSource = (SchedulerMessageSource) configurationComponentLocator
+    SchedulerMessageSource schedulerMessageSource = (SchedulerMessageSource) locator
         .find(Location.builder().globalName(LIST_AND_DELETE_FILES_FLOW).addSourcePart().build()).get();
     schedulerMessageSource.start();
 
@@ -67,11 +63,6 @@ public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
     File workingDirectory = new File(workingDir.getValue());
     File inputFolder = new File(workingDirectory, "input");
     return new File(inputFolder, getUUID());
-  }
-
-  @Override
-  protected boolean doTestClassInjection() {
-    return true;
   }
 
 }

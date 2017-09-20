@@ -73,11 +73,6 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   }
 
   @Override
-  protected boolean doTestClassInjection() {
-    return true;
-  }
-
-  @Override
   protected void doSetUpBeforeMuleContextCreation() throws Exception {
     super.doSetUpBeforeMuleContextCreation();
     temporaryFolder.newFolder(MATCHERLESS_LISTENER_FOLDER_NAME);
