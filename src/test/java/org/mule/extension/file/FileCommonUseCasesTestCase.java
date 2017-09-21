@@ -35,7 +35,7 @@ public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
   @Description("List files from folder, process them and delete them. Single threaded to avoid file concurrency problems.")
   @Test
   public void fileProcessingSingleThreaded() throws Exception {
-    ExceptionListener exceptionListener = new ExceptionListener(muleContext);
+    ExceptionListener exceptionListener = new ExceptionListener(notificationListenerRegistry);
 
     File firstFile = createInputFile();
     File secondFile = createInputFile();
