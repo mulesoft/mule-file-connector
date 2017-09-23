@@ -38,7 +38,7 @@ import org.mule.runtime.api.scheduler.Scheduler;
 import org.mule.runtime.api.exception.DefaultMuleException;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationException;
-import org.mule.runtime.core.api.context.notification.NotificationListenerRegistry;
+import org.mule.runtime.api.notification.NotificationListenerRegistry;
 import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListener;
 import org.mule.runtime.api.scheduler.SchedulerService;
 import org.mule.runtime.extension.api.annotation.Alias;
