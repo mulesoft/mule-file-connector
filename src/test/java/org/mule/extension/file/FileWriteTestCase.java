@@ -23,7 +23,7 @@ import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PA
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
-import org.mule.runtime.core.api.event.BaseEvent;
+import org.mule.runtime.core.api.event.CoreEvent;
 
 import org.junit.Test;
 
@@ -117,7 +117,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     File file = temporaryFolder.newFile();
     writeStringToFile(file, "overwrite me!");
 
-    BaseEvent event = flowRunner("readAndWrite").withVariable("path", file.getAbsolutePath()).run();
+    CoreEvent event = flowRunner("readAndWrite").withVariable("path", file.getAbsolutePath()).run();
 
     assertThat(event.getMessage().getPayload().getValue(), equalTo(HELLO_WORLD));
   }
