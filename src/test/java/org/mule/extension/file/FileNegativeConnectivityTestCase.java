@@ -6,27 +6,28 @@
  */
 package org.mule.extension.file;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_DOESNT_EXIST;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_IS_NOT_DIRECTORY;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.functional.junit4.matchers.ThrowableCauseMatcher.hasCause;
 import static org.mule.tck.junit4.matcher.ErrorTypeMatcher.errorType;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
 
 import org.mule.extension.file.api.exception.FileConnectionException;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.tck.util.TestConnectivityUtils;
 
-import java.io.IOException;
-
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.IOException;
+
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
@@ -48,7 +49,7 @@ public class FileNegativeConnectivityTestCase extends FileConnectorTestCase {
 
   @Before
   public void createUtils() {
-    utils = new TestConnectivityUtils(muleContext);
+    utils = new TestConnectivityUtils(registry);
   }
 
   @Test
