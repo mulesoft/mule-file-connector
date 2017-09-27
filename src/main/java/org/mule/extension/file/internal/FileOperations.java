@@ -8,6 +8,7 @@ package org.mule.extension.file.internal;
 
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
+import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
@@ -27,6 +28,7 @@ import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.Content;
+import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Path;
@@ -96,6 +98,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Obtains the content and metadata of a file at a given path")
   @Throws(FileReadErrorTypeProvider.class)
+  @MediaType(value = ANY, strict = false)
   public Result<InputStream, LocalFileAttributes> read(@Config FileConnectorConfig config,
                                                        @Connection FileSystem fileSystem,
                                                        @DisplayName("File Path") @Path(type = FILE) String path,
