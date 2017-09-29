@@ -13,7 +13,10 @@ import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
+
+import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
+import org.mule.extension.file.common.api.exceptions.FileError;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 
@@ -115,6 +118,16 @@ public class FileRenameTestCase extends FileConnectorTestCase {
 
     doRename(origin.getAbsolutePath(), true);
     assertRenamedFile(origin);
+  }
+
+  @Test
+  public void writeOnDirectlyWithOutPermissions() throws Exception {
+    expectedError.expectError("FILE", FileError.ACCESS_DENIED, FileAccessDeniedException.class,
+                              "because access was denied by the operating system");
+    File folder = temporaryFolder.newFolder();
+    folder.setReadOnly();
+    flowRunner("rename").withVariable("overwrite", "false").withVariable("path", folder.getPath()).withVariable("to", "newName")
+        .run();
   }
 
   private void assertRenamedFile(File origin) throws Exception {

@@ -6,17 +6,22 @@
  */
 package org.mule.extension.file.internal.command;
 
+import static java.lang.String.format;
+import static java.nio.file.Files.isDirectory;
+import static java.nio.file.Files.isReadable;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ReadCommand;
+import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.extension.api.runtime.operation.Result;
+
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -39,8 +44,13 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, FileAttributes> read(FileConnectorConfig config, String filePath, boolean lock) {
     Path path = resolveExistingPath(filePath);
-    if (Files.isDirectory(path)) {
+    if (isDirectory(path)) {
       throw cannotReadDirectoryException(path);
+    }
+
+    if (!isReadable(path)) {
+      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
+                                                 path));
     }
 
     PathLock pathLock;

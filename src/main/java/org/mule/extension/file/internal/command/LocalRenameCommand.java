@@ -10,9 +10,11 @@ import static java.lang.String.format;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import org.mule.extension.file.common.api.command.RenameCommand;
+import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.internal.LocalFileSystem;
 
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -52,6 +54,10 @@ public final class LocalRenameCommand extends LocalFileCommand implements Rename
 
     try {
       Files.move(source, target, ATOMIC_MOVE, REPLACE_EXISTING);
+    } catch (AccessDeniedException e) {
+      throw new FileAccessDeniedException(format("Could not rename the file '%s' to '%s' because access was denied by the operating system",
+                                                 source, target),
+                                          e);
     } catch (Exception e) {
       throw exception(format("Exception was found renaming '%s' to '%s'", source, newName), e);
     }

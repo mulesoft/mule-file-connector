@@ -6,6 +6,7 @@
  */
 package org.mule.extension.file;
 
+import static java.lang.String.format;
 import static java.nio.charset.Charset.availableCharsets;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
 import static org.apache.commons.io.FileUtils.writeStringToFile;
@@ -21,16 +22,17 @@ import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREA
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 
 import org.mule.extension.file.common.api.FileWriteMode;
+import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
+import org.mule.extension.file.common.api.exceptions.FileError;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.core.api.event.CoreEvent;
-
-import org.junit.Test;
 
 import java.io.File;
 import java.util.Arrays;
 
 import io.qameta.allure.Feature;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileWriteTestCase extends FileConnectorTestCase {
@@ -123,8 +125,26 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   }
 
   @Test
+  public void writeOnDirectoryPath() throws Exception {
+    expectedError.expectError("FILE", FileError.ILLEGAL_PATH, IllegalPathException.class, "because it is a Directory");
+    flowRunner("writeStaticContent").withVariable("mode", "OVERWRITE").withVariable("path", temporaryFolder.newFolder().getPath())
+        .run();
+  }
+
+  @Test
+  public void writeOnDirectlyWithOutPermissions() throws Exception {
+    expectedError.expectError("FILE", FileError.ACCESS_DENIED, FileAccessDeniedException.class,
+                              "because access was denied by the operating system");
+    File folder = temporaryFolder.newFolder();
+    folder.setReadOnly();
+    flowRunner("writeStaticContent").withVariable("mode", "OVERWRITE")
+        .withVariable("path", new File(folder, "file.txt").getPath())
+        .run();
+  }
+
+  @Test
   public void writeStaticContent() throws Exception {
-    String path = String.format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
+    String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
     doWrite("writeStaticContent", path, "", CREATE_NEW, false);
 
     String content = readPathAsString(path);
@@ -150,7 +170,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
   private void doWriteNotExistingFileWithCreatedParent(FileWriteMode mode) throws Exception {
     File folder = temporaryFolder.newFolder();
-    final String path = String.format("%s/a/b/%s", folder.getAbsolutePath(), TEST_FILENAME);
+    final String path = format("%s/a/b/%s", folder.getAbsolutePath(), TEST_FILENAME);
 
     doWrite(path, HELLO_WORLD, mode, true);
 
@@ -160,7 +180,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
 
   private void doWriteOnNotExistingFile(FileWriteMode mode) throws Exception {
-    String path = String.format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
+    String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
     doWrite(path, HELLO_WORLD, mode, false);
 
     String content = readPathAsString(path);
@@ -169,7 +189,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
   private void doWriteOnNotExistingParentWithoutCreateFolder(FileWriteMode mode) throws Exception {
     File folder = temporaryFolder.newFolder();
-    final String path = String.format("%s/a/b/%s", folder.getAbsolutePath(), TEST_FILENAME);
+    final String path = format("%s/a/b/%s", folder.getAbsolutePath(), TEST_FILENAME);
 
     doWrite(path, HELLO_WORLD, mode, false);
   }
