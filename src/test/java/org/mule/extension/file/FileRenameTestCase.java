@@ -7,9 +7,11 @@
 package org.mule.extension.file;
 
 import static java.lang.String.format;
+import static java.lang.System.getProperty;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
@@ -22,8 +24,8 @@ import org.mule.runtime.api.exception.MuleRuntimeException;
 
 import java.io.File;
 
-import org.junit.Test;
 import io.qameta.allure.Feature;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileRenameTestCase extends FileConnectorTestCase {
@@ -122,6 +124,7 @@ public class FileRenameTestCase extends FileConnectorTestCase {
 
   @Test
   public void writeOnDirectlyWithOutPermissions() throws Exception {
+    assumeThat(getProperty("os.name").toLowerCase(), is("mac os x"));
     expectedError.expectError("FILE", FileError.ACCESS_DENIED, FileAccessDeniedException.class,
                               "because access was denied by the operating system");
     File folder = temporaryFolder.newFolder();
