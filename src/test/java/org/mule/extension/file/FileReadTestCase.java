@@ -35,10 +35,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import io.qameta.allure.Feature;
-import org.hamcrest.Matchers;
-import org.hamcrest.core.Is;
 import org.junit.Test;
-import org.mockito.internal.matchers.GreaterOrEqual;
 
 @Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {
@@ -106,6 +103,20 @@ public class FileReadTestCase extends FileConnectorTestCase {
     forbiddenFile.createNewFile();
     forbiddenFile.setWritable(false);
     readWithLock(forbiddenFile.getAbsolutePath());
+  }
+
+  @Test
+  public void readWithoutEnoughPermissions() throws Exception {
+    expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,
+                              "access was denied by the operating system");
+
+    final byte[] binaryPayload = HELLO_WORLD.getBytes();
+    final String binaryFileName = "binary.txt";
+    File binaryFile = new File(temporaryFolder.getRoot(), binaryFileName);
+    writeByteArrayToFile(binaryFile, binaryPayload);
+    binaryFile.setReadable(false);
+
+    readPath(binaryFile.getPath());
   }
 
   @Test

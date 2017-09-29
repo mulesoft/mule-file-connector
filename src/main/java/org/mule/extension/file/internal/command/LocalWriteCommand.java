@@ -11,18 +11,22 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.apache.commons.io.IOUtils.copy;
+
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.command.WriteCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
+import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.runtime.extension.api.exception.ModuleException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -60,7 +64,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
       throw new FileAccessDeniedException(format("Could not write to file '%s' because access was denied by the operating system",
                                                  path),
                                           e);
-    } catch (org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException e) {
+    } catch (ModuleException e) {
       throw e;
     } catch (Exception e) {
       throw exception(format("Exception was found writing to file '%s'", path), e);
@@ -78,6 +82,13 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
                                                                                                     + "Use a different write mode or point to a path which doesn't exist",
                                                                                                 path, mode),
                                                                                          e);
+    } catch (FileSystemException e) {
+      //The only way to be sure that the exception was raised due to an illegal path.
+      if (IS_A_DIRECTORY_MESSAGE.equals(e.getReason())) {
+        throw new IllegalPathException(format("Cannot write to path '%s' because it is a Directory.", path), e);
+      }
+
+      throw e;
     }
   }
 
