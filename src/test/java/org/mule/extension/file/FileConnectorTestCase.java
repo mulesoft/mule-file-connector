@@ -9,12 +9,12 @@ package org.mule.extension.file;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-import static org.mule.functional.junit4.rules.ExpectedError.none;
+import static org.mule.functional.api.exception.ExpectedError.none;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 
 import org.mule.extension.file.common.api.FileWriteMode;
+import org.mule.functional.api.exception.ExpectedError;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
-import org.mule.functional.junit4.rules.ExpectedError;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
