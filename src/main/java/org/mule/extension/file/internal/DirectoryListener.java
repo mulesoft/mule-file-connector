@@ -17,7 +17,6 @@ import static org.mule.extension.file.api.FileEventType.DELETE;
 import static org.mule.extension.file.api.FileEventType.UPDATE;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-
 import org.mule.extension.file.api.DeletedFileAttributes;
 import org.mule.extension.file.api.FileEventType;
 import org.mule.extension.file.api.ListenerFileAttributes;
@@ -30,17 +29,18 @@ import org.mule.extension.file.internal.command.DirectoryListenerCommand;
 import org.mule.runtime.api.cluster.ClusterService;
 import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.connection.ConnectionProvider;
+import org.mule.runtime.api.exception.DefaultMuleException;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
+import org.mule.runtime.api.notification.NotificationListenerRegistry;
 import org.mule.runtime.api.scheduler.Scheduler;
-import org.mule.runtime.api.exception.DefaultMuleException;
+import org.mule.runtime.api.scheduler.SchedulerService;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.ConfigurationException;
-import org.mule.runtime.api.notification.NotificationListenerRegistry;
 import org.mule.runtime.core.api.lifecycle.PrimaryNodeLifecycleNotificationListener;
-import org.mule.runtime.api.scheduler.SchedulerService;
+import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.Connection;
@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -353,18 +354,27 @@ public class DirectoryListener extends Source<InputStream, ListenerFileAttribute
   private Result<InputStream, ListenerFileAttributes> createResult(Path path, ListenerFileAttributes attributes) {
     InputStream payload = null;
     MediaType mediaType = MediaType.ANY;
+    FileChannel channel = null;
 
-    if (attributes.getEventType().equals(DELETE.name())) {
-      attributes = new DeletedFileAttributes(path);
-    } else if (!attributes.isDirectory()) {
-      mediaType = fileSystem.getFileMessageMediaType(attributes);
-      payload = new FileInputStream(path, new NullPathLock());
+    try {
+      if (attributes.getEventType().equals(DELETE.name())) {
+        attributes = new DeletedFileAttributes(path);
+      } else if (!attributes.isDirectory()) {
+        mediaType = fileSystem.getFileMessageMediaType(attributes);
+        channel = FileChannel.open(path);
+        payload = new FileInputStream(channel, new NullPathLock(path));
+      }
+
+      return Result.<InputStream, ListenerFileAttributes>builder()
+          .output(payload)
+          .mediaType(mediaType)
+          .attributes(attributes).build();
+    } catch (Exception e) {
+      IOUtils.closeQuietly(payload);
+      IOUtils.closeQuietly(channel);
+
+      throw new MuleRuntimeException(e);
     }
-
-    return Result.<InputStream, ListenerFileAttributes>builder()
-        .output(payload)
-        .mediaType(mediaType)
-        .attributes(attributes).build();
   }
 
   @Override

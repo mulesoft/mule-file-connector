@@ -6,15 +6,17 @@
  */
 package org.mule.extension.file.internal;
 
-import org.mule.runtime.api.exception.MuleRuntimeException;
+import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.extension.file.common.api.stream.LazyStreamSupplier;
+import org.mule.runtime.api.exception.MuleRuntimeException;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 
 /**
  * {@link AbstractFileInputStream} implementation used to obtain a file's content based on a {@link Reader}.
@@ -29,20 +31,28 @@ import java.nio.file.Path;
  */
 public final class FileInputStream extends AbstractFileInputStream {
 
+  private final FileChannel channel;
+
   /**
    * Creates a new instance
    *
-   * @param path
+   * @param channel
    * @param lock a {@link PathLock}
    */
-  public FileInputStream(Path path, PathLock lock) {
+  public FileInputStream(FileChannel channel, PathLock lock) {
     super(new LazyStreamSupplier(() -> {
       try {
-        return new BufferedInputStream(Files.newInputStream(path));
+        return new BufferedInputStream(Channels.newInputStream(channel));
       } catch (Exception e) {
         throw new MuleRuntimeException(e);
       }
     }), lock);
+
+    this.channel = channel;
   }
 
+  @Override
+  protected void doClose() throws IOException {
+    closeQuietly(channel);
+  }
 }

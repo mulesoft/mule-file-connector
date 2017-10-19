@@ -6,7 +6,6 @@
  */
 package org.mule.extension.file.internal;
 
-import static java.nio.file.StandardOpenOption.WRITE;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.AbstractFileSystem;
 import org.mule.extension.file.common.api.FileAttributes;
@@ -28,15 +27,15 @@ import org.mule.extension.file.internal.command.LocalMoveCommand;
 import org.mule.extension.file.internal.command.LocalReadCommand;
 import org.mule.extension.file.internal.command.LocalRenameCommand;
 import org.mule.extension.file.internal.command.LocalWriteCommand;
-import org.mule.extension.file.internal.lock.LocalPathLock;
+import org.mule.extension.file.internal.lock.FileChannelPathLock;
 
-import java.nio.file.OpenOption;
+import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
 /**
  * Implementation of {@link FileSystem} for file systems mounted on the host operating system.
  * <p>
- * Whenever the {@link FileSystem} contract refers to locking, this implementation will resolve through a {@link LocalPathLock},
+ * Whenever the {@link FileSystem} contract refers to locking, this implementation will resolve through a {@link FileChannelPathLock},
  * which produces file system level locks which rely on the host operating system.
  * <p>
  * Also, for any method returning {@link FileAttributes} instances, a {@link LocalFileAttributes} will be used.
@@ -111,8 +110,15 @@ public final class LocalFileSystem extends AbstractFileSystem {
   }
 
   @Override
-  protected PathLock createLock(Path path, Object... params) {
-    return new LocalPathLock(path, params.length == 0 ? new OpenOption[] {WRITE} : (OpenOption[]) params);
+  protected PathLock createLock(Path path) {
+    throw new UnsupportedOperationException("Use lock(Path, FileChannel) instead");
+  }
+
+  public PathLock lock(Path path, FileChannel channel) {
+    final FileChannelPathLock lock = new FileChannelPathLock(path, channel);
+    acquireLock(lock);
+
+    return lock;
   }
 
   /**
@@ -120,12 +126,4 @@ public final class LocalFileSystem extends AbstractFileSystem {
    */
   @Override
   public void changeToBaseDir() {}
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Class<? extends FileAttributes> getAttributesType() {
-    return LocalFileAttributes.class;
-  }
 }

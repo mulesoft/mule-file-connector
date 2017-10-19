@@ -97,8 +97,8 @@ public class FileReadTestCase extends FileConnectorTestCase {
 
   @Test
   public void readWithLockAndWithoutEnoughPermissions() throws Exception {
-    expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,
-                              "access was denied by the operating system");
+    expectedError.expectErrorType(NAMESPACE, ACCESS_DENIED.name());
+
     File forbiddenFile = temporaryFolder.newFile("forbiddenFile");
     forbiddenFile.createNewFile();
     forbiddenFile.setWritable(false);
