@@ -7,7 +7,6 @@
 package org.mule.extension.file.internal.lock;
 
 import static java.lang.String.format;
-import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
@@ -27,24 +26,23 @@ import org.slf4j.LoggerFactory;
  *
  * @since 1.0
  */
-public final class LocalPathLock implements PathLock {
+public final class FileChannelPathLock implements PathLock {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LocalPathLock.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FileChannelPathLock.class);
 
   private final Path path;
-  private final OpenOption[] openOptions;
-  private FileChannel channel;
+  private final FileChannel channel;
   private FileLock lock;
 
   /**
    * Creates a new instance
    *
-   * @param path a {@link Path} pointing to the resource to be locked
+   * @param path        a {@link Path} pointing to the resource to be locked
    * @param openOptions the {@link OpenOption}s to be used when opening the {@link FileChannel}
    */
-  public LocalPathLock(Path path, OpenOption... openOptions) {
+  public FileChannelPathLock(Path path, FileChannel channel) {
     this.path = path.toAbsolutePath();
-    this.openOptions = openOptions;
+    this.channel = channel;
   }
 
   /**
@@ -57,12 +55,12 @@ public final class LocalPathLock implements PathLock {
     }
 
     try {
-      channel = FileChannel.open(path, openOptions);
       lock = channel.tryLock();
       return isLocked();
     } catch (AccessDeniedException e) {
       release();
-      throw new FileAccessDeniedException(format("Could not obtain lock on path ''%s'' because access was denied by the operating system",
+      throw new FileAccessDeniedException(
+                                          format("Could not obtain lock on path ''%s'' because access was denied by the operating system",
                                                  path),
                                           e);
     } catch (Exception e) {
@@ -92,14 +90,20 @@ public final class LocalPathLock implements PathLock {
       try {
         lock.release();
       } catch (IOException e) {
-        if (LOGGER.isInfoEnabled()) {
-          LOGGER.info(format("Found exception attempting to release lock on path '%s'", path), e);
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug(format("Found exception attempting to release lock on path '%s'", path), e);
         }
       } finally {
         lock = null;
       }
     }
-    closeQuietly(channel);
-    channel = null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Path getPath() {
+    return path;
   }
 }

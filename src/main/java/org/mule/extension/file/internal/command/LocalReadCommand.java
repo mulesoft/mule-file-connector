@@ -9,7 +9,9 @@ package org.mule.extension.file.internal.command;
 import static java.lang.String.format;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isReadable;
-
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
+import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
@@ -22,6 +24,8 @@ import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 
 /**
@@ -53,21 +57,42 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
                                                  path));
     }
 
-    PathLock pathLock;
-    if (lock) {
-      pathLock = fileSystem.lock(path);
-    } else {
-      fileSystem.verifyNotLocked(path);
-      pathLock = new NullPathLock();
+    FileChannel channel = null;
+    PathLock pathLock = null;
+    InputStream payload = null;
+
+    try {
+      if (lock) {
+        channel = FileChannel.open(path, READ, WRITE);
+        pathLock = fileSystem.lock(path, channel);
+      } else {
+        channel = FileChannel.open(path, READ);
+        pathLock = new NullPathLock(path);
+      }
+
+      payload = new FileInputStream(channel, pathLock);
+      FileAttributes fileAttributes = new LocalFileAttributes(path);
+
+      return Result.<InputStream, FileAttributes>builder()
+          .output(payload)
+          .mediaType(fileSystem.getFileMessageMediaType(fileAttributes))
+          .attributes(fileAttributes)
+          .build();
+
+    } catch (AccessDeniedException e) {
+      onException(payload, channel, pathLock);
+      throw new FileAccessDeniedException(format("Access to path '%s' denied by the operating system", path), e);
+    } catch (Exception e) {
+      onException(payload, channel, pathLock);
+      throw exception(format("Unexpected error reading file '%s': %s", path, e.getMessage()), e);
     }
+  }
 
-    InputStream payload = new FileInputStream(path, pathLock);
-    FileAttributes fileAttributes = new LocalFileAttributes(path);
-
-    return Result.<InputStream, FileAttributes>builder()
-        .output(payload)
-        .mediaType(fileSystem.getFileMessageMediaType(fileAttributes))
-        .attributes(fileAttributes)
-        .build();
+  private void onException(InputStream payload, FileChannel channel, PathLock lock) {
+    closeQuietly(payload);
+    closeQuietly(channel);
+    if (lock != null) {
+      lock.release();
+    }
   }
 }
