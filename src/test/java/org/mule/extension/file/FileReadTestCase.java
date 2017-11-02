@@ -165,7 +165,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
   }
 
   private Message readWithLock(String path) throws Exception {
-    Message message = flowRunner("readWithLock").withVariable("path", path).run().getMessage();
+    Message message = flowRunner("readWithLock").keepStreamsOpen().withVariable("path", path).run().getMessage();
     assertThat(((AbstractFileInputStream) message.getPayload().getValue()).isLocked(), is(true));
 
     return message;
