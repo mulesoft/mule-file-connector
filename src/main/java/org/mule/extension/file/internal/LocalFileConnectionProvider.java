@@ -13,6 +13,7 @@ import static org.mule.extension.file.common.api.exceptions.FileError.FILE_DOESN
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_IS_NOT_DIRECTORY;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.runtime.api.connection.ConnectionValidationResult.success;
+import static org.mule.runtime.api.meta.model.display.PathModel.Location.EXTERNAL;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.extension.file.api.exception.FileConnectionException;
 import org.mule.extension.file.common.api.FileSystem;
@@ -51,7 +52,7 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
   @Optional
   @DisplayName("Working Directory")
   @Summary("Directory to be considered as the root of every relative path used with this connector. Defaults to the user's home")
-  @org.mule.runtime.extension.api.annotation.param.display.Path
+  @org.mule.runtime.extension.api.annotation.param.display.Path(location = EXTERNAL)
   private String workingDir;
 
   /**
