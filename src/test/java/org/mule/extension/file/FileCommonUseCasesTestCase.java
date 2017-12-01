@@ -11,10 +11,13 @@ import static org.mule.runtime.core.api.util.UUID.getUUID;
 
 import org.mule.functional.listener.ExceptionListener;
 import org.mule.runtime.api.component.location.Location;
+import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.source.SchedulerMessageSource;
 import org.mule.tck.probe.PollingProber;
 import org.mule.tck.probe.Probe;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -27,9 +30,23 @@ public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
 
   private static final String LIST_AND_DELETE_FILES_FLOW = "listAndDeleteFiles";
 
+  private SchedulerMessageSource schedulerMessageSource;
+
   @Override
   protected String getConfigFile() {
     return "file-common-use-cases-config.xml";
+  }
+
+  @Before
+  public void before() throws MuleException {
+    schedulerMessageSource = (SchedulerMessageSource) locator
+        .find(Location.builder().globalName(LIST_AND_DELETE_FILES_FLOW).addSourcePart().build()).get();
+    schedulerMessageSource.start();
+  }
+
+  @After
+  public void after() throws MuleException {
+    schedulerMessageSource.stop();
   }
 
   @Description("List files from folder, process them and delete them. Single threaded to avoid file concurrency problems.")
@@ -39,10 +56,6 @@ public class FileCommonUseCasesTestCase extends FileConnectorTestCase {
 
     File firstFile = createInputFile();
     File secondFile = createInputFile();
-
-    SchedulerMessageSource schedulerMessageSource = (SchedulerMessageSource) locator
-        .find(Location.builder().globalName(LIST_AND_DELETE_FILES_FLOW).addSourcePart().build()).get();
-    schedulerMessageSource.start();
 
     new PollingProber(RECEIVE_TIMEOUT, 100).check(new Probe() {
 
