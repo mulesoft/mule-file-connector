@@ -39,11 +39,15 @@ public class LocalFileAttributes extends AbstractFileAttributes {
    */
   public LocalFileAttributes(Path path) {
     super(path);
-    initAttributes(path);
+    initAttributes(getAttributes(path));
   }
 
-  protected void initAttributes(Path path) {
-    BasicFileAttributes attributes = getAttributes(path);
+  public LocalFileAttributes(Path path, BasicFileAttributes attributes) {
+    super(path);
+    initAttributes(attributes);
+  }
+
+  protected void initAttributes(BasicFileAttributes attributes) {
     this.lastModifiedTime = asDateTime(attributes.lastModifiedTime());
     this.lastAccessTime = asDateTime(attributes.lastAccessTime());
     this.creationTime = asDateTime(attributes.creationTime());

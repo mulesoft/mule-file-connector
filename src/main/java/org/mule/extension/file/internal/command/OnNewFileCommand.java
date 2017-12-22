@@ -6,8 +6,8 @@
  */
 package org.mule.extension.file.internal.command;
 
-import org.mule.extension.file.internal.DirectoryListener;
 import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.extension.file.internal.source.DirectoryListener;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,12 +17,12 @@ import java.nio.file.Paths;
  *
  * @since 1.0
  */
-public class DirectoryListenerCommand extends LocalFileCommand {
+public class OnNewFileCommand extends LocalFileCommand {
 
   /**
    * {@inheritDoc}
    */
-  public DirectoryListenerCommand(LocalFileSystem fileSystem) {
+  public OnNewFileCommand(LocalFileSystem fileSystem) {
     super(fileSystem);
   }
 
