@@ -132,7 +132,7 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
   private ObjectStoreManager objectStoreManager;
 
   /**
-   * The directory on which notifications are being listened to
+   * The directory on which polled files are contained
    */
   @Parameter
   @Optional
@@ -159,7 +159,6 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
    * How ofter to poll for files.
    */
   @Parameter
-  @Optional(defaultValue = "1")
   private long pollingFrequency;
 
   /**
@@ -186,7 +185,6 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
   private ObjectStore<String> filesBeingProcessingObjectStore;
 
   private final AtomicBoolean stopRequested = new AtomicBoolean(false);
-  private boolean started = false;
 
   @Override
   public void onStart(SourceCallback<InputStream, FileAttributes> sourceCallback) throws MuleException {
@@ -214,9 +212,8 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
     }
 
     long freq = poolingFrequencyTimeUnit.toMillis(pollingFrequency);
-    listenerExecutor.scheduleAtFixedRate(() -> poll(sourceCallback), freq, freq, MILLISECONDS);
-    started = true;
     stopRequested.set(false);
+    listenerExecutor.scheduleAtFixedRate(() -> poll(sourceCallback), freq, freq, MILLISECONDS);
   }
 
   @OnSuccess
@@ -398,9 +395,8 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
 
   @Override
   public void onStop() {
-    shutdownScheduler();
     stopRequested.set(true);
-    started = false;
+    shutdownScheduler();
 
     if (fileSystem != null) {
       fileSystemProvider.disconnect(fileSystem);
@@ -415,13 +411,6 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
 
   private Path resolveRootPath() {
     return new OnNewFileCommand(fileSystem).resolveRootPath(directory);
-  }
-
-  /**
-   * @return whether {@code this} source is actually started
-   */
-  public boolean isStarted() {
-    return started;
   }
 
   // not to be confused with Paul Walker

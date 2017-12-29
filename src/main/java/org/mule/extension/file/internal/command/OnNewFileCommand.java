@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 /**
  * A {@link LocalFileCommand} which implements support functionality for {@link DirectoryListener}
  *
- * @since 1.0
+ * @since 1.1
  */
 public class OnNewFileCommand extends LocalFileCommand {
 

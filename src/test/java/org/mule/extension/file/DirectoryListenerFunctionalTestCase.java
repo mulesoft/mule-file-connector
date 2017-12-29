@@ -48,8 +48,6 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   private static final String WATCH_CONTENT = "who watches the watchmen?";
   private static final String DR_MANHATTAN = "Dr. Manhattan";
   private static final String MATCH_FILE = "matchme.txt";
-  private static final int TIMEOUT_MILLIS = 5000;
-  private static final int POLL_DELAY_MILLIS = 100;
   private static final int PROBER_TIMEOUT = 5000;
   private static final int PROBER_DELAY = 100;
 
@@ -236,7 +234,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   private void assertPoll(File file, Object expectedContent) {
     Reference<Message> messageHolder = new Reference<>();
-    check(TIMEOUT_MILLIS, POLL_DELAY_MILLIS, () -> {
+    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
       for (Message message : RECEIVED_MESSAGES) {
         FileAttributes attributes = (FileAttributes) message.getAttributes().getValue();
         if (attributes.getPath().equals(file.getAbsolutePath())) {
