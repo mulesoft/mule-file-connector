@@ -15,28 +15,25 @@ import static org.mule.extension.file.common.api.exceptions.FileError.FILE_IS_NO
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.functional.junit4.matchers.ThrowableCauseMatcher.hasCause;
 import static org.mule.tck.junit4.matcher.ErrorTypeMatcher.errorType;
-
-import org.mule.extension.file.api.exception.FileConnectionException;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.tck.junit4.rule.SystemProperty;
 import org.mule.tck.util.TestConnectivityUtils;
-
-import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
 import java.io.IOException;
 
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import org.hamcrest.Matcher;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 @Story("Negative Connectivity Testing")
 public class FileNegativeConnectivityTestCase extends FileConnectorTestCase {
 
   private static final Matcher<Exception> CONNECTION_EXCEPTION_MATCHER =
-      is(allOf(instanceOf(ConnectionException.class), hasCause(instanceOf(FileConnectionException.class))));
+      is(allOf(instanceOf(ConnectionException.class), hasCause(instanceOf(ConnectionException.class))));
   private TestConnectivityUtils utils;
 
   @Rule

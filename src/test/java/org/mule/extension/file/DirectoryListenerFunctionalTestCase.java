@@ -6,66 +6,69 @@
  */
 package org.mule.extension.file;
 
+import static java.nio.file.Files.setLastModifiedTime;
+import static java.time.LocalDateTime.now;
+import static java.time.ZoneId.systemDefault;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.commons.io.FileUtils.write;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
-import static org.mule.extension.file.api.FileEventType.CREATE;
-import static org.mule.extension.file.api.FileEventType.DELETE;
-import static org.mule.extension.file.api.FileEventType.UPDATE;
-import static org.mule.runtime.core.api.util.FileUtils.deleteTree;
-
-import org.mule.extension.file.api.FileEventType;
-import org.mule.extension.file.api.ListenerFileAttributes;
+import static org.mule.tck.probe.PollingProber.check;
+import static org.mule.tck.probe.PollingProber.checkNot;
+import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.runtime.api.exception.MuleException;
+import org.mule.runtime.api.lifecycle.Startable;
+import org.mule.runtime.api.lifecycle.Stoppable;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.util.Reference;
-import org.mule.runtime.core.api.construct.Flow;
 import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.processor.Processor;
-import org.mule.tck.probe.JUnitLambdaProbe;
-import org.mule.tck.probe.PollingProber;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.inject.Inject;
-
+import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
-import io.qameta.allure.Issue;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
-@Ignore("MULE-12731")
-@Issue("MULE-12731")
 public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   private static final String MATCHERLESS_LISTENER_FOLDER_NAME = "matcherless";
+  private static final String SHARED_LISTENER_FOLDER_NAME = "shared";
   private static final String WITH_MATCHER_FOLDER_NAME = "withMatcher";
-  private static final String CREATED_FOLDER_NAME = "createdFolder";
   private static final String WATCH_FILE = "watchme.txt";
   private static final String WATCH_CONTENT = "who watches the watchmen?";
   private static final String DR_MANHATTAN = "Dr. Manhattan";
   private static final String MATCH_FILE = "matchme.txt";
   private static final int TIMEOUT_MILLIS = 5000;
   private static final int POLL_DELAY_MILLIS = 100;
+  private static final int PROBER_TIMEOUT = 5000;
+  private static final int PROBER_DELAY = 100;
 
-  private static List<Message> receivedMessages;
+  private static List<Message> RECEIVED_MESSAGES;
 
-  @Inject
-  private Collection<Flow> flows;
 
-  private File matcherLessFolder;
+  public static class TestProcessor implements Processor {
+
+    @Override
+    public CoreEvent process(CoreEvent event) throws MuleException {
+      RECEIVED_MESSAGES.add(event.getMessage());
+      return event;
+    }
+  }
+
+
   private File withMatcherFolder;
   private String listenerFolder;
+  private String sharedFolder;
 
   @Override
   protected String getConfigFile() {
@@ -77,134 +80,184 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     super.doSetUpBeforeMuleContextCreation();
     temporaryFolder.newFolder(MATCHERLESS_LISTENER_FOLDER_NAME);
     temporaryFolder.newFolder(WITH_MATCHER_FOLDER_NAME);
+    temporaryFolder.newFolder(SHARED_LISTENER_FOLDER_NAME);
+
     listenerFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), MATCHERLESS_LISTENER_FOLDER_NAME).toString();
-    matcherLessFolder = new File(listenerFolder, CREATED_FOLDER_NAME);
+    sharedFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), SHARED_LISTENER_FOLDER_NAME).toString();
     withMatcherFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), WITH_MATCHER_FOLDER_NAME).toFile();
-    receivedMessages = new CopyOnWriteArrayList<>();
+    RECEIVED_MESSAGES = new CopyOnWriteArrayList<>();
   }
 
   @Override
   protected void doTearDown() throws Exception {
-    receivedMessages = null;
+    RECEIVED_MESSAGES = null;
   }
 
   @Test
+  @Description("Verifies that a created file is picked")
   public void onFileCreated() throws Exception {
     final File file = new File(listenerFolder, WATCH_FILE);
     write(file, WATCH_CONTENT);
-    assertEvent(listen(CREATE, file), WATCH_CONTENT);
+    assertPoll(file, WATCH_CONTENT);
   }
 
   @Test
-  public void stopAndRestart() throws Exception {
-    flows.forEach(flow -> {
-      try {
-        flow.stop();
-        flow.start();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    });
-
-    onFileCreated();
-  }
-
-  @Test
-  public void onFileUpdated() throws Exception {
-    onFileCreated();
-    receivedMessages.clear();
-
-    final String appendedContent = "\nNOBODY";
-    final File file = new File(listenerFolder, WATCH_FILE);
-
-    write(file, appendedContent, true);
-    assertEvent(listen(UPDATE, file), WATCH_CONTENT + appendedContent);
-  }
-
-  @Test
-  public void onFileDeleted() throws Exception {
-    onFileCreated();
-
-    final File file = new File(listenerFolder, WATCH_FILE);
-    file.delete();
-    assertEvent(listen(DELETE, file), "null");
-  }
-
-  @Test
-  public void onDirectoryCreated() throws Exception {
-    matcherLessFolder.mkdir();
-    assertEvent(listen(CREATE, matcherLessFolder), "null");
-
-    final File file = new File(matcherLessFolder, WATCH_FILE);
+  @Description("Verifies that files created in subdirs are picked")
+  public void recursive() throws Exception {
+    File subdir = new File(listenerFolder, "subdir");
+    assertThat(subdir.mkdirs(), is(true));
+    final File file = new File(subdir, WATCH_FILE);
     write(file, WATCH_CONTENT);
-    assertEvent(listen(CREATE, file), WATCH_CONTENT);
+
+    assertPoll(file, WATCH_CONTENT);
   }
 
   @Test
-  public void onDirectoryDeleted() throws Exception {
-    onDirectoryCreated();
-    deleteTree(matcherLessFolder);
-    assertEvent(listen(DELETE, matcherLessFolder), "null");
-  }
-
-  @Test
-  public void onDirectoryRenamed() throws Exception {
-    onDirectoryCreated();
-    final String updatedName = CREATED_FOLDER_NAME + "twist";
-
-    final File renamedDirectory = new File(listenerFolder, updatedName);
-    Files.move(matcherLessFolder.toPath(), renamedDirectory.toPath());
-
-    assertEvent(listen(DELETE, matcherLessFolder), "null");
-    assertEvent(listen(CREATE, renamedDirectory), "null");
-  }
-
-  @Test
-  public void onDeleteFileAtSubfolder() throws Exception {
-    onDirectoryCreated();
-    deleteTree(matcherLessFolder);
-    assertEvent(listen(DELETE, matcherLessFolder), "null");
-  }
-
-  @Test
+  @Description("Verifies that only files compliant with the matcher are picked")
   public void matcher() throws Exception {
     final File file = new File(withMatcherFolder, MATCH_FILE);
-    write(file, "");
-    Message message = listen(CREATE, file);
+    final File rejectedFile = new File(withMatcherFolder, WATCH_FILE);
+    write(file, DR_MANHATTAN);
+    write(rejectedFile, WATCH_CONTENT);
 
-    assertThat(message.getPayload().getValue(), equalTo(DR_MANHATTAN));
+    assertPoll(file, DR_MANHATTAN);
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
   }
 
-  private void assertEvent(Message message, Object expectedContent) throws Exception {
-    String payload = toString(message.getPayload().getValue());
-    assertThat(payload, not(containsString(DR_MANHATTAN)));
-    assertThat(payload, equalTo(expectedContent));
+  @Test
+  @Description("verifies that if two listeners poll the same file at the same time, only one picks it up")
+  public void twoSourcesGoForTheSameFileAndDeleteIt() throws Exception {
+    final File file = new File(sharedFolder, WATCH_FILE);
+    write(file, WATCH_CONTENT);
+
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
+
+    assertThat(RECEIVED_MESSAGES, hasSize(1));
+    FileAttributes attributes = (FileAttributes) RECEIVED_MESSAGES.get(0).getAttributes().getValue();
+    assertThat(attributes.getPath(), equalTo(file.getAbsolutePath()));
   }
 
-  private Message listen(FileEventType type, File file) {
-    PollingProber prober = new PollingProber(TIMEOUT_MILLIS, POLL_DELAY_MILLIS);
+  @Test
+  @Description("Verifies that files are moved after processing")
+  public void moveTo() throws Exception {
+    stopFlow("listenWithoutMatcher");
+    startFlow("moveTo");
+
+    onFileCreated();
+    check(PROBER_TIMEOUT, PROBER_DELAY,
+          () -> !new File(listenerFolder, WATCH_FILE).exists() && new File(sharedFolder, WATCH_FILE).exists());
+  }
+
+  @Test
+  @Description("Verifies that files are moved and renamed after processing")
+  public void moveToWithRename() throws Exception {
+    stopFlow("listenWithoutMatcher");
+    startFlow("moveToWithRename");
+
+    onFileCreated();
+    check(PROBER_TIMEOUT, PROBER_DELAY,
+          () -> !new File(listenerFolder, WATCH_FILE).exists() && new File(sharedFolder, "renamed.txt").exists());
+  }
+
+  @Test
+  @Description("Tests the case of watermark on update timestamp, processing only files that have been modified after the prior poll")
+  public void watermarkForModifiedFiles() throws Exception {
+    stopFlow("listenWithoutMatcher");
+    startFlow("modifiedWatermark");
+
+    final File file = new File(listenerFolder, WATCH_FILE);
+    final File file2 = new File(listenerFolder, WATCH_FILE + "2");
+    write(file, WATCH_CONTENT);
+    write(file2, WATCH_CONTENT);
+
+    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+      if (RECEIVED_MESSAGES.size() == 2) {
+        return RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file.getPath())) &&
+            RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file2.getPath()));
+      }
+
+      return false;
+    });
+
+    assertThat(file.exists(), is(true));
+    assertThat(file2.exists(), is(true));
+
+    RECEIVED_MESSAGES.clear();
+    final String modifiedData = "modified!";
+    write(file, modifiedData);
+
+    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+      if (RECEIVED_MESSAGES.size() == 1) {
+        Message message = RECEIVED_MESSAGES.get(0);
+        return containsPath(message, file.getPath()) && message.getPayload().getValue().toString().contains(modifiedData);
+      }
+
+      return false;
+    });
+  }
+
+  @Test
+  @Description("Tests the case of watermark on created timestamp, processing only files that have been created after the prior poll")
+  public void watermarkForCreatedFiles() throws Exception {
+    final String testFlowName = "creationWatermark";
+    stopFlow("listenWithoutMatcher");
+    startFlow(testFlowName);
+
+    final File file = new File(listenerFolder, WATCH_FILE);
+    final File file2 = new File(listenerFolder, WATCH_FILE + "2");
+    write(file, WATCH_CONTENT);
+    write(file2, WATCH_CONTENT);
+
+    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+      if (RECEIVED_MESSAGES.size() == 2) {
+        return RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file.getPath())) &&
+            RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file2.getPath()));
+      }
+
+      return false;
+    });
+
+    stopFlow(testFlowName);
+    final File ignoredFile = new File(listenerFolder, "ignoreMe.txt");
+    write(ignoredFile, WATCH_CONTENT);
+    setLastModifiedTime(ignoredFile.toPath(), FileTime.from(now().minus(1, HOURS)
+        .atZone(systemDefault()).toInstant()));
+
+    RECEIVED_MESSAGES.clear();
+    startFlow(testFlowName);
+
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> !RECEIVED_MESSAGES.isEmpty());
+  }
+
+  private boolean containsPath(Message message, String path) {
+    LocalFileAttributes attrs = (LocalFileAttributes) message.getAttributes().getValue();
+    return attrs.getPath().equals(path);
+  }
+
+  private void assertPoll(File file, Object expectedContent) {
     Reference<Message> messageHolder = new Reference<>();
-    prober.check(new JUnitLambdaProbe(() -> {
-      for (Message message : receivedMessages) {
-        ListenerFileAttributes attributes = (ListenerFileAttributes) message.getAttributes().getValue();
-        if (attributes.getPath().equals(file.getAbsolutePath()) && attributes.getEventType().equals(type.name())) {
+    check(TIMEOUT_MILLIS, POLL_DELAY_MILLIS, () -> {
+      for (Message message : RECEIVED_MESSAGES) {
+        FileAttributes attributes = (FileAttributes) message.getAttributes().getValue();
+        if (attributes.getPath().equals(file.getAbsolutePath())) {
           messageHolder.set(message);
           return true;
         }
       }
 
       return false;
-    }));
 
-    return messageHolder.get();
+    });
+
+    String payload = toString(messageHolder.get().getPayload().getValue());
+    assertThat(payload, equalTo(expectedContent));
   }
 
-  public static class TestProcessor implements Processor {
+  private void startFlow(String flowName) throws Exception {
+    ((Startable) getFlowConstruct(flowName)).start();
+  }
 
-    @Override
-    public CoreEvent process(CoreEvent event) throws MuleException {
-      receivedMessages.add(event.getMessage());
-      return event;
-    }
+  private void stopFlow(String flowName) throws Exception {
+    ((Stoppable) getFlowConstruct(flowName)).stop();
   }
 }
