@@ -262,7 +262,10 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
     String fullPath = path.toString();
     try {
       if (filesBeingProcessingObjectStore.contains(fullPath)) {
-        LOGGER.debug("Polled file '{}', but skipping it since it is already being processed in another thread or node", fullPath);
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Polled file '{}', but skipping it since it is already being processed in another thread or node",
+                       fullPath);
+        }
         return CONTINUE;
       } else {
         markAsProcessing(fullPath);
@@ -447,20 +450,26 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
       LocalFileAttributes attributes = new LocalFileAttributes(file, attrs);
       Lock lock = getFileProcessingLock(attributes.getPath());
       if (!lock.tryLock()) {
-        LOGGER.debug("Skipping processing of file '{}' because another thread or node already has a mule lock on it",
-                     attributes.getPath());
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Skipping processing of file '{}' because another thread or node already has a mule lock on it",
+                       attributes.getPath());
+        }
         return CONTINUE;
       }
 
       if (!matcher.test(attributes)) {
-        LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
+        }
         return CONTINUE;
       }
 
       if (watermark.isPresent()) {
         final LocalDateTime timestamp = getWatermarkTimestamp(attributes);
         if (watermark.get().compareTo(timestamp) >= 0) {
-          LOGGER.debug("Skipping file '{}' because it was rejected by the watermark", attributes.getPath());
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Skipping file '{}' because it was rejected by the watermark", attributes.getPath());
+          }
           return CONTINUE;
         } else {
           if (updatedWatermark == null) {

@@ -121,11 +121,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     write(rejectedFile, WATCH_CONTENT);
 
     assertPoll(file, DR_MANHATTAN);
-    try {
-      checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
-    } catch (AssertionError e) {
-      e.printStackTrace();;
-    }
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
   }
 
   @Test
