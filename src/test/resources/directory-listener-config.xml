@@ -14,46 +14,46 @@
     <file:matcher name="matcher" filenamePattern="matchme.txt" />
 
     <flow name="listenWithoutMatcher">
-        <file:listener config-ref="file" directory="matcherless" />
+        <file:listener config-ref="file" directory="matcherless" pollingFrequency="1" />
         <flow-ref name="onEvent"/>
     </flow>
 
     <flow name="redundantListener1">
-        <file:listener config-ref="file" directory="shared" autoDelete="true"/>
+        <file:listener config-ref="file" directory="shared" autoDelete="true" pollingFrequency="1"/>
         <flow-ref name="onSharedFolderFile" />
     </flow>
 
     <flow name="redundantListener2">
-        <file:listener config-ref="file" directory="shared" autoDelete="true"/>
+        <file:listener config-ref="file" directory="shared" autoDelete="true" pollingFrequency="1"/>
         <flow-ref name="onSharedFolderFile" />
     </flow>
 
     <flow name="listenTxtOnly">
-        <file:listener config-ref="file" directory="withMatcher" matcher="matcher" autoDelete="true"/>
+        <file:listener config-ref="file" directory="withMatcher" matcher="matcher" autoDelete="true" pollingFrequency="1"/>
         <set-payload value="Dr. Manhattan" />
         <flow-ref name="onEvent"/>
     </flow>
 
     <flow name="moveTo" initialState="stopped">
-        <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" />
+        <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" pollingFrequency="1"/>
         <set-variable variableName="moveTo" value="shared" />
         <flow-ref name="onEvent"/>
     </flow>
 
     <flow name="moveToWithRename" initialState="stopped">
-        <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" renameTo="#[vars.rename]" />
+        <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" renameTo="#[vars.rename]" pollingFrequency="1"/>
         <set-variable variableName="moveTo" value="shared" />
         <set-variable variableName="rename" value="renamed.txt" />
         <flow-ref name="onEvent"/>
     </flow>
     
     <flow name="modifiedWatermark" initialState="stopped">
-        <file:listener config-ref="file" directory="matcherless" autoDelete="false" watermarkMode="MODIFIED_TIMESTAMP"/>
+        <file:listener config-ref="file" directory="matcherless" autoDelete="false" watermarkMode="MODIFIED_TIMESTAMP" pollingFrequency="1"/>
         <flow-ref name="onEvent"/>
     </flow>
 
     <flow name="creationWatermark" initialState="stopped">
-        <file:listener config-ref="file" directory="matcherless" autoDelete="false" watermarkMode="CREATED_TIMESTAMP"/>
+        <file:listener config-ref="file" directory="matcherless" autoDelete="false" watermarkMode="CREATED_TIMESTAMP" pollingFrequency="1"/>
         <flow-ref name="onEvent"/>
     </flow>
 

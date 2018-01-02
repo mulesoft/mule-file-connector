@@ -42,14 +42,14 @@ import java.nio.file.Path;
  *
  * @since 1.0
  */
-public final class LocalFileSystem extends AbstractFileSystem {
+public final class LocalFileSystem extends AbstractFileSystem<LocalFileAttributes> {
 
   private final CopyCommand copyCommand;
   private final CreateDirectoryCommand createDirectoryCommand;
   private final DeleteCommand deleteCommand;
-  private final ListCommand listCommand;
+  private final ListCommand<LocalFileAttributes> listCommand;
   private final MoveCommand moveCommand;
-  private final ReadCommand readCommand;
+  private final ReadCommand<LocalFileAttributes> readCommand;
   private final RenameCommand renameCommand;
   private final WriteCommand writeCommand;
 

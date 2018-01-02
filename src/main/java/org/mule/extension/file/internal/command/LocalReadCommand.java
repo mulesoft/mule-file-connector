@@ -13,7 +13,6 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.api.LocalFileAttributes;
-import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ReadCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
@@ -33,7 +32,7 @@ import java.nio.file.Path;
  *
  * @since 1.0
  */
-public final class LocalReadCommand extends LocalFileCommand implements ReadCommand {
+public final class LocalReadCommand extends LocalFileCommand implements ReadCommand<LocalFileAttributes> {
 
   /**
    * {@inheritDoc}
@@ -46,7 +45,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
    * {@inheritDoc}
    */
   @Override
-  public Result<InputStream, FileAttributes> read(FileConnectorConfig config, String filePath, boolean lock) {
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock) {
     Path path = resolveExistingPath(filePath);
     if (isDirectory(path)) {
       throw cannotReadDirectoryException(path);
@@ -71,9 +70,9 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
       }
 
       payload = new FileInputStream(channel, pathLock);
-      FileAttributes fileAttributes = new LocalFileAttributes(path);
+      LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
 
-      return Result.<InputStream, FileAttributes>builder()
+      return Result.<InputStream, LocalFileAttributes>builder()
           .output(payload)
           .mediaType(fileSystem.getFileMessageMediaType(fileAttributes))
           .attributes(fileAttributes)
