@@ -24,7 +24,6 @@ import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.store.ObjectStoreSettings.unmanagedPersistent;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
-import static org.mule.runtime.extension.api.runtime.source.BackPressureMode.WAIT;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.api.WatermarkMode;
@@ -60,7 +59,6 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
-import org.mule.runtime.extension.api.annotation.source.BackPressure;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.Source;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
@@ -107,7 +105,6 @@ import org.slf4j.LoggerFactory;
 @DisplayName("On New File")
 @Summary("Triggers when a new file is created in a directory")
 @Alias("listener")
-@BackPressure(defaultMode = WAIT, supportedModes = WAIT)
 public class DirectoryListener extends Source<InputStream, FileAttributes> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
