@@ -137,6 +137,15 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   @Test
   @Description("Verifies that files are moved after processing")
+  public void listenWithScheduler() throws Exception {
+    startFlow("listenWithScheduler");
+
+    check(PROBER_TIMEOUT, PROBER_DELAY,
+          () -> !new File(listenerFolder, WATCH_FILE).exists() && new File(sharedFolder, WATCH_FILE).exists());
+  }
+
+  @Test
+  @Description("Verifies that files are moved after processing")
   public void moveTo() throws Exception {
     stopFlow("listenWithoutMatcher");
     startFlow("moveTo");
