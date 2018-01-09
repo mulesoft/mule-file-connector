@@ -22,7 +22,6 @@ import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.api.WatermarkMode.MODIFIED_TIMESTAMP;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
-import static org.mule.runtime.api.meta.ExpressionSupport.NOT_SUPPORTED;
 import static org.mule.runtime.api.store.ObjectStoreSettings.unmanagedPersistent;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import org.mule.extension.file.api.LocalFileAttributes;
@@ -49,7 +48,6 @@ import org.mule.runtime.api.store.ObjectStoreManager;
 import org.mule.runtime.api.store.ObjectStoreSettings;
 import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
-import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.execution.OnError;
 import org.mule.runtime.extension.api.annotation.execution.OnSuccess;
 import org.mule.runtime.extension.api.annotation.execution.OnTerminate;
@@ -174,10 +172,6 @@ public class DirectoryListener extends Source<InputStream, FileAttributes> {
   @Parameter
   @Optional(defaultValue = "DISABLED")
   private WatermarkMode watermarkMode = DISABLED;
-
-  @Parameter
-  @Expression(NOT_SUPPORTED)
-  private org.mule.runtime.core.api.source.scheduler.Scheduler schedulingStrategy;
 
   private Path directoryPath;
   private LocalFileSystem fileSystem;
