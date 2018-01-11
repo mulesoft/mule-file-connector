@@ -13,7 +13,6 @@ import org.mule.extension.file.common.api.exceptions.FileError;
 import org.mule.extension.file.internal.source.DirectoryListener;
 import org.mule.runtime.extension.api.annotation.Export;
 import org.mule.runtime.extension.api.annotation.Extension;
-import org.mule.runtime.extension.api.annotation.Import;
 import org.mule.runtime.extension.api.annotation.Operations;
 import org.mule.runtime.extension.api.annotation.Sources;
 import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProviders;
@@ -33,7 +32,6 @@ import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)
 @Export(classes = LocalFileAttributes.class)
-@Import(type = org.mule.runtime.core.api.source.scheduler.Scheduler.class)
 public class FileConnector extends FileConnectorConfig {
 
 }
