@@ -13,7 +13,6 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.commons.io.FileUtils.write;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.tck.probe.PollingProber.check;
@@ -62,7 +61,6 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
       return event;
     }
   }
-
 
   private File withMatcherFolder;
   private String listenerFolder;
@@ -120,19 +118,6 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
     assertPoll(file, DR_MANHATTAN);
     checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
-  }
-
-  @Test
-  @Description("verifies that if two listeners poll the same file at the same time, only one picks it up")
-  public void twoSourcesGoForTheSameFileAndDeleteIt() throws Exception {
-    final File file = new File(sharedFolder, WATCH_FILE);
-    write(file, WATCH_CONTENT);
-
-    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
-
-    assertThat(RECEIVED_MESSAGES, hasSize(1));
-    FileAttributes attributes = (FileAttributes) RECEIVED_MESSAGES.get(0).getAttributes().getValue();
-    assertThat(attributes.getPath(), equalTo(file.getAbsolutePath()));
   }
 
   @Test
