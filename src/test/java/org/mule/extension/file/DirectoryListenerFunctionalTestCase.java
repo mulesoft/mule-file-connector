@@ -122,15 +122,6 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
   @Test
   @Description("Verifies that files are moved after processing")
-  public void listenWithScheduler() throws Exception {
-    startFlow("listenWithScheduler");
-
-    check(PROBER_TIMEOUT, PROBER_DELAY,
-          () -> !new File(listenerFolder, WATCH_FILE).exists() && new File(sharedFolder, WATCH_FILE).exists());
-  }
-
-  @Test
-  @Description("Verifies that files are moved after processing")
   public void moveTo() throws Exception {
     stopFlow("listenWithoutMatcher");
     startFlow("moveTo");
@@ -162,7 +153,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     write(file, WATCH_CONTENT);
     write(file2, WATCH_CONTENT);
 
-    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+    check(50000, PROBER_DELAY, () -> {
       if (RECEIVED_MESSAGES.size() == 2) {
         return RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file.getPath())) &&
             RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file2.getPath()));
@@ -178,7 +169,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     final String modifiedData = "modified!";
     write(file, modifiedData);
 
-    check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+    check(500000, PROBER_DELAY, () -> {
       if (RECEIVED_MESSAGES.size() == 1) {
         Message message = RECEIVED_MESSAGES.get(0);
         return containsPath(message, file.getPath()) && message.getPayload().getValue().toString().contains(modifiedData);
@@ -201,6 +192,12 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     write(file2, WATCH_CONTENT);
 
     check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+      //int size = RECEIVED_MESSAGES.size();
+      //boolean  contains1 = RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file.getPath()));
+      //boolean  contains2 = RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file2.getPath()));
+      //
+      //System.out.println(String.format("size: %d, contains1: %s, contains2: %s", size, contains1, contains2));
+
       if (RECEIVED_MESSAGES.size() == 2) {
         return RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file.getPath())) &&
             RECEIVED_MESSAGES.stream().anyMatch(m -> containsPath(m, file2.getPath()));
@@ -218,7 +215,14 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     RECEIVED_MESSAGES.clear();
     startFlow(testFlowName);
 
-    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> !RECEIVED_MESSAGES.isEmpty());
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+
+      RECEIVED_MESSAGES.forEach(m -> {
+        FileAttributes attributes = (FileAttributes) m.getAttributes().getValue();
+        System.out.println(attributes.getPath());
+      });
+      return !RECEIVED_MESSAGES.isEmpty();
+    });
   }
 
   private boolean containsPath(Message message, String path) {

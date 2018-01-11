@@ -167,7 +167,8 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
       walkFileTree(directoryPath, EnumSet.of(FOLLOW_LINKS), MAX_VALUE, walker);
     } catch (Exception e) {
       LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
-                          directoryPath.toString(), e.getMessage()), e);
+                          directoryPath.toString(), e.getMessage()),
+                   e);
     }
   }
 
@@ -209,7 +210,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   }
 
   @Override
-  public void releaseRejectedResource(Result<InputStream, FileAttributes> result) {
+  public void releaseRejectedResource(Result<InputStream, FileAttributes> result, SourceCallbackContext callbackContext) {
     closeQuietly(result.getOutput());
   }
 
