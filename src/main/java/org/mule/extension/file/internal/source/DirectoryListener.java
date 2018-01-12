@@ -210,7 +210,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   }
 
   @Override
-  public void releaseRejectedResource(Result<InputStream, FileAttributes> result, SourceCallbackContext callbackContext) {
+  public void onRejectedItem(Result<InputStream, FileAttributes> result, SourceCallbackContext callbackContext) {
     closeQuietly(result.getOutput());
   }
 
