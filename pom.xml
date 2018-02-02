@@ -21,7 +21,7 @@
     <properties>
         <commonsLangVersion>3.6</commonsLangVersion>
         <commonsIoVersion>2.4</commonsIoVersion>
-        <muleFileCommonsVersion>1.1.1-SNAPSHOT</muleFileCommonsVersion>
+        <muleFileCommonsVersion>1.1.0</muleFileCommonsVersion>
         <guavaVersion>23.5-jre</guavaVersion>
 
         <formatterConfigPath>formatter.xml</formatterConfigPath>
