@@ -65,7 +65,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Polls a directory looking for files that have been created on it. One message will be generated for each file that is found.
+ * Polls a directory looking for files that have been created or updated. One message will be generated for each file that is found.
  * <p>
  * The key part of this functionality is how to determine that a file is actually new. There're three strategies for that:
  * <ul>
@@ -83,7 +83,7 @@ import org.slf4j.LoggerFactory;
  * @since 1.1
  */
 @MediaType(value = ANY, strict = false)
-@DisplayName("On New File")
+@DisplayName("On New or Updated File")
 @Summary("Triggers when a new file is created in a directory")
 @Alias("listener")
 public class DirectoryListener extends PollingSource<InputStream, FileAttributes> {
@@ -162,7 +162,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
 
   @Override
   public void poll(PollContext<InputStream, FileAttributes> pollContext) {
-    PollWalker walker = new PollWalker(pollContext);
+    PollWalker walker = new PollWalker(directoryPath, pollContext);
     try {
       walkFileTree(directoryPath, EnumSet.of(FOLLOW_LINKS), MAX_VALUE, walker);
     } catch (Exception e) {
@@ -228,14 +228,20 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   // not to be confused with Paul Walker
   private class PollWalker extends SimpleFileVisitor<Path> {
 
+    private final Path directoryPath;
     private final PollContext<InputStream, FileAttributes> pollContext;
 
-    public PollWalker(PollContext<InputStream, FileAttributes> pollContext) {
+    public PollWalker(Path directoryPath, PollContext<InputStream, FileAttributes> pollContext) {
+      this.directoryPath = directoryPath;
       this.pollContext = pollContext;
     }
 
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+      if (directoryPath.equals(dir)) {
+        return CONTINUE;
+      }
+
       return recursive ? CONTINUE : SKIP_SUBTREE;
     }
 
