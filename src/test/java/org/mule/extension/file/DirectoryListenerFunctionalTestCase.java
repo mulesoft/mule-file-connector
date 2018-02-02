@@ -31,6 +31,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.qameta.allure.Description;
@@ -61,6 +62,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
       return event;
     }
   }
+
 
   private File withMatcherFolder;
   private String listenerFolder;
@@ -118,6 +120,26 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
 
     assertPoll(file, DR_MANHATTAN);
     checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 1);
+  }
+
+  @Test
+  @Description("Verifies that files created in subdirs are not picked")
+  public void nonRecursive() throws Exception {
+    stopFlow("listenWithoutMatcher");
+
+    startFlow("listenNonRecursive");
+    File subdir = new File(listenerFolder, "subdir");
+    assertThat(subdir.mkdirs(), is(true));
+    File file = new File(subdir, WATCH_FILE);
+    write(file, WATCH_CONTENT);
+
+    expectNot(file);
+
+    file = new File(listenerFolder, "nonRecursive.txt");
+    final String nonRecursiveContent = "you shall not recurse";
+    write(file, nonRecursiveContent);
+
+    assertPoll(file, nonRecursiveContent);
   }
 
   @Test
@@ -218,22 +240,33 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   }
 
   private void assertPoll(File file, Object expectedContent) {
+    Message message = expect(file);
+
+    String payload = toString(message.getPayload().getValue());
+    assertThat(payload, equalTo(expectedContent));
+  }
+
+  private Message expect(File file) {
     Reference<Message> messageHolder = new Reference<>();
     check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
-      for (Message message : RECEIVED_MESSAGES) {
-        FileAttributes attributes = (FileAttributes) message.getAttributes().getValue();
-        if (attributes.getPath().equals(file.getAbsolutePath())) {
-          messageHolder.set(message);
-          return true;
-        }
-      }
-
-      return false;
-
+      getPicked(file).ifPresent(messageHolder::set);
+      return messageHolder.get() != null;
     });
 
-    String payload = toString(messageHolder.get().getPayload().getValue());
-    assertThat(payload, equalTo(expectedContent));
+    return messageHolder.get();
+  }
+
+  private void expectNot(File file) {
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> getPicked(file).isPresent());
+  }
+
+  private Optional<Message> getPicked(File file) {
+    return RECEIVED_MESSAGES.stream()
+        .filter(message -> {
+          FileAttributes attributes = (FileAttributes) message.getAttributes().getValue();
+          return attributes.getPath().equals(file.getAbsolutePath());
+        })
+        .findFirst();
   }
 
   private void startFlow(String flowName) throws Exception {
