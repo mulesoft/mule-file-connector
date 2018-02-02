@@ -31,6 +31,15 @@
         <flow-ref name="onEvent"/>
     </flow>
 
+    <flow name="listenNonRecursive" initialState="stopped">
+        <file:listener config-ref="file" directory="matcherless" recursive="false">
+            <scheduling-strategy>
+                <fixed-frequency frequency="1000"/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="onEvent"/>
+    </flow>
+
     <flow name="redundantListener1">
         <file:listener config-ref="file" directory="shared" autoDelete="true">
             <scheduling-strategy>
