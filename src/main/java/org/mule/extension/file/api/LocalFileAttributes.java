@@ -10,6 +10,7 @@ import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.extension.file.common.api.AbstractFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,12 +27,25 @@ import java.time.ZoneId;
  */
 public class LocalFileAttributes extends AbstractFileAttributes {
 
+  @Parameter
   private LocalDateTime lastModifiedTime;
+
+  @Parameter
   private LocalDateTime lastAccessTime;
+
+  @Parameter
   private LocalDateTime creationTime;
+
+  @Parameter
   private long size;
+
+  @Parameter
   private boolean regularFile;
+
+  @Parameter
   private boolean directory;
+
+  @Parameter
   private boolean symbolicLink;
 
   /**
