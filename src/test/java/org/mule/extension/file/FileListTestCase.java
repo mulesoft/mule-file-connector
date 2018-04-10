@@ -64,6 +64,18 @@ public class FileListTestCase extends FileConnectorTestCase {
     doList(".", true);
   }
 
+  @Test
+  public void listFilesRecursivelyWithNameFilter() throws Exception {
+    List<Message> messages = doList("listFilesRecursivelyWithNameFilter", ".", true);
+    assertThat(messages, hasSize(7));
+  }
+
+  @Test
+  public void listFilesRecursivelyWithSpecificNameFilter() throws Exception {
+    List<Message> messages = doList("listFilesRecursivelyWithSpecificNameFilter", ".", true);
+    assertThat(messages, hasSize(1));
+  }
+
   private void assertRecursiveTreeNode(List<Message> messages) throws Exception {
     assertThat(messages, hasSize(8));
     assertThat(assertListedFiles(messages), is(true));
