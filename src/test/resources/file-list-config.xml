@@ -24,4 +24,16 @@
     <flow name="listWithGlobalMatcher">
         <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" matcher="globalMatcher"/>
     </flow>
+
+    <flow name="listFilesRecursivelyWithNameFilter">
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]">
+            <file:matcher directories="EXCLUDE" filenamePattern="*" />
+        </file:list>
+    </flow>
+
+    <flow name="listFilesRecursivelyWithSpecificNameFilter">
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]">
+            <file:matcher directories="EXCLUDE" filenamePattern="test-file-6.html" />
+        </file:list>
+    </flow>
 </mule>
