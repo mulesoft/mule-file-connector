@@ -37,6 +37,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import org.junit.Test;
+import org.mule.runtime.core.api.util.func.CheckedSupplier;
+import org.mule.tck.probe.JUnitLambdaProbe;
+import org.mule.tck.probe.PollingProber;
 
 @Feature(FILE_EXTENSION)
 public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
@@ -48,6 +51,8 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   private static final String WATCH_CONTENT = "who watches the watchmen?";
   private static final String DR_MANHATTAN = "Dr. Manhattan";
   private static final String MATCH_FILE = "matchme.txt";
+  private static final String IN_FOLDER_NAME = "in";
+  private static final String OUT_FOLDER_NAME = "out";
   private static final int PROBER_TIMEOUT = 5000;
   private static final int PROBER_DELAY = 100;
 
@@ -67,6 +72,8 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   private File withMatcherFolder;
   private String listenerFolder;
   private String sharedFolder;
+  private String inFolder;
+  private String outFolder;
 
   @Override
   protected String getConfigFile() {
@@ -79,10 +86,14 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     temporaryFolder.newFolder(MATCHERLESS_LISTENER_FOLDER_NAME);
     temporaryFolder.newFolder(WITH_MATCHER_FOLDER_NAME);
     temporaryFolder.newFolder(SHARED_LISTENER_FOLDER_NAME);
+    temporaryFolder.newFolder(IN_FOLDER_NAME);
+    temporaryFolder.newFolder(OUT_FOLDER_NAME);
 
     listenerFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), MATCHERLESS_LISTENER_FOLDER_NAME).toString();
     sharedFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), SHARED_LISTENER_FOLDER_NAME).toString();
     withMatcherFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), WITH_MATCHER_FOLDER_NAME).toFile();
+    inFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), IN_FOLDER_NAME).toString();
+    outFolder = Paths.get(temporaryFolder.getRoot().getAbsolutePath(), OUT_FOLDER_NAME).toString();
     RECEIVED_MESSAGES = new CopyOnWriteArrayList<>();
   }
 
@@ -162,6 +173,23 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     onFileCreated();
     check(PROBER_TIMEOUT, PROBER_DELAY,
           () -> !new File(listenerFolder, WATCH_FILE).exists() && new File(sharedFolder, "renamed.txt").exists());
+  }
+
+  @Test
+  @Description("Verifies that if a file with the same name exists in the moveTo directory, it is overwritten with the one polled")
+  public void moveToWithOverwrite() throws Exception {
+    stopFlow("listenWithoutMatcher");
+    startFlow("moveToOverwrite");
+
+    File file = new File(inFolder, WATCH_FILE);
+    write(file, WATCH_CONTENT);
+    check(PROBER_TIMEOUT, PROBER_DELAY,
+          () -> !new File(inFolder, WATCH_FILE).exists() && new File(outFolder, WATCH_FILE).exists());
+    assertThat(readPath(OUT_FOLDER_NAME + File.separator + WATCH_FILE).getPayload().getValue(), is(WATCH_CONTENT));
+    file = new File(inFolder, WATCH_FILE);
+    write(file, DR_MANHATTAN);
+    checkNot(PROBER_TIMEOUT, PROBER_DELAY, () -> RECEIVED_MESSAGES.size() > 2);
+    assertThat(readPath(OUT_FOLDER_NAME + File.separator + WATCH_FILE).getPayload().getValue(), is(DR_MANHATTAN));
   }
 
   @Test
@@ -267,6 +295,10 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
           return attributes.getPath().equals(file.getAbsolutePath());
         })
         .findFirst();
+  }
+
+  protected void validate(CheckedSupplier<Boolean> validation, long validationTimeout, long validationDelay) {
+    new PollingProber(validationTimeout, validationDelay).check(new JUnitLambdaProbe(validation));
   }
 
   private void startFlow(String flowName) throws Exception {

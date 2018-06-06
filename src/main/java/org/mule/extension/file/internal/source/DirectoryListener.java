@@ -183,7 +183,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
       if (postAction.isAutoDelete()) {
         fileSystem.delete(attrs.getPath());
       } else if (postAction.getMoveToDirectory() != null) {
-        fileSystem.move(config, attrs.getPath(), postAction.getMoveToDirectory(), false, true,
+        fileSystem.move(config, attrs.getPath(), postAction.getMoveToDirectory(), true, true,
                         postAction.getRenameTo());
       }
     });
