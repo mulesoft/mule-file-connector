@@ -193,7 +193,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
         String moveToFileName = postAction.getRenameTo() == null ? attrs.getName() : postAction.getRenameTo();
         String moveToPath = Paths.get(postAction.getMoveToDirectory()).resolve(moveToFileName).toString();
         LOGGER.warn(String.format("A file with the same name was found when trying to move '%s' to '%s'" +
-            "The file '%s' was not sent to the moveTo directory and it remains on the poll directory.",
+            ". The file '%s' was not sent to the moveTo directory and it remains on the poll directory.",
                                   attrs.getPath(), moveToPath, attrs.getPath()));
         throw e;
       }
