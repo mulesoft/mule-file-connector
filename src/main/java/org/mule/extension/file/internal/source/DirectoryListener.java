@@ -23,6 +23,7 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.api.WatermarkMode;
 import org.mule.extension.file.common.api.FileAttributes;
+import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.matcher.NullFilePayloadPredicate;
 import org.mule.extension.file.internal.FileConnector;
@@ -55,6 +56,7 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
@@ -180,11 +182,20 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
     }
 
     ctx.<LocalFileAttributes>getVariable(ATTRIBUTES_CONTEXT_VAR).ifPresent(attrs -> {
-      if (postAction.isAutoDelete()) {
-        fileSystem.delete(attrs.getPath());
-      } else if (postAction.getMoveToDirectory() != null) {
-        fileSystem.move(config, attrs.getPath(), postAction.getMoveToDirectory(), false, true,
-                        postAction.getRenameTo());
+      try {
+        if (postAction.isAutoDelete()) {
+          fileSystem.delete(attrs.getPath());
+        } else if (postAction.getMoveToDirectory() != null) {
+          fileSystem.move(config, attrs.getPath(), postAction.getMoveToDirectory(), false, true,
+                          postAction.getRenameTo());
+        }
+      } catch (FileAlreadyExistsException e) {
+        String moveToFileName = postAction.getRenameTo() == null ? attrs.getName() : postAction.getRenameTo();
+        String moveToPath = Paths.get(postAction.getMoveToDirectory()).resolve(moveToFileName).toString();
+        LOGGER.warn(String.format("A file with the same name was found when trying to move '%s' to '%s'" +
+            ". The file '%s' was not sent to the moveTo directory and it remains on the poll directory.",
+                                  attrs.getPath(), moveToPath, attrs.getPath()));
+        throw e;
       }
     });
   }
