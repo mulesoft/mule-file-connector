@@ -19,8 +19,8 @@
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
 
     <properties>
-        <commonsLangVersion>3.6</commonsLangVersion>
-        <commonsIoVersion>2.4</commonsIoVersion>
+        <commonsLangVersion>3.7</commonsLangVersion>
+        <commonsIoVersion>2.6</commonsIoVersion>
         <muleFileCommonsVersion>1.2.0-SNAPSHOT</muleFileCommonsVersion>
         <guavaVersion>25.1-jre</guavaVersion>
 
