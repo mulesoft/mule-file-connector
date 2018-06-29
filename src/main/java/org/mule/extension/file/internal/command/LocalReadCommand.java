@@ -44,8 +44,19 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock) {
+    return read(config, filePath, lock, null);
+  }
+
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
+                                                       Long timeBetweenSizeCheck) {
     Path path = resolveExistingPath(filePath);
     if (isDirectory(path)) {
       throw cannotReadDirectoryException(path);
@@ -69,7 +80,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
         pathLock = new NullPathLock(path);
       }
 
-      payload = new FileInputStream(channel, pathLock);
+      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck);
       LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
 
       return Result.<InputStream, LocalFileAttributes>builder()

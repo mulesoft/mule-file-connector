@@ -34,5 +34,16 @@
         <file:read config-ref="file" path="#[vars.path]" outputMimeType="test/test"/>
         <object-to-string-transformer />
     </flow>
+
+    <flow name="readFileThatIsDeleted">
+        <file:read config-ref="file" path="#[vars.path]"/>
+        <file:delete config-ref="file" path="#[vars.path]"/>
+        <object-to-string-transformer />
+    </flow>
+
+    <flow name="readFileWithSizeCheck">
+        <file:read config-ref="file" path="#[vars.path]" timeBetweenSizeCheck="2000"/>
+        <object-to-string-transformer />
+    </flow>
     
 </mule>
