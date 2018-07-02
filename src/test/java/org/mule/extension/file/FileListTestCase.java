@@ -33,6 +33,9 @@ import org.mule.runtime.api.streaming.object.CursorIteratorProvider;
 @Feature(FILE_EXTENSION)
 public class FileListTestCase extends FileConnectorTestCase {
 
+  private static String FILE_BEING_WRITTEN = "test-file-2.html";
+  private static String LONG_CONTENT = "longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong";
+
   @Override
   protected String getConfigFile() {
     return "file-list-config.xml";
@@ -55,6 +58,20 @@ public class FileListTestCase extends FileConnectorTestCase {
   @Test
   public void listRecursive() throws Exception {
     List<Message> messages = doList(".", true);
+    assertRecursiveTreeNode(messages);
+  }
+
+  @Test
+  public void listRecursiveWithSizeCheck() throws Exception {
+    List<Message> messages = doListWithSizeCheck(".", true);
+    assertRecursiveTreeNode(messages);
+  }
+
+  @Test
+  public void listRecursiveWithSizeCheckWithFileStillBeingWritten() throws Exception {
+    expectedException.expectMessage("being written");
+    writeByteByByteAsync(FILE_BEING_WRITTEN, LONG_CONTENT, 250);
+    List<Message> messages = doListWithSizeCheck(".", true);
     assertRecursiveTreeNode(messages);
   }
 
@@ -144,6 +161,10 @@ public class FileListTestCase extends FileConnectorTestCase {
 
   private List<Message> doList(String path, boolean recursive) throws Exception {
     return doList("list", path, recursive);
+  }
+
+  private List<Message> doListWithSizeCheck(String path, boolean recursive) throws Exception {
+    return doList("listWithSizeCheck", path, recursive);
   }
 
   private List<Message> doList(String flowName, String path, boolean recursive) throws Exception {
