@@ -227,7 +227,9 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
     try {
       channel = FileChannel.open(path);
       payload = new FileInputStream(channel, new NullPathLock(path), path,
-                                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit));
+                                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit)
+                                        .orElse(null),
+                                    attributes);
 
       return Result.<InputStream, FileAttributes>builder()
           .output(payload)

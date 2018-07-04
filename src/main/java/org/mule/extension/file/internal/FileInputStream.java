@@ -12,6 +12,8 @@ import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.common.api.AbstractFileInputStreamSupplier;
+import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.exceptions.DeletedFileWhileReadException;
 import org.mule.extension.file.common.api.exceptions.FileBeingModifiedException;
 import org.mule.extension.file.common.api.lock.PathLock;
@@ -51,8 +53,8 @@ public final class FileInputStream extends AbstractFileInputStream {
    * @param channel
    * @param lock a {@link PathLock}
    */
-  public FileInputStream(FileChannel channel, PathLock lock, Path path, Long timeBetweenSizeCheck) {
-    super(new LazyStreamSupplier(new FileStreamSupplier(timeBetweenSizeCheck, path, channel)), lock);
+  public FileInputStream(FileChannel channel, PathLock lock, Path path, Long timeBetweenSizeCheck, FileAttributes attributes) {
+    super(new LazyStreamSupplier(new LocalFileInputStreamSupplier(timeBetweenSizeCheck, path, channel, attributes)), lock);
     this.channel = channel;
   }
 
@@ -61,74 +63,39 @@ public final class FileInputStream extends AbstractFileInputStream {
     closeQuietly(channel);
   }
 
-  protected static final class FileStreamSupplier implements Supplier<InputStream> {
+  protected static final class LocalFileInputStreamSupplier extends AbstractFileInputStreamSupplier {
 
-    private static final Logger LOGGER = getLogger(FileStreamSupplier.class);
-    private static final String FILE_NO_LONGER_EXISTS_MESSAGE =
-        "Error reading file from path %s. It no longer exists at the time of reading.";
-    private static final String STARTING_WAIT_MESSAGE = "Starting wait to check if the file size of the file %s is stable.";
-    private static final int MAX_SIZE_CHECK_RETRIES = 2;
+    private static final Logger LOGGER = getLogger(LocalFileInputStreamSupplier.class);
 
-    private Path path;
-    private Long timeBetweenSizeCheck;
-    private FileChannel channel;
+    private final Path path;
+    private final FileChannel channel;
 
-    FileStreamSupplier(Long timeBetweenSizeCheck, Path path, FileChannel channel) {
-      this.timeBetweenSizeCheck = timeBetweenSizeCheck;
+    LocalFileInputStreamSupplier(Long timeBetweenSizeCheck, Path path, FileChannel channel, FileAttributes attributes) {
+      super(attributes, timeBetweenSizeCheck);
       this.path = path;
       this.channel = channel;
     }
 
     @Override
-    public InputStream get() {
-      // This call is done to check that the file still exists
-      getUpdatedAttributes(path);
-
-      if (timeBetweenSizeCheck != null && timeBetweenSizeCheck > 0) {
-        failIfFileSizeIsUnstable(path);
-      }
-      return new BufferedInputStream(Channels.newInputStream(channel));
-    }
-
-    private LocalFileAttributes failIfFileSizeIsUnstable(Path path) {
-      LocalFileAttributes oldAttributes;
-      LocalFileAttributes updatedAttributes = getUpdatedAttributes(path);
-      int retries = 0;
-      do {
-        oldAttributes = updatedAttributes;
-        try {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format(STARTING_WAIT_MESSAGE, path.toString()));
-          }
-          sleep(timeBetweenSizeCheck);
-        } catch (InterruptedException e) {
-          throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"),
-                                         e);
-        }
-        updatedAttributes = getUpdatedAttributes(path);
-      } while (updatedAttributes != null && updatedAttributes.getSize() != oldAttributes.getSize()
-          && retries++ < MAX_SIZE_CHECK_RETRIES);
-      if (retries > MAX_SIZE_CHECK_RETRIES) {
-        throw new FileBeingModifiedException(createStaticMessage("File on path " + path.toString() + " is still being written."));
-      }
-      return updatedAttributes;
-    }
-
-    private LocalFileAttributes getUpdatedAttributes(Path path) {
+    protected FileAttributes getUpdatedAttributes() {
       LocalFileAttributes updatedFtpFileAttributes;
       try {
         updatedFtpFileAttributes = new LocalFileAttributes(path);
       } catch (MuleRuntimeException e) {
         if (e.getCause() instanceof NoSuchFileException) {
           LOGGER.error(String.format(FILE_NO_LONGER_EXISTS_MESSAGE, path.toString()));
-          throw new DeletedFileWhileReadException(createStaticMessage("File on path " + path.toString()
-              + " was read but does not exist anymore."), e);
+          onFileDeleted(e);
         }
         throw e;
       }
       return updatedFtpFileAttributes;
     }
 
+    @Override
+    protected InputStream getContentInputStream() {
+      // Get updated attributes to check whether the file still exists
+      getUpdatedAttributes();
+      return new BufferedInputStream(Channels.newInputStream(channel));
+    }
   }
-
 }

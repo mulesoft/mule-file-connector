@@ -80,8 +80,8 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
         pathLock = new NullPathLock(path);
       }
 
-      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck);
       LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
+      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck, fileAttributes);
 
       return Result.<InputStream, LocalFileAttributes>builder()
           .output(payload)

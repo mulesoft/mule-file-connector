@@ -83,7 +83,8 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                                                            StreamingHelper streamingHelper) {
     PagingProvider result =
         doPagedList(config, directoryPath, recursive, matcher,
-                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit), streamingHelper);
+                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
+                    streamingHelper);
     return (PagingProvider<LocalFileSystem, Result<CursorProvider, LocalFileAttributes>>) result;
   }
 
@@ -124,7 +125,7 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                        @ConfigOverride @Placement(
                                                            tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
     Result result = doRead(config, fileSystem, path, lock,
-                           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit));
+                           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
     return (Result<InputStream, LocalFileAttributes>) result;
   }
 
