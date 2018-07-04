@@ -39,18 +39,31 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   @Override
   public List<Result<InputStream, LocalFileAttributes>> list(FileConnectorConfig config,
                                                              String directoryPath,
                                                              boolean recursive,
                                                              Predicate<LocalFileAttributes> matcher) {
+    return list(config, directoryPath, recursive, matcher, null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<Result<InputStream, LocalFileAttributes>> list(FileConnectorConfig config,
+                                                             String directoryPath,
+                                                             boolean recursive,
+                                                             Predicate<LocalFileAttributes> matcher,
+                                                             Long timeBetweenSizeCheck) {
     Path path = resolveExistingPath(directoryPath);
     if (!Files.isDirectory(path)) {
       throw cannotListFileException(path);
     }
 
     List<Result<InputStream, LocalFileAttributes>> accumulator = new LinkedList<>();
-    doList(config, path.toFile(), accumulator, recursive, matcher);
+    doList(config, path.toFile(), accumulator, recursive, matcher, timeBetweenSizeCheck);
 
     return accumulator;
   }
@@ -59,7 +72,8 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                       File parent,
                       List<Result<InputStream, LocalFileAttributes>> accumulator,
                       boolean recursive,
-                      Predicate<LocalFileAttributes> matcher) {
+                      Predicate<LocalFileAttributes> matcher,
+                      Long timeBetweenSizeCheck) {
 
     if (!parent.canRead()) {
       throw new FileAccessDeniedException(
@@ -77,11 +91,11 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
         }
 
         if (recursive) {
-          doList(config, child, accumulator, recursive, matcher);
+          doList(config, child, accumulator, recursive, matcher, timeBetweenSizeCheck);
         }
       } else {
         if (matcher.test(attributes)) {
-          accumulator.add(fileSystem.read(config, child.getAbsolutePath(), false));
+          accumulator.add(fileSystem.read(config, child.getAbsolutePath(), false, timeBetweenSizeCheck));
         }
       }
     }

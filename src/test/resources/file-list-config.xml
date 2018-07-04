@@ -15,6 +15,11 @@
         <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" />
     </flow>
 
+    <flow name="listWithSizeCheck">
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]"
+                   timeBetweenSizeCheck="500"/>
+    </flow>
+
     <flow name="listWithEmbeddedPredicate">
         <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]">
             <file:matcher filenamePattern="*[1-2]*.html" />

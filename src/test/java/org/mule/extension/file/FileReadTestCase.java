@@ -40,6 +40,10 @@ import org.junit.Test;
 @Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {
 
+  private static String DELETED_FILE_NAME = "deleted.txt";
+  private static String DELETED_FILE_CONTENT = "non existant content";
+  private static String WATCH_FILE = "watch.txt";
+
   @Override
   protected String getConfigFile() {
     return "file-read-config.xml";
@@ -160,6 +164,29 @@ public class FileReadTestCase extends FileConnectorTestCase {
     assertThat(filePayload.isRegularFile(), is(true));
   }
 
+  @Test
+  public void readFileThatIsDeleted() throws Exception {
+    expectedException.expectMessage("was read but does not exist anymore.");
+    File file = new File(temporaryFolder.getRoot(), DELETED_FILE_NAME);
+    writeByteArrayToFile(file, DELETED_FILE_CONTENT.getBytes());
+    flowRunner("readFileThatIsDeleted").withVariable("path", DELETED_FILE_NAME).run().getMessage().getPayload().getValue();
+  }
+
+  @Test
+  public void readWhileStillWriting() throws Exception {
+    expectedException.expectMessage("is still being written");
+    writeByteByByteAsync(WATCH_FILE, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 500);
+    flowRunner("readFileWithSizeCheck").withVariable("path", WATCH_FILE).run().getMessage().getPayload().getValue();
+  }
+
+  @Test
+  public void readWhileFinishWriting() throws Exception {
+    writeByteByByteAsync(WATCH_FILE, "aaaaa", 500);
+    String result = (String) flowRunner("readFileWithSizeCheck").withVariable("path", WATCH_FILE).run().getMessage()
+        .getPayload().getValue();
+    assertThat(result, is("aaaaa"));
+  }
+
   private Message readWithLock() throws Exception {
     return readWithLock(HELLO_PATH);
   }
@@ -167,7 +194,6 @@ public class FileReadTestCase extends FileConnectorTestCase {
   private Message readWithLock(String path) throws Exception {
     Message message = flowRunner("readWithLock").keepStreamsOpen().withVariable("path", path).run().getMessage();
     assertThat(((AbstractFileInputStream) message.getPayload().getValue()).isLocked(), is(true));
-
     return message;
   }
 

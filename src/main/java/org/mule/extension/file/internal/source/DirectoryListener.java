@@ -39,6 +39,7 @@ import org.mule.runtime.extension.api.annotation.execution.OnError;
 import org.mule.runtime.extension.api.annotation.execution.OnSuccess;
 import org.mule.runtime.extension.api.annotation.execution.OnTerminate;
 import org.mule.runtime.extension.api.annotation.param.Config;
+import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
 import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
@@ -61,6 +62,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -131,6 +133,24 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   @Parameter
   @Optional(defaultValue = "DISABLED")
   private WatermarkMode watermarkMode = DISABLED;
+
+  /**
+   * Wait time in milliseconds between size checks to determine if a file is ready to be read. This allows a file write to
+   * complete before processing. You can disable this feature by omitting a value. When enabled, Mule performs two size checks
+   * waiting the specified time between calls. If both checks return the same value, the file is ready to be read.
+   */
+  @Parameter
+  @ConfigOverride
+  @Summary("Wait time in milliseconds between size checks to determine if a file is ready to be read.")
+  private Long timeBetweenSizeCheck;
+
+  /**
+   * A {@link TimeUnit} which qualifies the {@link #timeBetweenSizeCheck} attribute.
+   */
+  @Parameter
+  @ConfigOverride
+  @Summary("Time unit to be used in the wait time between size checks")
+  private TimeUnit timeBetweenSizeCheckUnit;
 
   private Path directoryPath;
   private LocalFileSystem fileSystem;
@@ -206,7 +226,10 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
 
     try {
       channel = FileChannel.open(path);
-      payload = new FileInputStream(channel, new NullPathLock(path));
+      payload = new FileInputStream(channel, new NullPathLock(path), path,
+                                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit)
+                                        .orElse(null),
+                                    attributes);
 
       return Result.<InputStream, FileAttributes>builder()
           .output(payload)

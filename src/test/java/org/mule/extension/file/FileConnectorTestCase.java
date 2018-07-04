@@ -6,12 +6,15 @@
  */
 package org.mule.extension.file;
 
+import static java.lang.Thread.sleep;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.functional.api.exception.ExpectedError.none;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 
+import org.junit.rules.ExpectedException;
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.functional.api.exception.ExpectedError;
 import org.mule.functional.junit4.MuleArtifactFunctionalTestCase;
@@ -24,6 +27,7 @@ import org.mule.tck.junit4.rule.SystemProperty;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import io.qameta.allure.Feature;
 import org.apache.commons.io.FileUtils;
@@ -44,6 +48,9 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
 
   @ClassRule
   public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Rule
   public ExpectedError expectedError = none();
@@ -156,4 +163,27 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
       FileUtils.write(file, CONTENT);
     }
   }
+
+  protected void writeByteByByteAsync(String path, String content, long delayBetweenCharacters) throws Exception {
+    path = path.startsWith("/") ? path : temporaryFolder.getRoot().getPath() + "/" + path;
+    OutputStream outputStream = FileUtils.openOutputStream(new File(path), true);
+    new Thread(() -> {
+      try {
+        for (int i = 0; i < content.length(); i++) {
+          outputStream.write(content.charAt(i));
+          sleep(delayBetweenCharacters);
+        }
+      } catch (Exception e) {
+        fail("Error trying to write in file");
+      } finally {
+        try {
+          outputStream.close();
+        } catch (IOException e) {
+          // Do nothing
+        }
+      }
+
+    }).start();
+  }
+
 }

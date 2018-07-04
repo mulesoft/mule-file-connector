@@ -21,14 +21,20 @@ import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.api.message.Message;
 
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
 import io.qameta.allure.Feature;
+import org.mule.runtime.api.streaming.object.CursorIteratorProvider;
 
 @Feature(FILE_EXTENSION)
 public class FileListTestCase extends FileConnectorTestCase {
+
+  private static String FILE_BEING_WRITTEN = "test-file-2.html";
+  private static String LONG_CONTENT = "longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong";
 
   @Override
   protected String getConfigFile() {
@@ -52,6 +58,20 @@ public class FileListTestCase extends FileConnectorTestCase {
   @Test
   public void listRecursive() throws Exception {
     List<Message> messages = doList(".", true);
+    assertRecursiveTreeNode(messages);
+  }
+
+  @Test
+  public void listRecursiveWithSizeCheck() throws Exception {
+    List<Message> messages = doListWithSizeCheck(".", true);
+    assertRecursiveTreeNode(messages);
+  }
+
+  @Test
+  public void listRecursiveWithSizeCheckWithFileStillBeingWritten() throws Exception {
+    expectedException.expectMessage("being written");
+    writeByteByByteAsync(FILE_BEING_WRITTEN, LONG_CONTENT, 250);
+    List<Message> messages = doListWithSizeCheck(".", true);
     assertRecursiveTreeNode(messages);
   }
 
@@ -143,13 +163,26 @@ public class FileListTestCase extends FileConnectorTestCase {
     return doList("list", path, recursive);
   }
 
-  private List<Message> doList(String flowName, String path, boolean recursive) throws Exception {
-    List<Message> messages =
-        (List<Message>) flowRunner(flowName).withVariable("path", path).withVariable("recursive", recursive).run()
-            .getMessage().getPayload().getValue();
-
-    assertThat(messages, is(notNullValue()));
-
-    return messages;
+  private List<Message> doListWithSizeCheck(String path, boolean recursive) throws Exception {
+    return doList("listWithSizeCheck", path, recursive);
   }
+
+  private List<Message> doList(String flowName, String path, boolean recursive) throws Exception {
+    CursorIteratorProvider iteratorProvider = (CursorIteratorProvider) (flowRunner(flowName)
+        .withVariable("path", path).withVariable("recursive", recursive).keepStreamsOpen()
+        .run()
+        .getMessage().getPayload().getValue());
+
+    assertThat(iteratorProvider, is(notNullValue()));
+
+    Iterator<Message> iterator = iteratorProvider.openCursor();
+
+    List<Message> results = new LinkedList<>();
+
+    while (iterator.hasNext()) {
+      results.add(iterator.next());
+    }
+    return results;
+  }
+
 }

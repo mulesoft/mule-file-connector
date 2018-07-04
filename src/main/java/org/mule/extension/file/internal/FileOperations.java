@@ -25,8 +25,10 @@ import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
+import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
+import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
 import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
@@ -36,9 +38,12 @@ import org.mule.runtime.extension.api.annotation.param.display.Path;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
+import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
+import org.mule.runtime.extension.api.runtime.streaming.StreamingHelper;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * File connector operations.
@@ -53,25 +58,34 @@ public final class FileOperations extends BaseFileSystemOperations {
    * If the listing encounters a directory, the output list will include its contents depending on the value of the
    * {@code recursive} parameter.
    * <p>
-   * If {@code recursive} is set to {@code true} but a found directory is rejected by the {@code matcher}, then there won't be any
-   * recursion into such directory.
    *
    * @param config        the config that is parameterizing this operation
    * @param directoryPath the path to the directory to be listed
    * @param recursive     whether to include the contents of sub-directories. Defaults to false.
    * @param matcher     a matcher used to filter the output list
+   * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
+   * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
    * @return a {@link List} of {@link Message messages} each one containing each file's content in the payload and metadata in the attributes
    * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exist or is not a directory
    */
   @Summary("List all the files from given directory")
   @Throws(FileListErrorTypeProvider.class)
-  public List<Result<InputStream, LocalFileAttributes>> list(@Config FileConnectorConfig config,
-                                                             @Connection LocalFileSystem fileSystem,
-                                                             @Path(type = DIRECTORY, location = EXTERNAL) String directoryPath,
-                                                             @Optional(defaultValue = "false") boolean recursive,
-                                                             @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher) {
-    List result = doList(config, fileSystem, directoryPath, recursive, matcher);
-    return (List<Result<InputStream, LocalFileAttributes>>) result;
+  public PagingProvider<LocalFileSystem, Result<CursorProvider, LocalFileAttributes>> list(@Config FileConnectorConfig config,
+                                                                                           @Path(type = DIRECTORY,
+                                                                                               location = EXTERNAL) String directoryPath,
+                                                                                           @Optional(
+                                                                                               defaultValue = "false") boolean recursive,
+                                                                                           @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
+                                                                                           @ConfigOverride @Placement(
+                                                                                               tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                                                           @ConfigOverride @Placement(
+                                                                                               tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
+                                                                                           StreamingHelper streamingHelper) {
+    PagingProvider result =
+        doPagedList(config, directoryPath, recursive, matcher,
+                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
+                    streamingHelper);
+    return (PagingProvider<LocalFileSystem, Result<CursorProvider, LocalFileAttributes>>) result;
   }
 
   /**
@@ -92,6 +106,8 @@ public final class FileOperations extends BaseFileSystemOperations {
    * @param fileSystem a reference to the host {@link FileSystem}
    * @param path       the path to the file to be read
    * @param lock       whether or not to lock the file. Defaults to false.
+   * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
+   * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
    * @return the file's content and metadata on a {@link FileAttributes} instance
    * @throws IllegalArgumentException if the file at the given path doesn't exist
    */
@@ -103,8 +119,13 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                        @DisplayName("File Path") @Path(type = FILE,
                                                            location = EXTERNAL) String path,
                                                        @Optional(defaultValue = "false") @Placement(
-                                                           tab = ADVANCED_TAB) boolean lock) {
-    Result result = doRead(config, fileSystem, path, lock);
+                                                           tab = ADVANCED_TAB) boolean lock,
+                                                       @ConfigOverride @Placement(
+                                                           tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                       @ConfigOverride @Placement(
+                                                           tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
+    Result result = doRead(config, fileSystem, path, lock,
+                           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
     return (Result<InputStream, LocalFileAttributes>) result;
   }
 
