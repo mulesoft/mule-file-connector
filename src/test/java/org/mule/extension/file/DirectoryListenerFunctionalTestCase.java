@@ -48,8 +48,8 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
   private static final String WATCH_CONTENT = "who watches the watchmen?";
   private static final String DR_MANHATTAN = "Dr. Manhattan";
   private static final String MATCH_FILE = "matchme.txt";
-  private static final int PROBER_TIMEOUT = 5000;
-  private static final int PROBER_DELAY = 100;
+  private static final int PROBER_TIMEOUT = 10000;
+  private static final int PROBER_DELAY = 1000;
 
   private static List<Message> RECEIVED_MESSAGES;
 
