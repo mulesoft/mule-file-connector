@@ -19,10 +19,10 @@ import static org.mule.extension.file.api.WatermarkMode.MODIFIED_TIMESTAMP;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.api.WatermarkMode;
-import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.matcher.NullFilePayloadPredicate;
@@ -90,7 +90,7 @@ import org.slf4j.LoggerFactory;
 @DisplayName("On New or Updated File")
 @Summary("Triggers when a new file is created in a directory")
 @Alias("listener")
-public class DirectoryListener extends PollingSource<InputStream, FileAttributes> {
+public class DirectoryListener extends PollingSource<InputStream, LocalFileAttributes> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
   private static final String ATTRIBUTES_CONTEXT_VAR = "attributes";
@@ -183,7 +183,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   public void onTerminate() {}
 
   @Override
-  public void poll(PollContext<InputStream, FileAttributes> pollContext) {
+  public void poll(PollContext<InputStream, LocalFileAttributes> pollContext) {
     PollWalker walker = new PollWalker(directoryPath, pollContext);
     try {
       walkFileTree(directoryPath, EnumSet.of(FOLLOW_LINKS), MAX_VALUE, walker);
@@ -220,7 +220,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
     });
   }
 
-  private Result<InputStream, FileAttributes> createResult(Path path, FileAttributes attributes) {
+  private Result<InputStream, LocalFileAttributes> createResult(Path path, LocalFileAttributes attributes) {
     InputStream payload = null;
     FileChannel channel = null;
 
@@ -231,7 +231,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
                                         .orElse(null),
                                     attributes);
 
-      return Result.<InputStream, FileAttributes>builder()
+      return Result.<InputStream, LocalFileAttributes>builder()
           .output(payload)
           .mediaType(fileSystem.getFileMessageMediaType(attributes))
           .attributes(attributes).build();
@@ -244,7 +244,7 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   }
 
   @Override
-  public void onRejectedItem(Result<InputStream, FileAttributes> result, SourceCallbackContext callbackContext) {
+  public void onRejectedItem(Result<InputStream, LocalFileAttributes> result, SourceCallbackContext callbackContext) {
     closeQuietly(result.getOutput());
   }
 
@@ -263,9 +263,9 @@ public class DirectoryListener extends PollingSource<InputStream, FileAttributes
   private class PollWalker extends SimpleFileVisitor<Path> {
 
     private final Path directoryPath;
-    private final PollContext<InputStream, FileAttributes> pollContext;
+    private final PollContext<InputStream, LocalFileAttributes> pollContext;
 
-    public PollWalker(Path directoryPath, PollContext<InputStream, FileAttributes> pollContext) {
+    public PollWalker(Path directoryPath, PollContext<InputStream, LocalFileAttributes> pollContext) {
       this.directoryPath = directoryPath;
       this.pollContext = pollContext;
     }
