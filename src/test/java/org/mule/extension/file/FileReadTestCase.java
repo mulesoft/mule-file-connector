@@ -15,7 +15,6 @@ import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.runtime.api.metadata.MediaType.JSON;
-
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
@@ -23,9 +22,9 @@ import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
-import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,8 +77,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
                is(MediaType.BINARY.getPrimaryType()));
     assertThat(response.getMessage().getPayload().getDataType().getMediaType().getSubType(), is(MediaType.BINARY.getSubType()));
 
-    AbstractFileInputStream payload = (AbstractFileInputStream) response.getMessage().getPayload().getValue();
-    assertThat(payload.isLocked(), is(false));
+    InputStream payload = (InputStream) response.getMessage().getPayload().getValue();
 
     byte[] readContent = new byte[new Long(binaryFile.length()).intValue()];
     org.apache.commons.io.IOUtils.read(payload, readContent);
@@ -127,22 +125,6 @@ public class FileReadTestCase extends FileConnectorTestCase {
   public void readDirectory() throws Exception {
     expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class, "since it's a directory");
     readPath("files");
-  }
-
-  @Test
-  public void readLockReleasedOnContentConsumed() throws Exception {
-    final AbstractFileInputStream payload = (AbstractFileInputStream) readWithLock().getPayload().getValue();
-    IOUtils.toString(payload);
-
-    assertThat(payload.isLocked(), is(false));
-  }
-
-  @Test
-  public void readLockReleasedOnEarlyClose() throws Exception {
-    final AbstractFileInputStream payload = (AbstractFileInputStream) readWithLock().getPayload().getValue();
-    payload.close();
-
-    assertThat(payload.isLocked(), is(false));
   }
 
   @Test
