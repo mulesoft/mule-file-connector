@@ -78,6 +78,16 @@
         <flow-ref name="onEvent"/>
     </flow>
 
+    <flow name="moveToAndAutoDelete" initialState="stopped">
+        <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency frequency="1000"/>
+            </scheduling-strategy>
+        </file:listener>
+        <set-variable variableName="moveTo" value="shared"/>
+        <flow-ref name="onEvent"/>
+    </flow>
+
     <flow name="moveToWithRename" initialState="stopped">
         <file:listener config-ref="file" directory="matcherless" moveToDirectory="#[vars.moveTo]" renameTo="#[vars.rename]">
             <scheduling-strategy>
