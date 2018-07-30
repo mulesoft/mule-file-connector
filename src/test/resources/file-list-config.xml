@@ -30,6 +30,10 @@
         <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" matcher="globalMatcher"/>
     </flow>
 
+    <flow name="listWithExpressionMatcher">
+        <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]" matcher="#[{filenamePattern: 'sub*', directories: 'REQUIRE'}]"/>
+    </flow>
+
     <flow name="listFilesRecursivelyWithNameFilter">
         <file:list config-ref="file" directoryPath="#[vars.path]" recursive="#[vars.recursive]">
             <file:matcher directories="EXCLUDE" filenamePattern="*" />

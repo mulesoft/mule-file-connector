@@ -6,29 +6,28 @@
  */
 package org.mule.extension.file;
 
-import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
-import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
-import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
-
+import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
+import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
+import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.api.message.Message;
+import org.mule.runtime.api.streaming.object.CursorIteratorProvider;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
 import io.qameta.allure.Feature;
-import org.mule.runtime.api.streaming.object.CursorIteratorProvider;
+import org.junit.Test;
 
 @Feature(FILE_EXTENSION)
 public class FileListTestCase extends FileConnectorTestCase {
@@ -132,6 +131,17 @@ public class FileListTestCase extends FileConnectorTestCase {
   @Test
   public void listWithGlobalMatcher() throws Exception {
     List<Message> messages = doList("listWithGlobalMatcher", ".", true);
+
+    assertThat(messages, hasSize(1));
+
+    FileAttributes file = (FileAttributes) messages.get(0).getAttributes().getValue();
+    assertThat(file.isDirectory(), is(true));
+    assertThat(file.getName(), equalTo(SUB_DIRECTORY_NAME));
+  }
+
+  @Test
+  public void listWithExpressionMatcher() throws Exception {
+    List<Message> messages = doList("listWithExpressionMatcher", ".", true);
 
     assertThat(messages, hasSize(1));
 
