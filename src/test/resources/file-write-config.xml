@@ -8,7 +8,7 @@
     <import file="file-read-config.xml"/>
 
     <flow name="write">
-        <file:write config-ref="file" path="#[vars.path]" mode="#[vars.mode]" createParentDirectories="#[vars.createParent]" encoding="#[vars.encoding]"/>
+        <file:write config-ref="file" path="#[vars.path]" mode="#[vars.mode]" createParentDirectories="#[vars.createParent]"/>
     </flow>
 
     <flow name="writeStaticContent">

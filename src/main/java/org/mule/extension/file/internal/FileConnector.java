@@ -19,9 +19,12 @@ import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProvider
 import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
+import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.mule.runtime.extension.api.annotation.param.ParameterGroup.ADVANCED;
 
 /**
  * File connector used to manipulate file systems mounted on the host operation system.
@@ -46,6 +49,7 @@ public class FileConnector extends FileConnectorConfig {
    * tandem with {@link #timeBetweenSizeCheckUnit}.
    */
   @Parameter
+  @Placement(tab = ADVANCED)
   @Summary("Wait time between size checks to determine if a file is ready to be read.")
   @Optional
   private Long timeBetweenSizeCheck;
@@ -56,6 +60,7 @@ public class FileConnector extends FileConnectorConfig {
    * Defaults to {@code MILLISECONDS}
    */
   @Parameter
+  @Placement(tab = ADVANCED)
   @Optional(defaultValue = "MILLISECONDS")
   @Summary("Time unit to be used in the wait time between size checks")
   private TimeUnit timeBetweenSizeCheckUnit;
