@@ -161,7 +161,7 @@ public final class FileOperations extends BaseFileSystemOperations {
                     @Path(type = FILE, location = EXTERNAL) String path,
                     @Content @Summary("Content to be written into the file") InputStream content,
                     @Optional @Summary("This parameter is deprecated and will do nothing if configured") @Placement(
-                        tab = ADVANCED_TAB) @DisplayName("encoding (DEPRECATED)") String encoding,
+                        tab = ADVANCED_TAB) @DisplayName("Encoding (DEPRECATED)") String encoding,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
                     @Optional(defaultValue = "false") @Placement(tab = ADVANCED_TAB) boolean lock, @Optional(
                         defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode) {
