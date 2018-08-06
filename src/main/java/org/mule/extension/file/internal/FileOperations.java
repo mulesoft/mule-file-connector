@@ -160,7 +160,7 @@ public final class FileOperations extends BaseFileSystemOperations {
   public void write(@Config FileConnectorConfig config, @Connection FileSystem fileSystem,
                     @Path(type = FILE, location = EXTERNAL) String path,
                     @Content @Summary("Content to be written into the file") InputStream content,
-                    @Optional @Summary("This parameter is deprecated and will do nothing if configured") @Placement(
+                    @Optional @Summary("This parameter is deprecated and will not be taken into account") @Placement(
                         tab = ADVANCED_TAB) @DisplayName("Encoding (DEPRECATED)") String encoding,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
                     @Optional(defaultValue = "false") @Placement(tab = ADVANCED_TAB) boolean lock, @Optional(
