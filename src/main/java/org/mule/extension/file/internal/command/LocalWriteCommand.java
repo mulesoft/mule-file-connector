@@ -51,9 +51,19 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
   /**
    * {@inheritDoc}
    */
+  @Deprecated
   @Override
   public void write(String filePath, InputStream content, FileWriteMode mode,
                     boolean lock, boolean createParentDirectory, String encoding) {
+    write(filePath, content, mode, lock, createParentDirectory);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void write(String filePath, InputStream content, FileWriteMode mode,
+                    boolean lock, boolean createParentDirectory) {
     Path path = resolvePath(filePath);
     assureParentFolderExists(path, createParentDirectory);
 
@@ -80,7 +90,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
                                                  path),
                                           e);
     } catch (FileSystemException e) {
-      //The only way to be sure that the exception was raised due to an illegal path.
+      // The only way to be sure that the exception was raised due to an illegal path.
       if (IS_A_DIRECTORY_MESSAGE.equals(e.getReason())) {
         throw new IllegalPathException(format("Cannot write to path '%s' because it is a Directory.", path), e);
       }
