@@ -17,6 +17,7 @@ import static org.mule.extension.file.api.WatermarkMode.CREATED_TIMESTAMP;
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.api.WatermarkMode.MODIFIED_TIMESTAMP;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
+import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
@@ -34,6 +35,7 @@ import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.api.meta.model.display.PathModel;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.execution.OnError;
 import org.mule.runtime.extension.api.annotation.execution.OnSuccess;
@@ -107,6 +109,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
    */
   @Parameter
   @Optional
+  @org.mule.runtime.extension.api.annotation.param.display.Path(type = DIRECTORY)
   private String directory;
 
   /**
