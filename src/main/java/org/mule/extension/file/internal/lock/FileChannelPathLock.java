@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.AccessDeniedException;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 
 import org.slf4j.Logger;
@@ -37,8 +36,8 @@ public final class FileChannelPathLock implements PathLock {
   /**
    * Creates a new instance
    *
-   * @param path        a {@link Path} pointing to the resource to be locked
-   * @param openOptions the {@link OpenOption}s to be used when opening the {@link FileChannel}
+   * @param path    a {@link Path} pointing to the resource to be locked
+   * @param channel a {@link FileChannel}
    */
   public FileChannelPathLock(Path path, FileChannel channel) {
     this.path = path.toAbsolutePath();
@@ -89,6 +88,7 @@ public final class FileChannelPathLock implements PathLock {
     if (lock != null) {
       try {
         lock.release();
+        channel.close();
       } catch (IOException e) {
         if (LOGGER.isDebugEnabled()) {
           LOGGER.debug(format("Found exception attempting to release lock on path '%s'", path), e);
