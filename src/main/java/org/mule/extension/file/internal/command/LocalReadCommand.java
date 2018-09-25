@@ -20,7 +20,6 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
-import org.mule.extension.file.internal.lock.NullPathLockWithChannel;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.InputStream;
@@ -78,7 +77,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
         pathLock = fileSystem.lock(path, channel);
       } else {
         channel = FileChannel.open(path, READ);
-        pathLock = new NullPathLockWithChannel(path, channel);
+        pathLock = new NullPathLock(path);
       }
 
       LocalFileAttributes fileAttributes = new LocalFileAttributes(path);

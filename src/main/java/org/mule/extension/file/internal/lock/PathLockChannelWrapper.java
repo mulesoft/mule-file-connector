@@ -18,50 +18,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of the {@link PathLock} that close its channel when releasing the lock;
+ * Composite {@link PathLock} implementation and {@link FileChannel} that closes the {@link FileChannel} when the
+ * {@link PathLock} is released.
  *
- * @since 1.1.4
+ * @since 2.0.0
  */
-public class NullPathLockWithChannel implements PathLock {
+public class PathLockChannelWrapper implements PathLock {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(NullPathLockWithChannel.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(PathLockChannelWrapper.class);
 
-  private final Path path;
+  private PathLock pathLock;
   private FileChannel fileChannel;
 
-  public NullPathLockWithChannel(Path path, FileChannel fileChannel) {
-    this.path = path;
+  public PathLockChannelWrapper(PathLock pathLock, FileChannel fileChannel) {
+    this.pathLock = pathLock;
     this.fileChannel = fileChannel;
   }
 
   /**
-   * Does nothing and always returns {@code true}
-   *
-   * @return {@code true}
+   * {@inheritDoc}
    */
   @Override
   public boolean tryLock() {
-    return true;
+    return pathLock.tryLock();
   }
 
   /**
-   * @return {@code false}
+   * {@inheritDoc}
    */
   @Override
   public boolean isLocked() {
-    return false;
+    return pathLock.isLocked();
   }
 
   /**
-   * Does nothing regardless of how many invocations the {@link #tryLock()} method has received
+   * {@inheritDoc}
    */
   @Override
   public void release() {
+    pathLock.release();
     try {
       fileChannel.close();
     } catch (IOException e) {
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(format("Found exception attempting to close the channel for the lock on path '%s'", path), e);
+        LOGGER.debug(format("Found exception attempting to close the channel for the lock on path '%s'", pathLock.getPath()), e);
       }
     }
   }
@@ -71,6 +71,7 @@ public class NullPathLockWithChannel implements PathLock {
    */
   @Override
   public Path getPath() {
-    return path;
+    return pathLock.getPath();
   }
+
 }

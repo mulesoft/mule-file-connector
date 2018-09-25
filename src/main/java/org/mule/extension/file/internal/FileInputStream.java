@@ -6,19 +6,16 @@
  */
 package org.mule.extension.file.internal;
 
-import static java.lang.Thread.sleep;
-import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.AbstractFileInputStreamSupplier;
 import org.mule.extension.file.common.api.FileAttributes;
-import org.mule.extension.file.common.api.exceptions.DeletedFileWhileReadException;
-import org.mule.extension.file.common.api.exceptions.FileBeingModifiedException;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.extension.file.common.api.stream.LazyStreamSupplier;
+import org.mule.extension.file.internal.lock.PathLockChannelWrapper;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.slf4j.Logger;
 
@@ -30,7 +27,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.function.Supplier;
 
 /**
  * {@link AbstractFileInputStream} implementation used to obtain a file's content based on a {@link Reader}.
@@ -54,7 +50,8 @@ public final class FileInputStream extends AbstractFileInputStream {
    * @param lock a {@link PathLock}
    */
   public FileInputStream(FileChannel channel, PathLock lock, Path path, Long timeBetweenSizeCheck, FileAttributes attributes) {
-    super(new LazyStreamSupplier(new LocalFileInputStreamSupplier(timeBetweenSizeCheck, path, channel, attributes)), lock);
+    super(new LazyStreamSupplier(new LocalFileInputStreamSupplier(timeBetweenSizeCheck, path, channel, attributes)),
+          new PathLockChannelWrapper(lock, channel));
     this.channel = channel;
   }
 

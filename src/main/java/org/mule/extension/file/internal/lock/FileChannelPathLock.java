@@ -88,7 +88,6 @@ public final class FileChannelPathLock implements PathLock {
     if (lock != null) {
       try {
         lock.release();
-        channel.close();
       } catch (IOException e) {
         if (LOGGER.isDebugEnabled()) {
           LOGGER.debug(format("Found exception attempting to release lock on path '%s'", path), e);
