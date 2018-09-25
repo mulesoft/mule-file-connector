@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.extension.file;
+package org.mule.extension.file.integration;
 
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -28,7 +28,6 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
