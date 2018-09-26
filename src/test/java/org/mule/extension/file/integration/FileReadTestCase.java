@@ -4,13 +4,14 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.extension.file;
+package org.mule.extension.file.integration;
 
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
@@ -22,9 +23,11 @@ import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
+import org.mule.runtime.core.api.event.CoreEvent;
+import org.mule.runtime.core.api.processor.Processor;
+import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,6 +45,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
   private static String DELETED_FILE_NAME = "deleted.txt";
   private static String DELETED_FILE_CONTENT = "non existant content";
   private static String WATCH_FILE = "watch.txt";
+  private static String payloadString;
 
   @Override
   protected String getConfigFile() {
@@ -77,11 +81,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
                is(MediaType.BINARY.getPrimaryType()));
     assertThat(response.getMessage().getPayload().getDataType().getMediaType().getSubType(), is(MediaType.BINARY.getSubType()));
 
-    InputStream payload = (InputStream) response.getMessage().getPayload().getValue();
-
-    byte[] readContent = new byte[new Long(binaryFile.length()).intValue()];
-    org.apache.commons.io.IOUtils.read(payload, readContent);
-    assertThat(new String(readContent), is(HELLO_WORLD));
+    assertThat(payloadString, is(HELLO_WORLD));
   }
 
   @Test
@@ -181,6 +181,21 @@ public class FileReadTestCase extends FileConnectorTestCase {
 
   private void assertTime(LocalDateTime dateTime, FileTime fileTime) {
     assertThat(dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), is(fileTime.toInstant().toEpochMilli()));
+  }
+
+  public static final class CapturePayloadProcessor implements Processor {
+
+    @Override
+    public CoreEvent process(CoreEvent event) {
+      try {
+        AbstractFileInputStream payload = (AbstractFileInputStream) event.getMessage().getPayload().getValue();
+        payloadString = IOUtils.toString(payload);
+      } catch (Exception e) {
+        fail();
+      }
+
+      return event;
+    }
   }
 
 }

@@ -119,7 +119,7 @@
 
     <sub-flow name="onEvent">
         <object-to-string-transformer/>
-        <test:processor class="org.mule.extension.file.DirectoryListenerFunctionalTestCase$TestProcessor"/>
+        <test:processor class="org.mule.extension.file.integration.DirectoryListenerFunctionalTestCase$TestProcessor"/>
     </sub-flow>
 
     <sub-flow name="onSharedFolderFile">
