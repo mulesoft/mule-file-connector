@@ -4,7 +4,7 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.extension.file;
+package org.mule.extension.file.integration;
 
 import io.qameta.allure.Feature;
 import org.junit.Test;
