@@ -13,6 +13,7 @@ import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 import static java.nio.file.Files.walkFileTree;
+import static java.util.stream.Collectors.toList;
 import static org.mule.extension.file.api.WatermarkMode.CREATED_TIMESTAMP;
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.api.WatermarkMode.MODIFIED_TIMESTAMP;
@@ -20,6 +21,7 @@ import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
+import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
@@ -64,6 +66,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -71,7 +74,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Polls a directory looking for files that have been created or updated. One message will be generated for each file that is found.
+ * Polls a directory looking for files that have been created or updated. One message will be generated for each file that is
+ * found.
  * <p>
  * The key part of this functionality is how to determine that a file is actually new. There're three strategies for that:
  * <ul>
@@ -187,14 +191,88 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   @Override
   public void poll(PollContext<InputStream, LocalFileAttributes> pollContext) {
-    PollWalker walker = new PollWalker(directoryPath, pollContext);
+
+    if (pollContext.isSourceStopping()) {
+      return;
+    }
+
+    LocalFileSystem fileSystem;
     try {
-      walkFileTree(directoryPath, EnumSet.of(FOLLOW_LINKS), MAX_VALUE, walker);
+      fileSystem = fileSystemProvider.connect();
+    } catch (Exception e) {
+      LOGGER.error(format("Could not obtain connection while trying to poll directory '%s'. %s", directoryPath.toString(),
+                          e.getMessage()),
+                   e);
+      return;
+    }
+
+    try {
+      List<Result<InputStream, LocalFileAttributes>> fileList =
+          fileSystem
+              .list(config, directoryPath.toString(), recursive, matcher,
+                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
+
+      if (fileList.isEmpty()) {
+        return;
+      }
+
+      for (Result<InputStream, LocalFileAttributes> file : fileList) {
+
+        LocalFileAttributes attributes = file.getAttributes().orElse(null);
+        if (attributes == null) {
+          continue;
+        }
+
+        if (attributes.isDirectory()) {
+          continue;
+        }
+
+        if (!matcher.test(attributes)) {
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
+          }
+          return;
+        }
+
+        if (!processFile(file, attributes, pollContext)) {
+          break;
+        }
+      }
     } catch (Exception e) {
       LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
                           directoryPath.toString(), e.getMessage()),
                    e);
+    } finally {
+      if (fileSystem != null) {
+        fileSystemProvider.disconnect(fileSystem);
+      }
     }
+
+  }
+
+  private boolean processFile(Result<InputStream, LocalFileAttributes> file, LocalFileAttributes attributes,
+                              PollContext<InputStream, LocalFileAttributes> pollContext) {
+    String fullPath = attributes.getPath();
+
+    PollContext.PollItemStatus status = pollContext.accept(item -> {
+      SourceCallbackContext ctx = item.getSourceCallbackContext();
+      try {
+
+        ctx.addVariable(ATTRIBUTES_CONTEXT_VAR, attributes);
+        item.setResult(file);
+        item.setId(attributes.getPath());
+        if (watermarkMode != DISABLED) {
+          item.setWatermark(getWatermarkTimestamp(attributes));
+        }
+      } catch (Throwable t) {
+        LOGGER.error(format("Found file '%s' but found exception trying to dispatch it for processing. %s",
+                            fullPath, t.getMessage()),
+                     t);
+        onRejectedItem(file, ctx);
+      }
+    });
+
+    return status != SOURCE_STOPPING;
   }
 
   private void postAction(PostActionGroup postAction, SourceCallbackContext ctx) {
@@ -242,63 +320,13 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
     return new OnNewFileCommand(fileSystem).resolveRootPath(directory);
   }
 
-  // not to be confused with Paul Walker
-  private class PollWalker extends SimpleFileVisitor<Path> {
-
-    private final Path directoryPath;
-    private final PollContext<InputStream, LocalFileAttributes> pollContext;
-
-    public PollWalker(Path directoryPath, PollContext<InputStream, LocalFileAttributes> pollContext) {
-      this.directoryPath = directoryPath;
-      this.pollContext = pollContext;
-    }
-
-    @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-      if (directoryPath.equals(dir)) {
-        return CONTINUE;
-      }
-
-      return recursive ? CONTINUE : SKIP_SUBTREE;
-    }
-
-    @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-      if (pollContext.isSourceStopping()) {
-        return TERMINATE;
-      }
-
-      LocalFileAttributes attributes = new LocalFileAttributes(file, attrs);
-
-      if (!matcher.test(attributes)) {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
-        }
-        return CONTINUE;
-      }
-
-      pollContext.accept(item -> {
-        item.setResult(createResult(file, attributes))
-            .setId(file.toString());
-
-        if (watermarkMode != DISABLED) {
-          item.setWatermark(getWatermarkTimestamp(attributes));
-        }
-
-        item.getSourceCallbackContext().addVariable(ATTRIBUTES_CONTEXT_VAR, attributes);
-      });
-
-      return pollContext.isSourceStopping() ? TERMINATE : CONTINUE;
-    }
-
-    private LocalDateTime getWatermarkTimestamp(LocalFileAttributes attributes) {
-      if (watermarkMode == MODIFIED_TIMESTAMP) {
-        return attributes.getLastModifiedTime();
-      } else if (watermarkMode == CREATED_TIMESTAMP) {
-        return attributes.getCreationTime();
-      } else {
-        throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
-      }
+  private LocalDateTime getWatermarkTimestamp(LocalFileAttributes attributes) {
+    if (watermarkMode == MODIFIED_TIMESTAMP) {
+      return attributes.getLastModifiedTime();
+    } else if (watermarkMode == CREATED_TIMESTAMP) {
+      return attributes.getCreationTime();
+    } else {
+      throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
     }
   }
 }
