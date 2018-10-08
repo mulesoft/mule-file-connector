@@ -207,10 +207,11 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
     }
 
     try {
+      Long timeBetweenSizeCheckInMillis =
+          config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null);
+
       List<Result<InputStream, LocalFileAttributes>> fileList =
-          fileSystem
-              .list(config, directoryPath.toString(), recursive, matcher,
-                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
+          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis);
 
       if (fileList.isEmpty()) {
         return;
@@ -219,11 +220,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       for (Result<InputStream, LocalFileAttributes> file : fileList) {
 
         LocalFileAttributes attributes = file.getAttributes().orElse(null);
-        if (attributes == null) {
-          continue;
-        }
-
-        if (attributes.isDirectory()) {
+        if (attributes == null || attributes.isDirectory()) {
           continue;
         }
 
@@ -234,7 +231,9 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
           return;
         }
 
-        if (!processFile(file, attributes, pollContext)) {
+        PollContext.PollItemStatus status = processFile(file, attributes, pollContext);
+
+        if (status == SOURCE_STOPPING) {
           break;
         }
       }
@@ -250,11 +249,11 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   }
 
-  private boolean processFile(Result<InputStream, LocalFileAttributes> file, LocalFileAttributes attributes,
-                              PollContext<InputStream, LocalFileAttributes> pollContext) {
+  private PollContext.PollItemStatus processFile(Result<InputStream, LocalFileAttributes> file, LocalFileAttributes attributes,
+                                                 PollContext<InputStream, LocalFileAttributes> pollContext) {
     String fullPath = attributes.getPath();
 
-    PollContext.PollItemStatus status = pollContext.accept(item -> {
+    return pollContext.accept(item -> {
       SourceCallbackContext ctx = item.getSourceCallbackContext();
       try {
 
@@ -271,8 +270,6 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         onRejectedItem(file, ctx);
       }
     });
-
-    return status != SOURCE_STOPPING;
   }
 
   private void postAction(PostActionGroup postAction, SourceCallbackContext ctx) {
@@ -321,12 +318,13 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   }
 
   private LocalDateTime getWatermarkTimestamp(LocalFileAttributes attributes) {
-    if (watermarkMode == MODIFIED_TIMESTAMP) {
-      return attributes.getLastModifiedTime();
-    } else if (watermarkMode == CREATED_TIMESTAMP) {
-      return attributes.getCreationTime();
-    } else {
-      throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
+    switch (watermarkMode) {
+      case MODIFIED_TIMESTAMP:
+        return attributes.getLastModifiedTime();
+      case CREATED_TIMESTAMP:
+        return attributes.getCreationTime();
+      default:
+        throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
     }
   }
 }
