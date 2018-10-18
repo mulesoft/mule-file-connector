@@ -10,10 +10,12 @@ import static java.lang.String.format;
 import static java.nio.charset.Charset.availableCharsets;
 import static org.apache.commons.io.FileUtils.readFileToByteArray;
 import static org.apache.commons.io.FileUtils.writeStringToFile;
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeFalse;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.FileWriteMode.APPEND;
 import static org.mule.extension.file.common.api.FileWriteMode.CREATE_NEW;
@@ -133,6 +135,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
   @Test
   public void writeOnDirectlyWithOutPermissions() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     expectedError.expectError("FILE", FileError.ACCESS_DENIED, FileAccessDeniedException.class,
                               "because access was denied by the operating system");
     File folder = temporaryFolder.newFolder();

@@ -34,6 +34,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.mule.tck.probe.JUnitLambdaProbe;
+import org.mule.tck.probe.PollingProber;
 
 @Feature(FILE_EXTENSION)
 public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCase {
@@ -41,7 +43,7 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
   protected static final String NAMESPACE = "FILE";
   protected static final String HELLO_WORLD = "Hello World!";
   protected static final String HELLO_FILE_NAME = "hello.json";
-  protected static final String HELLO_PATH = "files/" + HELLO_FILE_NAME;
+  protected static final String HELLO_PATH = "files/" + File.separator + HELLO_FILE_NAME;
   protected static final String TEST_FILE_PATTERN = "test-file-%d.html";
   protected static final String SUB_DIRECTORY_NAME = "subDirectory";
   protected static final String CONTENT = "foo";
@@ -67,7 +69,10 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
 
   @Override
   protected void doTearDownAfterMuleContextDispose() throws Exception {
-    temporaryFolder.delete();
+    new PollingProber(300000, 1000).check(new JUnitLambdaProbe(() -> {
+      temporaryFolder.delete();
+      return temporaryFolder.getRoot().exists() ? false : true;
+    }));
   }
 
   protected void assertExists(boolean exists, File... files) {
@@ -165,7 +170,7 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
   }
 
   protected void writeByteByByteAsync(String path, String content, long delayBetweenCharacters) throws Exception {
-    path = path.startsWith("/") ? path : temporaryFolder.getRoot().getPath() + "/" + path;
+    path = path.startsWith("/") ? path : temporaryFolder.getRoot().getPath() + File.separator + path;
     OutputStream outputStream = FileUtils.openOutputStream(new File(path), true);
     new Thread(() -> {
       try {

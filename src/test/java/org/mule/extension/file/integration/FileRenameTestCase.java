@@ -8,9 +8,11 @@ package org.mule.extension.file.integration;
 
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
@@ -81,6 +83,7 @@ public class FileRenameTestCase extends FileConnectorTestCase {
 
   @Test
   public void failOnOverwriteANonReadableDirectory() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     expectedError.expectCause(instanceOf(MuleRuntimeException.class));
 
     File origin = createHelloWorldFile().getParentFile();
