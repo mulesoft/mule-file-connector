@@ -7,11 +7,13 @@
 package org.mule.extension.file.integration;
 
 import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
@@ -109,6 +111,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
 
   @Test
   public void readWithoutEnoughPermissions() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,
                               "access was denied by the operating system");
 
