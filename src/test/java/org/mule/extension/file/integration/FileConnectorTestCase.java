@@ -43,7 +43,7 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
   protected static final String NAMESPACE = "FILE";
   protected static final String HELLO_WORLD = "Hello World!";
   protected static final String HELLO_FILE_NAME = "hello.json";
-  protected static final String HELLO_PATH = "files/" + File.separator + HELLO_FILE_NAME;
+  protected static final String HELLO_PATH = "files" + File.separator + HELLO_FILE_NAME;
   protected static final String TEST_FILE_PATTERN = "test-file-%d.html";
   protected static final String SUB_DIRECTORY_NAME = "subDirectory";
   protected static final String CONTENT = "foo";
