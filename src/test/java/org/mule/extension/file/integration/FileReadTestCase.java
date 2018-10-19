@@ -18,6 +18,8 @@ import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.runtime.api.metadata.MediaType.JSON;
+
+import org.junit.Ignore;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
@@ -150,6 +152,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
   }
 
   @Test
+  @Ignore("MULE-15859 - Different error is expected when you try to read a file that is deleted in Windows")
   public void readFileThatIsDeleted() throws Exception {
     expectedException.expectMessage("was read but does not exist anymore.");
     File file = new File(temporaryFolder.getRoot(), DELETED_FILE_NAME);

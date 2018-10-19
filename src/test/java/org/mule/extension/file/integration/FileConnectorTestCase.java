@@ -69,7 +69,7 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
 
   @Override
   protected void doTearDownAfterMuleContextDispose() throws Exception {
-    new PollingProber(300000, 1000).check(new JUnitLambdaProbe(() -> {
+    new PollingProber(60000, 1000).check(new JUnitLambdaProbe(() -> {
       temporaryFolder.delete();
       return temporaryFolder.getRoot().exists() ? false : true;
     }));
