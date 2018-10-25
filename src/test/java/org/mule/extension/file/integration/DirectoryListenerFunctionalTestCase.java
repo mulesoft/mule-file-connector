@@ -6,7 +6,6 @@
  */
 package org.mule.extension.file.integration;
 
-import static java.nio.file.Files.setLastModifiedTime;
 import static java.time.LocalDateTime.now;
 import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -17,6 +16,7 @@ import static org.junit.Assert.assertThat;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.tck.probe.PollingProber.check;
 import static org.mule.tck.probe.PollingProber.checkNot;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.runtime.api.exception.MuleException;
@@ -28,6 +28,7 @@ import org.mule.runtime.core.api.event.CoreEvent;
 import org.mule.runtime.core.api.processor.Processor;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
@@ -282,8 +283,9 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     stopFlow(testFlowName);
     final File ignoredFile = new File(listenerFolder, "ignoreMe.txt");
     write(ignoredFile, WATCH_CONTENT);
-    setLastModifiedTime(ignoredFile.toPath(), FileTime.from(now().minus(1, HOURS)
-        .atZone(systemDefault()).toInstant()));
+    FileTime fileTime = FileTime.from(now().minus(1, HOURS).atZone(systemDefault()).toInstant());
+    Files.setAttribute(ignoredFile.toPath(), "creationTime", fileTime);
+    Files.setAttribute(ignoredFile.toPath(), "lastModifiedTime", fileTime);
 
     RECEIVED_MESSAGES.clear();
     startFlow(testFlowName);
