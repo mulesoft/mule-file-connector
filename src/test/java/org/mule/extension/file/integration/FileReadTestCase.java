@@ -32,6 +32,7 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -194,8 +195,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
     @Override
     public CoreEvent process(CoreEvent event) {
       try {
-        AbstractFileInputStream payload = (AbstractFileInputStream) event.getMessage().getPayload().getValue();
-        payloadString = IOUtils.toString(payload);
+        payloadString = IOUtils.toString((InputStream) event.getMessage().getPayload().getValue());
       } catch (Exception e) {
         fail();
       }
