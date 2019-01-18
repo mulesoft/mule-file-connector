@@ -71,6 +71,9 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
     return read(config, fileAttributes, lock, timeBetweenSizeCheck);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
