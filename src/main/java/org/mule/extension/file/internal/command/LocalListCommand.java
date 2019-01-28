@@ -29,14 +29,11 @@ import java.util.function.Predicate;
  */
 public final class LocalListCommand extends LocalFileCommand implements ListCommand<LocalFileAttributes> {
 
-  private final LocalReadCommand readCommand;
-
   /**
    * {@inheritDoc}
    */
-  public LocalListCommand(LocalFileSystem fileSystem, LocalReadCommand readCommand) {
+  public LocalListCommand(LocalFileSystem fileSystem) {
     super(fileSystem);
-    this.readCommand = readCommand;
   }
 
   /**
@@ -98,7 +95,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
         }
       } else {
         if (matcher.test(attributes)) {
-          accumulator.add(readCommand.read(config, attributes, false, timeBetweenSizeCheck));
+          accumulator.add(fileSystem.read(config, child.getAbsolutePath(), false, timeBetweenSizeCheck));
         }
       }
     }

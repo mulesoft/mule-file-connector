@@ -67,17 +67,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
                                                  path));
     }
 
-    LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
-    return read(config, fileAttributes, lock, timeBetweenSizeCheck);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
-                                                       Long timeBetweenSizeCheck) {
-    Path path = resolvePath(attributes.getPath());
     FileChannel channel = null;
     PathLock pathLock = null;
     InputStream payload = null;
@@ -91,12 +80,13 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
         pathLock = new NullPathLock(path);
       }
 
-      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck, attributes);
+      LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
+      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck, fileAttributes);
 
       return Result.<InputStream, LocalFileAttributes>builder()
           .output(payload)
-          .mediaType(fileSystem.getFileMessageMediaType(attributes))
-          .attributes(attributes)
+          .mediaType(fileSystem.getFileMessageMediaType(fileAttributes))
+          .attributes(fileAttributes)
           .build();
 
     } catch (AccessDeniedException e) {
