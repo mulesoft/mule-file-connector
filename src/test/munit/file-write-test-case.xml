@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:java="http://www.mulesoft.org/schema/mule/java"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+      http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+    <munit:config name="asd">
+
+    </munit:config>
+
+    <file:config name="file">
+        <file:connection workingDir="${munit.temporary.directory}" />
+    </file:config>
+
+    <munit:test name="writeWithLock">
+        <munit:execution>
+            <set-variable variableName="path" value="${munit.temporary.directory}/text.txt"/>
+            <set-variable variableName="lock" value="true"/>
+            <set-variable variableName="mode" value="CREATE_NEW"/>
+            <set-variable variableName="createParent" value="false"/>
+            <set-payload value="Hello World!"/>
+            <flow-ref name="write"/>
+        </munit:execution>
+        <munit:validation>
+            <file:read config-ref="file" path="${munit.temporary.directory}/text.txt" />
+            <munit-tools:assert-equals actual="#[payload]" expected="Hello World!" />
+        </munit:validation>
+    </munit:test>
+
+    <flow name="write">
+        <file:write config-ref="file" path="#[vars.path]" lock="#[vars.lock]" mode="#[vars.mode]" createParentDirectories="#[vars.createParent]"/>
+    </flow>
+
+    <flow name="writeFromStreamWithLock">
+        <set-variable variableName="path" value="${munit.temporary.directory}/text.txt"/>
+        <set-variable variableName="lock" value="true"/>
+        <set-variable variableName="mode" value="APPEND"/>
+        <set-variable variableName="createParent" value="false"/>
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()" />
+        <flow-ref name="write"/>
+    </flow>
+
+    <flow name="writeLocks">
+        <scatter-gather>
+            <route>
+                <flow-ref name="writeFromStreamWithLock"/>
+            </route>
+            <route>
+                <flow-ref name="writeFromStreamWithLock"/>
+            </route>
+        </scatter-gather>
+    </flow>
+
+    <munit:test name="writeAlreadyLocked" expectedException="org.mule.extension.file.common.api.exceptions.FileLockedException" >
+        <munit:execution>
+            <flow-ref name="writeLocks"/>
+        </munit:execution>
+        <!--<munit:validation>-->
+            <!--<file:read config-ref="file" path="${munit.temporary.directory}/text.txt" />-->
+            <!--<munit-tools:assert-equals actual="#[payload]" expected="Hello World!" />-->
+        <!--</munit:validation>-->
+    </munit:test>
+
+</mule>
