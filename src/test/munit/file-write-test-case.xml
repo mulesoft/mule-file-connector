@@ -47,25 +47,28 @@
         <flow-ref name="write"/>
     </flow>
 
-    <flow name="writeLocks">
-        <scatter-gather>
-            <route>
-                <flow-ref name="writeFromStreamWithLock"/>
-            </route>
-            <route>
-                <flow-ref name="writeFromStreamWithLock"/>
-            </route>
-        </scatter-gather>
-    </flow>
-
-    <munit:test name="writeAlreadyLocked" expectedException="org.mule.extension.file.common.api.exceptions.FileLockedException" >
+    <munit:test name="writeAlreadyLocked" >
         <munit:execution>
-            <flow-ref name="writeLocks"/>
+            <try>
+                <scatter-gather>
+                    <route>
+                        <flow-ref name="writeFromStreamWithLock"/>
+                    </route>
+                    <route>
+                        <flow-ref name="writeFromStreamWithLock"/>
+                    </route>
+                </scatter-gather>
+                <error-handler>
+                    <on-error-continue type="COMPOSITE_ROUTING">
+                        <set-payload value="#[error.cause]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
         </munit:execution>
-        <!--<munit:validation>-->
-            <!--<file:read config-ref="file" path="${munit.temporary.directory}/text.txt" />-->
-            <!--<munit-tools:assert-equals actual="#[payload]" expected="Hello World!" />-->
-        <!--</munit:validation>-->
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
+        </munit:validation>
     </munit:test>
 
 </mule>
