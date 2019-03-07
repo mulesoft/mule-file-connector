@@ -6,6 +6,7 @@
  */
 package org.mule.extension.file.internal;
 
+import static java.lang.String.format;
 import static org.mule.runtime.api.meta.model.display.PathModel.Location.EXTERNAL;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
@@ -21,6 +22,7 @@ import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileCopyErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileDeleteErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileListErrorTypeProvider;
+import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
@@ -155,9 +157,23 @@ public final class FileOperations extends BaseFileSystemOperations {
                     @Path(type = FILE, location = EXTERNAL) String path,
                     @Content @Summary("Content to be written into the file") InputStream content,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
-                    @Optional(defaultValue = "false") @Placement(tab = ADVANCED_TAB) boolean lock, @Optional(
-                        defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode) {
-    super.doWrite(config, fileSystem, path, content, createParentDirectories, lock, mode);
+                    @Optional(defaultValue = "false") @Placement(tab = ADVANCED_TAB) boolean lock,
+                    @Optional(defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode,
+                    @Optional(defaultValue = "0L" ) @Placement(tab = ADVANCED_TAB) Long lockTimeout,
+                    @Optional(defaultValue = "MILLISECONDS" ) @Placement(tab = ADVANCED_TAB) TimeUnit lockTimeoutUnit) {
+    Long timeout = config.getTimeBetweenSizeCheckInMillis(lockTimeout, lockTimeoutUnit).orElse(0L);
+    for (Long stop = System.nanoTime()+timeout; stop > System.nanoTime(); ){
+      try {
+        super.doWrite(config, fileSystem, path, content, createParentDirectories, lock, mode);
+      }
+      catch (FileLockedException e){
+        continue;
+      }
+      catch (Exception e){
+        throw e;
+      }
+    }
+    throw new FileLockedException(String.format("Could not lock file '%s' because it's already owned by another process", path));
   }
 
   /**
