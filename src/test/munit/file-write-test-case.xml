@@ -11,9 +11,7 @@
       http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
       http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
 
-    <munit:config name="asd">
-
-    </munit:config>
+    <munit:config name="file-write-test-case.xml"/>
 
     <file:config name="file">
         <file:connection workingDir="${munit.temporary.directory}" />
