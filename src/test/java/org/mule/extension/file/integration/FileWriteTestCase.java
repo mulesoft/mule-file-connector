@@ -261,12 +261,4 @@ public class FileWriteTestCase extends FileConnectorTestCase {
       }
     });
   }
-
-  public static void waitt() {
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      fail();
-    }
-  }
 }
