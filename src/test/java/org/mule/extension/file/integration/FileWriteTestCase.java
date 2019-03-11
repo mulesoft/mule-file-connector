@@ -15,6 +15,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.FileWriteMode.APPEND;
@@ -23,7 +24,6 @@ import static org.mule.extension.file.common.api.FileWriteMode.OVERWRITE;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 
-import org.junit.Ignore;
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
@@ -32,10 +32,16 @@ import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.runtime.core.api.event.CoreEvent;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 
-import io.qameta.allure.Feature;
+import org.junit.Ignore;
 import org.junit.Test;
+import io.qameta.allure.Feature;
+
 
 @Feature(FILE_EXTENSION)
 public class FileWriteTestCase extends FileConnectorTestCase {
@@ -100,6 +106,33 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     expectedError.expectError(NAMESPACE, ILLEGAL_PATH, IllegalPathException.class,
                               "because path to it doesn't exist");
     doWriteOnNotExistingParentWithoutCreateFolder(CREATE_NEW);
+  }
+
+  @Test
+  public void writeWithLock() throws Exception {
+    String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
+    flowRunner("writeWithLock").withVariable("mode", CREATE_NEW)
+        .withVariable("createParent", false)
+        .withVariable("path", path)
+        .withPayload("Hello World!")
+        .run();
+    String content = readPathAsString(path);
+    assertThat(content, is(HELLO_WORLD));
+  }
+
+  @Test
+  public void writeOnLockedFile() throws Exception {
+    File file = temporaryFolder.newFile();
+    Exception exception =
+        flowRunner("writeAlreadyLocked").withVariable("path", file.getAbsolutePath())
+            .withVariable("createParent", false)
+            .withVariable("mode", APPEND).runExpectingException();
+    Method methodGetErrors = exception.getCause().getClass().getMethod("getErrors");
+    Object error = ((List<Object>) methodGetErrors.invoke(exception.getCause())).get(0);
+    Method methodGetErrorType = error.getClass().getMethod("getErrorType");
+    methodGetErrorType.setAccessible(true);
+    Object fileError = methodGetErrorType.invoke(error);
+    assertThat(fileError.toString(), is("FILE:FILE_LOCK"));
   }
 
   @Test
@@ -183,7 +216,6 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     assertThat(content, is(HELLO_WORLD));
   }
 
-
   private void doWriteOnNotExistingFile(FileWriteMode mode) throws Exception {
     String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
     doWrite(path, HELLO_WORLD, mode, false);
@@ -205,5 +237,28 @@ public class FileWriteTestCase extends FileConnectorTestCase {
 
     doWrite(file.getAbsolutePath(), HELLO_WORLD, mode, false);
     return readPathAsString(file.getAbsolutePath());
+  }
+
+  public static InputStream getContentStream() {
+    return (new InputStream() {
+
+      String text = "Hello World!";
+      char[] textArray = text.toCharArray();
+      int index = -1;
+
+      @Override
+      public int read() throws IOException {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          fail();
+        }
+        if (index < text.length() - 1) {
+          index++;
+          return (int) textArray[index];
+        }
+        return -1;
+      }
+    });
   }
 }
