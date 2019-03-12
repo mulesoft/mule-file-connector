@@ -2,51 +2,96 @@
 <mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:file="http://www.mulesoft.org/schema/mule/file"
       xmlns:test="http://www.mulesoft.org/schema/mule/test"
+      xmlns:java="http://www.mulesoft.org/schema/mule/java"
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-        http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
-        http://www.mulesoft.org/schema/mule/test http://www.mulesoft.org/schema/mule/test/current/mule-test.xsd">
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/test http://www.mulesoft.org/schema/mule/test/current/mule-test.xsd
+      http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
 
     <file:config name="file">
-        <file:connection workingDir="${workingDir}" />
+        <file:connection workingDir="${workingDir}"/>
     </file:config>
 
     <flow name="read">
-        <logger level="ERROR" message="#[vars.streaming]" />
+        <logger level="ERROR" message="#[vars.streaming]"/>
         <choice>
             <when expression="#[vars.streaming]">
-                <file:read config-ref="file" path="#[vars.path]" />
-                <object-to-string-transformer />
+                <file:read config-ref="file" path="#[vars.path]"/>
+                <object-to-string-transformer/>
             </when>
             <otherwise>
                 <file:read config-ref="file" path="#[vars.path]">
-                    <non-repeatable-stream />
+                    <non-repeatable-stream/>
                 </file:read>
-                <test:processor class="org.mule.extension.file.integration.FileReadTestCase$CapturePayloadProcessor" />
+                <test:processor class="org.mule.extension.file.integration.FileReadTestCase$CapturePayloadProcessor"/>
             </otherwise>
         </choice>
     </flow>
 
-    <flow name="readWithLock">
+    <flow name="readStreamWithLock">
         <file:read config-ref="file" path="#[vars.path]" lock="true">
-            <non-repeatable-stream />
+            <non-repeatable-stream/>
         </file:read>
+    </flow>
+
+    <flow name="readStreamWithLockTimeout">
+        <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]">
+            <non-repeatable-stream/>
+        </file:read>
+    </flow>
+
+    <flow name="readStreamWithLockTimeoutAndUnit">
+        <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]"
+                   lockTimeoutUnit="#[vars.lockTimeoutUnit]">
+            <non-repeatable-stream/>
+        </file:read>
+    </flow>
+
+    <flow name="readAlreadyLocked">
+        <scatter-gather>
+            <route>
+                <flow-ref name="readStreamWithLock"/>
+            </route>
+            <route>
+                <flow-ref name="readStreamWithLock"/>
+            </route>
+        </scatter-gather>
+    </flow>
+
+    <flow name="readOnAlreadyLockedWithTimeout">
+        <scatter-gather>
+            <route>
+                <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
+                                    method="getContentStream()"/>
+                <file:write config-ref="file" path="#[vars.path]" lock="true" mode="APPEND"
+                            createParentDirectories="false"/>
+            </route>
+            <route>
+                <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
+                                    method="sleepThread()"/>
+                <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]"
+                           lockTimeoutUnit="#[vars.lockTimeoutUnit]">
+                    <non-repeatable-stream/>
+                </file:read>
+            </route>
+        </scatter-gather>
     </flow>
 
     <flow name="readWithForcedMimeType">
         <file:read config-ref="file" path="#[vars.path]" outputMimeType="test/test"/>
-        <object-to-string-transformer />
+        <object-to-string-transformer/>
     </flow>
 
     <flow name="readFileThatIsDeleted">
         <file:read config-ref="file" path="#[vars.path]"/>
         <file:delete config-ref="file" path="#[vars.path]"/>
-        <object-to-string-transformer />
+        <object-to-string-transformer/>
     </flow>
 
     <flow name="readFileWithSizeCheck">
         <file:read config-ref="file" path="#[vars.path]" timeBetweenSizeCheck="2000"/>
-        <object-to-string-transformer />
+        <object-to-string-transformer/>
     </flow>
-    
+
 </mule>

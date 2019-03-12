@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:java="http://www.mulesoft.org/schema/mule/java"
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-        http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
 
     <import file="file-read-config.xml"/>
 
@@ -22,4 +24,55 @@
         <set-payload value="Hello World!" />
         <file:write config-ref="file" path="#[vars.path]" mode="OVERWRITE"/>
     </flow>
+
+    <flow name="writeWithLock">
+        <file:write config-ref="file" lock="true" path="#[vars.path]" mode="#[vars.mode]"
+                   createParentDirectories="#[vars.createParent]"/>
+    </flow>
+
+    <flow name="writeFromStreamWithLock">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()" />
+        <file:write config-ref="file" path="#[vars.path]" lock="true" mode="#[vars.mode]"
+                   createParentDirectories="#[vars.createParent]"/>
+    </flow>
+
+    <flow name="writeAlreadyLocked">
+        <scatter-gather>
+            <route>
+                <flow-ref name="writeFromStreamWithLock"/>
+            </route>
+            <route>
+                <flow-ref name="writeFromStreamWithLock"/>
+            </route>
+        </scatter-gather>
+    </flow>
+
+    <flow name="writeWithLockTimeout">
+        <set-payload value="Hello World!" />
+        <file:write config-ref="file" path="#[vars.path]" lock="true" mode="#[vars.mode]"
+                    createParentDirectories="#[vars.createParent]" lockTimeout="#[vars.lockTimeout]" />
+    </flow>
+
+    <flow name="writeWithLockTimeoutAndUnit">
+        <file:write config-ref="file" path="#[vars.path]" lock="true" mode="#[vars.mode]"
+                    createParentDirectories="#[vars.createParent]" lockTimeout="#[vars.lockTimeout]" lockTimeoutUnit="#[vars.lockTimeoutUnit]"/>
+    </flow>
+
+    <flow name="writeFromStreamWithLockTimeoutAndUnit">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()" />
+        <file:write config-ref="file" path="#[vars.path]" lock="true" mode="#[vars.mode]"
+                    createParentDirectories="false" lockTimeout="#[vars.lockTimeout]" lockTimeoutUnit="#[vars.lockTimeoutUnit]"/>
+    </flow>
+
+    <flow name="writeOnAlreadyLockedWithTimeout">
+        <scatter-gather>
+            <route>
+                <flow-ref name="writeFromStreamWithLockTimeoutAndUnit"/>
+            </route>
+            <route>
+                <flow-ref name="writeFromStreamWithLockTimeoutAndUnit"/>
+            </route>
+        </scatter-gather>
+    </flow>
+
 </mule>

@@ -6,7 +6,6 @@
  */
 package org.mule.extension.file.internal;
 
-import static java.lang.String.format;
 import static org.mule.runtime.api.meta.model.display.PathModel.Location.EXTERNAL;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
@@ -61,13 +60,14 @@ public final class FileOperations extends BaseFileSystemOperations {
    * {@code recursive} parameter.
    * <p>
    *
-   * @param config        the config that is parameterizing this operation
+   * @param config the config that is parameterizing this operation
    * @param directoryPath the path to the directory to be listed
-   * @param recursive     whether to include the contents of sub-directories. Defaults to false.
-   * @param matcher     a matcher used to filter the output list
+   * @param recursive whether to include the contents of sub-directories. Defaults to false.
+   * @param matcher a matcher used to filter the output list
    * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
    * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
-   * @return a {@link List} of {@link Message messages} each one containing each file's content in the payload and metadata in the attributes
+   * @return a {@link List} of {@link Message messages} each one containing each file's content in the payload and metadata in the
+   *         attributes
    * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exist or is not a directory
    */
   @Summary("List all the files from given directory")
@@ -92,22 +92,22 @@ public final class FileOperations extends BaseFileSystemOperations {
 
   /**
    * Obtains the content and metadata of a file at a given path. The operation itself returns a {@link Message} which payload is a
-   * {@link InputStream} with the file's content, and the metadata is represent as a {@link LocalFileAttributes} object that's placed
-   * as the message {@link Message#getAttributes() attributes}.
+   * {@link InputStream} with the file's content, and the metadata is represent as a {@link LocalFileAttributes} object that's
+   * placed as the message {@link Message#getAttributes() attributes}.
    * <p>
    * If the {@code lock} parameter is set to {@code true}, then a file system level lock will be placed on the file until the
    * input stream this operation returns is closed or fully consumed. Because the lock is actually provided by the host file
    * system, its behavior might change depending on the mounted drive and the operation system on which mule is running. Take that
    * into consideration before blindly relying on this lock.
    * <p>
-   * This method also makes a best effort to determine the mime type of the file being read. The file's extension will
-   * be used to make an educated guess on the file's mime type. The user also has the chance to force the output encoding and
-   * mimeType through the {@code outputEncoding} and {@code outputMimeType} optional parameters.
+   * This method also makes a best effort to determine the mime type of the file being read. The file's extension will be used to
+   * make an educated guess on the file's mime type. The user also has the chance to force the output encoding and mimeType
+   * through the {@code outputEncoding} and {@code outputMimeType} optional parameters.
    *
-   * @param config     the config that is parameterizing this operation
+   * @param config the config that is parameterizing this operation
    * @param fileSystem a reference to the host {@link FileSystem}
-   * @param path       the path to the file to be read
-   * @param lock       whether or not to lock the file. Defaults to false.
+   * @param path the path to the file to be read
+   * @param lock whether or not to lock the file. Defaults to false.
    * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
    * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
    * @return the file's content and metadata on a {@link FileAttributes} instance
@@ -125,10 +125,34 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                        @ConfigOverride @Placement(
                                                            tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
                                                        @ConfigOverride @Placement(
-                                                           tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
-    Result result = doRead(config, fileSystem, path, lock,
-                           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
-    return (Result<InputStream, LocalFileAttributes>) result;
+                                                           tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
+                                                       @Optional(defaultValue = "0") @Placement(
+                                                           tab = ADVANCED_TAB) Long lockTimeout,
+                                                       @Optional(defaultValue = "MILLISECONDS") @Placement(
+                                                           tab = ADVANCED_TAB) TimeUnit lockTimeoutUnit) {
+    Long nanoTimeout = lockTimeoutUnit == null ? 0 : lockTimeoutUnit.toNanos(lockTimeout);
+    long startTime = System.nanoTime();
+    do {
+      try {
+        Result result = doRead(config, fileSystem, path, lock,
+                               config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit)
+                                   .orElse(null));
+        return (Result<InputStream, LocalFileAttributes>) result;
+      } catch (FileLockedException e) {
+        continue;
+      } catch (Exception e) {
+        throw e;
+      }
+    } while (System.nanoTime() - startTime < nanoTimeout);
+    if (lockTimeout != 0) {
+      throw new FileLockedException(String
+          .format("Could not lock file '%s' for reading because it remained locked by another process for the whole timeout",
+                  path));
+    } else {
+      throw new FileLockedException(String
+          .format("Could not lock file '%s' for reading because it's already owned by another process",
+                  path));
+    }
   }
 
   /**
@@ -142,13 +166,13 @@ public final class FileOperations extends BaseFileSystemOperations {
    * This operation also supports locking support depending on the value of the {@code lock} argument, but following the same
    * rules and considerations as described in the read operation.
    *
-   * @param config                  the {@link FileConnectorConfig} on which the operation is being executed
-   * @param fileSystem              a reference to the host {@link FileSystem}
-   * @param path                    the path of the file to be written
-   * @param content                 the content to be written into the file. Defaults to the current {@link Message} payload
+   * @param config the {@link FileConnectorConfig} on which the operation is being executed
+   * @param fileSystem a reference to the host {@link FileSystem}
+   * @param path the path of the file to be written
+   * @param content the content to be written into the file. Defaults to the current {@link Message} payload
    * @param createParentDirectories whether or not to attempt creating any parent directories which don't exists.
-   * @param lock                    whether or not to lock the file. Defaults to false
-   * @param mode                    a {@link FileWriteMode}. Defaults to {@code OVERWRITE}
+   * @param lock whether or not to lock the file. Defaults to false
+   * @param mode a {@link FileWriteMode}. Defaults to {@code OVERWRITE}
    * @throws IllegalArgumentException if an illegal combination of arguments is supplied
    */
   @Summary("Writes the given \"Content\" in the file pointed by \"Path\"")
@@ -158,30 +182,42 @@ public final class FileOperations extends BaseFileSystemOperations {
                     @Content @Summary("Content to be written into the file") InputStream content,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
                     @Optional(defaultValue = "false") @Placement(tab = ADVANCED_TAB) boolean lock,
-                    @Optional(defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode,
-                    @Optional(defaultValue = "0L" ) @Placement(tab = ADVANCED_TAB) Long lockTimeout,
-                    @Optional(defaultValue = "MILLISECONDS" ) @Placement(tab = ADVANCED_TAB) TimeUnit lockTimeoutUnit) {
-    Long timeout = config.getTimeBetweenSizeCheckInMillis(lockTimeout, lockTimeoutUnit).orElse(0L);
-    for (Long stop = System.nanoTime()+timeout; stop > System.nanoTime(); ){
+                    @Optional(
+                        defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode,
+                    @Optional(defaultValue = "0") @Placement(tab = ADVANCED_TAB) Long lockTimeout,
+                    @Optional(defaultValue = "MILLISECONDS") @Placement(tab = ADVANCED_TAB) TimeUnit lockTimeoutUnit) {
+    Boolean success = false;
+    Long nanoTimeout = lockTimeoutUnit == null ? 0 : lockTimeoutUnit.toNanos(lockTimeout);
+    long startTime = System.nanoTime();
+    do {
       try {
         super.doWrite(config, fileSystem, path, content, createParentDirectories, lock, mode);
-      }
-      catch (FileLockedException e){
+        success = true;
+      } catch (FileLockedException e) {
         continue;
-      }
-      catch (Exception e){
+      } catch (Exception e) {
         throw e;
       }
+    } while (System.nanoTime() - startTime < nanoTimeout && !success);
+    if (!success) {
+      if (lockTimeout != 0) {
+        throw new FileLockedException(String
+            .format("Could not lock file '%s' for writing because it remained locked by another process for the whole timeout",
+                    path));
+      } else {
+        throw new FileLockedException(String
+            .format("Could not lock file '%s' for writing because it's already owned by another process",
+                    path));
+      }
     }
-    throw new FileLockedException(String.format("Could not lock file '%s' because it's already owned by another process", path));
   }
 
   /**
    * Copies the file at the {@code sourcePath} into the {@code targetPath}.
    * <p>
    * If {@code targetPath} doesn't exist, and neither does its parent, then an attempt will be made to create depending on the
-   * value of the {@code createParentFolder} argument. If such argument is {@false}, then a {@code FILE:ILLEGAL_PATH} will
-   * be thrown.
+   * value of the {@code createParentFolder} argument. If such argument is {@false}, then a {@code FILE:ILLEGAL_PATH} will be
+   * thrown.
    * <p>
    * If the target file already exists, then it will be overwritten if the {@code overwrite} argument is {@code true}. Otherwise,
    * {@code FILE:FILE_ALREADY_EXISTS} error will be thrown.
@@ -189,13 +225,13 @@ public final class FileOperations extends BaseFileSystemOperations {
    * As for the {@code sourcePath}, it can either be a file or a directory. If it points to a directory, then it will be copied
    * recursively.
    *
-   * @param config                  the config that is parameterizing this operation
-   * @param fileSystem              a reference to the host {@link FileSystem}
-   * @param sourcePath              the path to the file to be copied
-   * @param targetPath              the target directory where the file is going to be copied
+   * @param config the config that is parameterizing this operation
+   * @param fileSystem a reference to the host {@link FileSystem}
+   * @param sourcePath the path to the file to be copied
+   * @param targetPath the target directory where the file is going to be copied
    * @param createParentDirectories whether or not to attempt creating any parent directories which don't exists.
-   * @param overwrite               whether or not overwrite the file if the target destination already exists.
-   * @param renameTo                copied file's new name. If not provided, original file name will be kept.
+   * @param overwrite whether or not overwrite the file if the target destination already exists.
+   * @param renameTo copied file's new name. If not provided, original file name will be kept.
    * @throws IllegalArgumentException if an illegal combination of arguments is supplied
    */
   @Summary("Copies a file")
@@ -211,8 +247,8 @@ public final class FileOperations extends BaseFileSystemOperations {
    * Moves the file at the {@code sourcePath} into the {@code targetPath}.
    * <p>
    * If {@code targetPath} doesn't exist, and neither does its parent, then an attempt will be made to create depending on the
-   * value of the {@code createParentFolder} argument. If such argument is {@false}, then a {@code FILE:ILLEGAL_PATH} will
-   * be thrown.
+   * value of the {@code createParentFolder} argument. If such argument is {@false}, then a {@code FILE:ILLEGAL_PATH} will be
+   * thrown.
    * <p>
    * If the target file already exists, then it will be overwritten if the {@code overwrite} argument is {@code true}. Otherwise,
    * {@code FILE:FILE_ALREADY_EXISTS} error will be thrown.
@@ -220,13 +256,13 @@ public final class FileOperations extends BaseFileSystemOperations {
    * As for the {@code sourcePath}, it can either be a file or a directory. If it points to a directory, then it will be moved
    * recursively.
    *
-   * @param config                  the config that is parameterizing this operation
-   * @param fileSystem              a reference to the host {@link FileSystem}
-   * @param sourcePath              the path to the file to be copied
-   * @param targetPath              the target directory
+   * @param config the config that is parameterizing this operation
+   * @param fileSystem a reference to the host {@link FileSystem}
+   * @param sourcePath the path to the file to be copied
+   * @param targetPath the target directory
    * @param createParentDirectories whether or not to attempt creating any parent directories which don't exists.
-   * @param overwrite               whether or not overwrite the file if the target destination already exists.
-   * @param renameTo                moved file's new name. If not provided, original file name will be kept.
+   * @param overwrite whether or not overwrite the file if the target destination already exists.
+   * @param renameTo moved file's new name. If not provided, original file name will be kept.
    * @throws IllegalArgumentException if an illegal combination of arguments is supplied
    */
   @Summary("Moves a file")
@@ -243,7 +279,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    * Deletes the file pointed by {@code path}, provided that it's not locked
    *
    * @param fileSystem a reference to the host {@link FileSystem}
-   * @param path       the path to the file to be deleted
+   * @param path the path to the file to be deleted
    * @throws IllegalArgumentException if {@code filePath} doesn't exist or is locked
    */
   @Summary("Deletes a file")
@@ -255,12 +291,13 @@ public final class FileOperations extends BaseFileSystemOperations {
   /**
    * Renames the file pointed by {@code path} to the name provided on the {@code to} parameter
    * <p>
-   * {@code to} argument should not contain any path separator. {@code FILE:ILLEGAL_PATH} will be thrown if this
-   * precondition is not honored.
-   *  @param fileSystem a reference to the host {@link FileSystem}
-   * @param path       the path to the file to be renamed
-   * @param to         the file's new name
-   * @param overwrite  whether or not overwrite the file if the target destination already exists.
+   * {@code to} argument should not contain any path separator. {@code FILE:ILLEGAL_PATH} will be thrown if this precondition is
+   * not honored.
+   * 
+   * @param fileSystem a reference to the host {@link FileSystem}
+   * @param path the path to the file to be renamed
+   * @param to the file's new name
+   * @param overwrite whether or not overwrite the file if the target destination already exists.
    */
   @Summary("Renames a file")
   @Throws(FileRenameErrorTypeProvider.class)
@@ -272,7 +309,7 @@ public final class FileOperations extends BaseFileSystemOperations {
   /**
    * Creates a new directory on {@code directoryPath}
    *
-   * @param fileSystem    a reference to the host {@link FileSystem}
+   * @param fileSystem a reference to the host {@link FileSystem}
    * @param directoryPath the new directory's name
    */
   @Summary("Creates a new directory")

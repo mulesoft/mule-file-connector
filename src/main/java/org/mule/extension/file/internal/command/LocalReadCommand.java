@@ -20,6 +20,7 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.InputStream;
@@ -89,6 +90,9 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
           .attributes(fileAttributes)
           .build();
 
+    } catch (ModuleException e) {
+      onException(payload, channel, pathLock);
+      throw e;
     } catch (AccessDeniedException e) {
       onException(payload, channel, pathLock);
       throw new FileAccessDeniedException(format("Access to path '%s' denied by the operating system", path), e);

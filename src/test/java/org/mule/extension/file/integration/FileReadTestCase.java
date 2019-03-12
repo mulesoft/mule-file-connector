@@ -33,6 +33,7 @@ import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,6 +41,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 
 import io.qameta.allure.Feature;
 import org.junit.Test;
@@ -109,7 +112,64 @@ public class FileReadTestCase extends FileConnectorTestCase {
     File forbiddenFile = temporaryFolder.newFile("forbiddenFile");
     forbiddenFile.createNewFile();
     forbiddenFile.setWritable(false);
-    readWithLock(forbiddenFile.getAbsolutePath());
+    readStreamWithLock(forbiddenFile.getAbsolutePath());
+  }
+
+  @Test
+  public void readStreamWithLock() throws Exception {
+    Message message = readStreamWithLock(HELLO_PATH);
+    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
+  }
+
+  @Test
+  public void readWithLockOnLockedFile() throws Exception {
+    final byte[] binaryPayload = HELLO_WORLD.getBytes();
+    final String binaryFileName = "file.txt";
+    File binaryFile = new File(temporaryFolder.getRoot(), binaryFileName);
+    writeByteArrayToFile(binaryFile, binaryPayload);
+    Exception exception = flowRunner("readAlreadyLocked")
+        .withVariable("path", binaryFile.getAbsolutePath())
+        .runExpectingException();
+
+    Method methodGetErrors = exception.getCause().getClass().getMethod("getErrors");
+    Object error = ((List<Object>) methodGetErrors.invoke(exception.getCause())).get(0);
+    Method methodGetErrorType = error.getClass().getMethod("getErrorType");
+    methodGetErrorType.setAccessible(true);
+    Object fileError = methodGetErrorType.invoke(error);
+    assertThat(fileError.toString(), is("FILE:FILE_LOCK"));
+  }
+
+  @Test
+  public void readWithLockTimeout() throws Exception {
+    Message message = flowRunner("readStreamWithLockTimeout")
+        .withVariable("path", HELLO_PATH)
+        .withVariable("lockTimeout", 10)
+        .keepStreamsOpen()
+        .run()
+        .getMessage();
+    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
+  }
+
+  @Test
+  public void readWithLockTimeoutAndUnit() throws Exception {
+    Message message = flowRunner("readStreamWithLockTimeoutAndUnit")
+        .withVariable("path", HELLO_PATH)
+        .withVariable("lockTimeout", 500)
+        .withVariable("lockTimeoutUnit", "NANOSECONDS")
+        .keepStreamsOpen()
+        .run()
+        .getMessage();
+    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
+  }
+
+  @Test
+  public void readWithLockTimeoutOnLockedFile() throws Exception {
+    CoreEvent event = flowRunner("readOnAlreadyLockedWithTimeout")
+        .withVariable("path", HELLO_PATH)
+        .withVariable("lockTimeout", 50)
+        .withVariable("lockTimeoutUnit", "SECONDS")
+        .run();
+    assertThat(((Map) event.getMessage().getPayload().getValue()).size(), is(2));
   }
 
   @Test
@@ -176,12 +236,8 @@ public class FileReadTestCase extends FileConnectorTestCase {
     assertThat(result, is("aaaaa"));
   }
 
-  private Message readWithLock() throws Exception {
-    return readWithLock(HELLO_PATH);
-  }
-
-  private Message readWithLock(String path) throws Exception {
-    Message message = flowRunner("readWithLock").keepStreamsOpen().withVariable("path", path).run().getMessage();
+  private Message readStreamWithLock(String path) throws Exception {
+    Message message = flowRunner("readStreamWithLock").keepStreamsOpen().withVariable("path", path).run().getMessage();
     assertThat(((AbstractFileInputStream) message.getPayload().getValue()).isLocked(), is(true));
     return message;
   }
