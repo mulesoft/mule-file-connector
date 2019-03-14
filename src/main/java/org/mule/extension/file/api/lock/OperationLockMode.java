@@ -6,11 +6,17 @@
  */
 package org.mule.extension.file.api.lock;
 
+import java.util.concurrent.TimeUnit;
+
 public interface OperationLockMode {
 
-    /**
-     * Whether or not to lock the file when attempting the operation.
-     */
-    public boolean willLock();
+  /**
+   * Whether or not to lock the file when attempting the operation.
+   */
+  public boolean willLock();
+
+  public Long getLockTimeout();
+
+  public TimeUnit getLockTimeoutUnit();
 
 }

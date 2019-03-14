@@ -32,10 +32,12 @@ public class OperationWithLock implements OperationLockMode {
     return true;
   }
 
+  @Override
   public Long getLockTimeout() {
     return lockTimeout;
   }
 
+  @Override
   public TimeUnit getLockTimeoutUnit() {
     return lockTimeoutUnit;
   }
