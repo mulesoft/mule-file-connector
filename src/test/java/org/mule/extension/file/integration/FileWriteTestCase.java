@@ -24,7 +24,6 @@ import static org.mule.extension.file.common.api.FileWriteMode.OVERWRITE;
 import static org.mule.extension.file.common.api.exceptions.FileError.FILE_ALREADY_EXISTS;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 
-import org.junit.Ignore;
 import org.mule.extension.file.common.api.FileWriteMode;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
@@ -39,8 +38,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import io.qameta.allure.Feature;
+import org.junit.Ignore;
 import org.junit.Test;
+import io.qameta.allure.Feature;
+
 
 @Feature(FILE_EXTENSION)
 public class FileWriteTestCase extends FileConnectorTestCase {
@@ -162,31 +163,6 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   }
 
   @Test
-  public void writeWithLock() throws Exception {
-    String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);
-    doWrite("writeWithLock", path, HELLO_WORLD, CREATE_NEW, false);
-
-    String content = toString(readPath(path).getPayload().getValue());
-    assertThat(content, is(HELLO_WORLD));
-  }
-
-  @Test
-  public void writeWithLockOnLockedFile() throws Exception {
-    final String path = "file";
-    doWrite("writeStaticContent", path, "", CREATE_NEW, false);
-    Exception exception = flowRunner("writeAlreadyLocked").withVariable("path", path).withVariable("createParent", false)
-        .withVariable("mode", APPEND)
-        .withVariable("encoding", null).withPayload(HELLO_WORLD).runExpectingException();
-
-    Method methodGetErrors = exception.getCause().getClass().getMethod("getErrors");
-    Object error = ((List<Object>) methodGetErrors.invoke(exception.getCause())).get(0);
-    Method methodGetErrorType = error.getClass().getMethod("getErrorType");
-    methodGetErrorType.setAccessible(true);
-    Object fileError = methodGetErrorType.invoke(error);
-    assertThat(fileError.toString(), is("FILE:FILE_LOCK"));
-  }
-
-  @Test
   public void writeWithLockTimeout() throws Exception {
     final String path = "file";
     flowRunner("writeWithLockTimeout")
@@ -259,7 +235,6 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     String content = readPathAsString(path);
     assertThat(content, is(HELLO_WORLD));
   }
-
 
   private void doWriteOnNotExistingFile(FileWriteMode mode) throws Exception {
     String path = format("%s/%s", temporaryFolder.newFolder().getPath(), TEST_FILENAME);

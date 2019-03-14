@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:java="http://www.mulesoft.org/schema/mule/java"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+      http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+    <munit:config name="file-write-test-case.xml">
+    </munit:config>
+
+    <file:config name="file">
+        <file:connection workingDir="${munit.temporary.directory}"/>
+    </file:config>
+
+    <munit:before-test name="createEmptyFile">
+        <file:write config-ref="file" path="text.txt" mode="CREATE_NEW" createParentDirectories="false"/>
+    </munit:before-test>
+
+    <flow name="writeStreamWithLock">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <file:write config-ref="file" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"/>
+    </flow>
+
+    <flow name="writeStreamWithLockTimeout">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <file:write config-ref="file" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"
+                    lockTimeout="30" lockTimeoutUnit="SECONDS"/>
+    </flow>
+
+    <munit:test name="writeWithLock">
+        <munit:execution>
+            <set-payload value="Hello World!"/>
+            <file:write config-ref="file" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"/>
+        </munit:execution>
+        <munit:validation>
+            <file:read config-ref="file" path="text.txt"/>
+            <munit-tools:assert-equals actual="#[payload]" expected="Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="writeOnLockedFile">
+        <munit:execution>
+            <try>
+                <scatter-gather>
+                    <route>
+                        <flow-ref name="writeStreamWithLock"/>
+                    </route>
+                    <route>
+                        <flow-ref name="writeStreamWithLock"/>
+                    </route>
+                </scatter-gather>
+                <error-handler>
+                    <on-error-continue type="COMPOSITE_ROUTING">
+                        <set-payload value="#[error.cause]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="writeWithLockTimeout">
+        <munit:execution>
+            <set-payload value="Hello World!"/>
+            <file:write config-ref="file" path="text.txt" createParentDirectories="false" mode="APPEND" lock="true"
+                        lockTimeout="100"/>
+        </munit:execution>
+        <munit:validation>
+            <file:read config-ref="file" path="text.txt"/>
+            <munit-tools:assert-equals actual="#[payload]" expected="Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="writeWithLockTimeoutAndUnit">
+        <munit:execution>
+            <set-payload value="Hello World!"/>
+            <file:write config-ref="file" path="text.txt" createParentDirectories="false" mode="APPEND" lock="true"
+                        lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+        </munit:execution>
+        <munit:validation>
+            <file:read config-ref="file" path="text.txt"/>
+            <munit-tools:assert-equals actual="#[payload]" expected="Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="writeOnLockedFileWithTimeout">
+        <munit:execution>
+            <scatter-gather>
+                <route>
+                    <flow-ref name="writeStreamWithLockTimeout"/>
+                </route>
+                <route>
+                    <flow-ref name="writeStreamWithLockTimeout"/>
+                </route>
+            </scatter-gather>
+        </munit:execution>
+        <munit:validation>
+            <file:read config-ref="file" path="text.txt"/>
+            <munit-tools:assert-equals actual="#[payload]" expected="Hello World!Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

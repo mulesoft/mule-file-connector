@@ -62,9 +62,9 @@ public final class LocalFileSystem extends AbstractFileSystem<LocalFileAttribute
     copyCommand = new LocalCopyCommand(this);
     createDirectoryCommand = new LocalCreateDirectoryCommand(this);
     deleteCommand = new LocalDeleteCommand(this);
-    listCommand = new LocalListCommand(this);
     moveCommand = new LocalMoveCommand(this);
     readCommand = new LocalReadCommand(this);
+    listCommand = new LocalListCommand(this, (LocalReadCommand) readCommand);
     renameCommand = new LocalRenameCommand(this);
     writeCommand = new LocalWriteCommand(this);
   }
