@@ -30,52 +30,12 @@
     </flow>
 
     <flow name="readStreamWithLock">
-        <file:read config-ref="file" path="#[vars.path]" lock="true">
+        <file:read config-ref="file" path="#[vars.path]">
             <non-repeatable-stream/>
+            <file:lock-strategy>
+                <file:with-lock/>
+            </file:lock-strategy>
         </file:read>
-    </flow>
-
-    <flow name="readStreamWithLockTimeout">
-        <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]">
-            <non-repeatable-stream/>
-        </file:read>
-    </flow>
-
-    <flow name="readStreamWithLockTimeoutAndUnit">
-        <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]"
-                   lockTimeoutUnit="#[vars.lockTimeoutUnit]">
-            <non-repeatable-stream/>
-        </file:read>
-    </flow>
-
-    <flow name="readAlreadyLocked">
-        <scatter-gather>
-            <route>
-                <flow-ref name="readStreamWithLock"/>
-            </route>
-            <route>
-                <flow-ref name="readStreamWithLock"/>
-            </route>
-        </scatter-gather>
-    </flow>
-
-    <flow name="readOnAlreadyLockedWithTimeout">
-        <scatter-gather>
-            <route>
-                <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
-                                    method="getContentStream()"/>
-                <file:write config-ref="file" path="#[vars.path]" lock="true" mode="APPEND"
-                            createParentDirectories="false"/>
-            </route>
-            <route>
-                <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
-                                    method="sleepThread()"/>
-                <file:read config-ref="file" path="#[vars.path]" lock="true" lockTimeout="#[vars.lockTimeout]"
-                           lockTimeoutUnit="#[vars.lockTimeoutUnit]">
-                    <non-repeatable-stream/>
-                </file:read>
-            </route>
-        </scatter-gather>
     </flow>
 
     <flow name="readWithForcedMimeType">

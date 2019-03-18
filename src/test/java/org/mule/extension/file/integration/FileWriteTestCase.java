@@ -163,53 +163,6 @@ public class FileWriteTestCase extends FileConnectorTestCase {
   }
 
   @Test
-  public void writeWithLockTimeout() throws Exception {
-    final String path = "file";
-    flowRunner("writeWithLockTimeout")
-        .withVariable("path", path)
-        .withVariable("createParent", false)
-        .withVariable("mode", APPEND)
-        .withPayload(HELLO_WORLD)
-        .withVariable("lockTimeout", 100)
-        .run();
-
-    String content = toString(readPath(path).getPayload().getValue());
-    assertThat(content, is(HELLO_WORLD));
-  }
-
-  @Test
-  public void writeWithLockTimeoutAndUnit() throws Exception {
-    final String path = "file";
-    flowRunner("writeWithLockTimeoutAndUnit")
-        .withVariable("path", path)
-        .withVariable("createParent", false)
-        .withVariable("mode", APPEND)
-        .withPayload(HELLO_WORLD)
-        .withVariable("lockTimeout", 500)
-        .withVariable("lockTimeoutUnit", "NANOSECONDS")
-        .run();
-
-    String content = toString(readPath(path).getPayload().getValue());
-    assertThat(content, is(HELLO_WORLD));
-  }
-
-  @Test
-  public void writeWithLockTimeoutOnLockedFile() throws Exception {
-    final String path = "file";
-    flowRunner("writeOnAlreadyLockedWithTimeout")
-        .withVariable("path", path)
-        .withVariable("createParent", false)
-        .withVariable("mode", APPEND)
-        .withPayload(HELLO_WORLD)
-        .withVariable("lockTimeout", 50)
-        .withVariable("lockTimeoutUnit", "SECONDS")
-        .run();
-
-    String content = toString(readPath(path).getPayload().getValue());
-    assertThat(content, is(HELLO_WORLD + HELLO_WORLD));
-  }
-
-  @Test
   public void writeWithCustomEncoding() throws Exception {
     final String defaultEncoding = muleContext.getConfiguration().getDefaultEncoding();
     assertThat(defaultEncoding, is(notNullValue()));
@@ -269,7 +222,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
       @Override
       public int read() throws IOException {
         try {
-          Thread.sleep(15);
+          Thread.sleep(20);
         } catch (InterruptedException e) {
           fail();
         }
@@ -282,9 +235,9 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     });
   }
 
-  public static void sleepThread() {
+  public static void sleepThread(int duration) {
     try {
-      Thread.sleep(2500);
+      Thread.sleep(duration);
     } catch (InterruptedException e) {
       fail();
     }

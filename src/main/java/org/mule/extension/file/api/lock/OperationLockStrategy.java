@@ -6,24 +6,15 @@
  */
 package org.mule.extension.file.api.lock;
 
-import java.sql.Time;
 import java.util.concurrent.TimeUnit;
 
-public class OperationWithoutLock implements OperationLockMode {
+public interface OperationLockStrategy {
 
-  @Override
-  public boolean willLock() {
-    return false;
-  }
+  public static final Boolean NO_LOCK = false;
+  public static final Boolean WITH_LOCK = true;
 
-  @Override
-  public Long getLockTimeout() {
-    return -1L;
-  }
+  public Long getLockTimeout();
 
-  @Override
-  public TimeUnit getLockTimeoutUnit() {
-    return TimeUnit.MILLISECONDS;
-  }
+  public TimeUnit getLockTimeoutUnit();
 
 }

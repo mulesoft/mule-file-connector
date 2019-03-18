@@ -116,63 +116,6 @@ public class FileReadTestCase extends FileConnectorTestCase {
   }
 
   @Test
-  public void readStreamWithLock() throws Exception {
-    Message message = readStreamWithLock(HELLO_PATH);
-    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
-  }
-
-  @Test
-  public void readWithLockOnLockedFile() throws Exception {
-    final byte[] binaryPayload = HELLO_WORLD.getBytes();
-    final String binaryFileName = "file.txt";
-    File binaryFile = new File(temporaryFolder.getRoot(), binaryFileName);
-    writeByteArrayToFile(binaryFile, binaryPayload);
-    Exception exception = flowRunner("readAlreadyLocked")
-        .withVariable("path", binaryFile.getAbsolutePath())
-        .runExpectingException();
-
-    Method methodGetErrors = exception.getCause().getClass().getMethod("getErrors");
-    Object error = ((List<Object>) methodGetErrors.invoke(exception.getCause())).get(0);
-    Method methodGetErrorType = error.getClass().getMethod("getErrorType");
-    methodGetErrorType.setAccessible(true);
-    Object fileError = methodGetErrorType.invoke(error);
-    assertThat(fileError.toString(), is("FILE:FILE_LOCK"));
-  }
-
-  @Test
-  public void readWithLockTimeout() throws Exception {
-    Message message = flowRunner("readStreamWithLockTimeout")
-        .withVariable("path", HELLO_PATH)
-        .withVariable("lockTimeout", 10)
-        .keepStreamsOpen()
-        .run()
-        .getMessage();
-    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
-  }
-
-  @Test
-  public void readWithLockTimeoutAndUnit() throws Exception {
-    Message message = flowRunner("readStreamWithLockTimeoutAndUnit")
-        .withVariable("path", HELLO_PATH)
-        .withVariable("lockTimeout", 500)
-        .withVariable("lockTimeoutUnit", "NANOSECONDS")
-        .keepStreamsOpen()
-        .run()
-        .getMessage();
-    assertThat(toString(message.getPayload().getValue()), is(HELLO_WORLD));
-  }
-
-  @Test
-  public void readWithLockTimeoutOnLockedFile() throws Exception {
-    CoreEvent event = flowRunner("readOnAlreadyLockedWithTimeout")
-        .withVariable("path", HELLO_PATH)
-        .withVariable("lockTimeout", 50)
-        .withVariable("lockTimeoutUnit", "SECONDS")
-        .run();
-    assertThat(((Map) event.getMessage().getPayload().getValue()).size(), is(2));
-  }
-
-  @Test
   public void readWithoutEnoughPermissions() throws Exception {
     assumeFalse(IS_OS_WINDOWS);
     expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,

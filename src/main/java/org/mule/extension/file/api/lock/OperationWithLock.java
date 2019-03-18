@@ -6,31 +6,27 @@
  */
 package org.mule.extension.file.api.lock;
 
+import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
-import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
+import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.util.concurrent.TimeUnit;
 
-public class OperationWithLock implements OperationLockMode {
+@Alias("withLock")
+public class OperationWithLock implements OperationLockStrategy {
 
   @Parameter
   @Summary("Sets the for how long the operation will try to lock the file. Works in tandem with the Lock Timeout Unit parameter. By default it is set to 0, which means it will only try once to lock the file.")
-  @DisplayName("Lock Timeout")
-  @Optional()
+  @Optional(defaultValue = "0")
+  @Example("0")
   private Long lockTimeout;
 
   @Parameter
   @Summary("Time Unit that determines how to interpret the Lock Timeout parameter. By default it is MILLISECONDS. Can be one of: NANOSECONDS, MICROSECONDS, MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS.")
-  @DisplayName("Lock Timeout Unit")
-  @Optional()
+  @Optional(defaultValue = "MILLISECONDS")
   private TimeUnit lockTimeoutUnit;
-
-  @Override
-  public boolean willLock() {
-    return true;
-  }
 
   @Override
   public Long getLockTimeout() {

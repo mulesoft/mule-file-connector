@@ -18,6 +18,7 @@ import org.mule.extension.file.common.api.command.MoveCommand;
 import org.mule.extension.file.common.api.command.ReadCommand;
 import org.mule.extension.file.common.api.command.RenameCommand;
 import org.mule.extension.file.common.api.command.WriteCommand;
+import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.command.LocalCopyCommand;
 import org.mule.extension.file.internal.command.LocalCreateDirectoryCommand;
@@ -115,9 +116,35 @@ public final class LocalFileSystem extends AbstractFileSystem<LocalFileAttribute
   }
 
   public PathLock lock(Path path, FileChannel channel) {
-    final FileChannelPathLock lock = new FileChannelPathLock(path, channel);
-    acquireLock(lock);
+    return lock(path, channel, 0L);
+  }
 
+  public PathLock lock(Path path, FileChannel channel, Long lockTimeout) {
+    final FileChannelPathLock lock = new FileChannelPathLock(path, channel);
+
+    boolean success = false;
+    long nanoTimeout = lockTimeout < 0 ? 0 : lockTimeout;
+    long startTime = System.nanoTime();
+    do {
+      try {
+        acquireLock(lock);
+        success = true;
+      } catch (FileLockedException e) {
+        continue;
+      } catch (Exception e) {
+        throw e;
+      }
+    } while (System.nanoTime() - startTime < nanoTimeout && !success);
+    if (!success) {
+      if (nanoTimeout != 0) {
+        throw new FileLockedException(String
+            .format("Could not lock file '%s' for the operation because it remained locked by another process for the whole timeout.",
+                    path));
+      } else {
+        throw new FileLockedException(String
+            .format("Could not lock file '%s' for the operation because it's already owned by another process.", path));
+      }
+    }
     return lock;
   }
 

@@ -41,6 +41,8 @@ import java.nio.file.Path;
  */
 public final class LocalWriteCommand extends LocalFileCommand implements WriteCommand {
 
+  private final static long NO_TIMEOUT = 0L;
+
   /**
    * {@inheritDoc}
    */
@@ -64,6 +66,15 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
   @Override
   public void write(String filePath, InputStream content, FileWriteMode mode,
                     boolean lock, boolean createParentDirectory) {
+    write(filePath, content, mode, lock, createParentDirectory, NO_TIMEOUT);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void write(String filePath, InputStream content, FileWriteMode mode,
+                    boolean lock, boolean createParentDirectory, long lockTimeout) {
     Path path = resolvePath(filePath);
     assureParentFolderExists(path, createParentDirectory);
 
@@ -72,7 +83,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
     try {
       channel = FileChannel.open(path, getOpenOptions(mode));
 
-      pathLock = lock ? fileSystem.lock(path, channel) : new NullPathLock(path);
+      pathLock = lock ? fileSystem.lock(path, channel, lockTimeout) : new NullPathLock(path);
 
       try (OutputStream out = Channels.newOutputStream(channel)) {
         copy(content, out);

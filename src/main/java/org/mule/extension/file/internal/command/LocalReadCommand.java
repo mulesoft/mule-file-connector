@@ -16,6 +16,7 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ReadCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
+import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
@@ -35,6 +36,8 @@ import java.nio.file.Path;
  */
 public final class LocalReadCommand extends LocalFileCommand implements ReadCommand<LocalFileAttributes> {
 
+  private final static long NO_TIMEOUT = 0L;
+
   /**
    * {@inheritDoc}
    */
@@ -50,7 +53,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock) {
     return read(config, filePath, lock, null);
   }
-
 
   /**
    * {@inheritDoc}
@@ -76,8 +78,33 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
    * {@inheritDoc}
    */
   @Override
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
+                                                       Long timeBetweenSizeCheck, long lockTimeout) {
+    Path path = resolveExistingPath(filePath);
+    if (isDirectory(path)) {
+      throw cannotReadDirectoryException(path);
+    }
+
+    if (!isReadable(path)) {
+      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
+                                                 path));
+    }
+
+    LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
+    return read(config, fileAttributes, lock, timeBetweenSizeCheck, lockTimeout);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
+    return read(config, attributes, lock, timeBetweenSizeCheck, NO_TIMEOUT);
+  }
+
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
+                                                       Long timeBetweenSizeCheck, long lockTimeout) {
     Path path = resolvePath(attributes.getPath());
     FileChannel channel = null;
     PathLock pathLock = null;
@@ -86,7 +113,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
     try {
       if (lock) {
         channel = FileChannel.open(path, READ, WRITE);
-        pathLock = fileSystem.lock(path, channel);
+        pathLock = fileSystem.lock(path, channel, lockTimeout);
       } else {
         channel = FileChannel.open(path, READ);
         pathLock = new NullPathLock(path);
@@ -119,4 +146,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
       lock.release();
     }
   }
+
+
+
 }

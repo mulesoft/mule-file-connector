@@ -7,6 +7,8 @@
 package org.mule.extension.file.internal;
 
 import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.api.lock.OperationLockStrategy;
+import org.mule.extension.file.api.lock.OperationWithLock;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.exceptions.FileError;
@@ -15,6 +17,7 @@ import org.mule.runtime.extension.api.annotation.Export;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.Operations;
 import org.mule.runtime.extension.api.annotation.Sources;
+import org.mule.runtime.extension.api.annotation.SubTypeMapping;
 import org.mule.runtime.extension.api.annotation.connectivity.ConnectionProviders;
 import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
 import org.mule.runtime.extension.api.annotation.param.Optional;
@@ -36,6 +39,7 @@ import static org.mule.runtime.extension.api.annotation.param.display.Placement.
  */
 @Extension(name = "File")
 @Operations({FileOperations.class})
+@SubTypeMapping(baseType = OperationLockStrategy.class, subTypes = {OperationWithLock.class})
 @ConnectionProviders(LocalFileConnectionProvider.class)
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)

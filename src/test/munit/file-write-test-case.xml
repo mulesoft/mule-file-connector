@@ -24,19 +24,30 @@
 
     <flow name="writeStreamWithLock">
         <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
-        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"/>
+        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
+            <file:lock-strategy>
+                <file:with-lock/>
+            </file:lock-strategy>
+        </file:write>
     </flow>
 
     <flow name="writeStreamWithLockTimeout">
         <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
-        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"
-                    lockTimeout="30" lockTimeoutUnit="SECONDS"/>
+        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
+            <file:lock-strategy>
+                <file:with-lock lockTimeout="30" lockTimeoutUnit="SECONDS"/>
+            </file:lock-strategy>
+        </file:write>
     </flow>
 
     <munit:test name="writeWithLock">
         <munit:execution>
             <set-payload value="Hello World!"/>
-            <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false" lock="true"/>
+            <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
+                <file:lock-strategy>
+                    <file:with-lock/>
+                </file:lock-strategy>
+            </file:write>
         </munit:execution>
         <munit:validation>
             <file:read config-ref="write-tests" path="text.txt"/>
@@ -44,7 +55,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="writeOnLockedFile">
+    <munit:test name="writeWithLockOnLockedFile">
         <munit:execution>
             <try>
                 <scatter-gather>
@@ -71,8 +82,11 @@
     <munit:test name="writeWithLockTimeout">
         <munit:execution>
             <set-payload value="Hello World!"/>
-            <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND" lock="true"
-                        lockTimeout="100"/>
+            <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND">
+                <file:lock-strategy>
+                    <file:with-lock lockTimeout="100" lockTimeoutUnit="MILLISECONDS"/>
+                </file:lock-strategy>
+            </file:write>
         </munit:execution>
         <munit:validation>
             <file:read config-ref="write-tests" path="text.txt"/>
@@ -83,8 +97,11 @@
     <munit:test name="writeWithLockTimeoutAndUnit">
         <munit:execution>
             <set-payload value="Hello World!"/>
-            <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND" lock="true"
-                        lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+            <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND">
+                <file:lock-strategy>
+                    <file:with-lock lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+                </file:lock-strategy>
+            </file:write>
         </munit:execution>
         <munit:validation>
             <file:read config-ref="write-tests" path="text.txt"/>
@@ -92,7 +109,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="writeOnLockedFileWithTimeout">
+    <munit:test name="writeWithLockTimeoutOnLockedFile">
         <munit:execution>
             <scatter-gather>
                 <route>
