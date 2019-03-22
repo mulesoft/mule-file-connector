@@ -31,15 +31,6 @@
         </file:write>
     </flow>
 
-    <flow name="writeStreamWithLockTimeout">
-        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
-        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
-            <file:lock-strategy>
-                <file:with-lock lockTimeout="30" lockTimeoutUnit="SECONDS"/>
-            </file:lock-strategy>
-        </file:write>
-    </flow>
-
     <munit:test name="writeWithLock">
         <munit:execution>
             <set-payload value="Hello World!"/>
@@ -55,7 +46,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="writeWithLockOnLockedFile">
+    <munit:test name="writeWithLockOnLockedFileFails">
         <munit:execution>
             <try>
                 <scatter-gather>
@@ -109,20 +100,62 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="writeWithLockTimeoutOnLockedFile">
+    <flow name="writeStreamWithLongLockTimeout">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
+            <file:lock-strategy>
+                <file:with-lock lockTimeout="30" lockTimeoutUnit="SECONDS"/>
+            </file:lock-strategy>
+        </file:write>
+    </flow>
+
+    <munit:test name="writeWithShortLockTimeout">
         <munit:execution>
             <scatter-gather>
                 <route>
-                    <flow-ref name="writeStreamWithLockTimeout"/>
+                    <flow-ref name="writeStreamWithLongLockTimeout"/>
                 </route>
                 <route>
-                    <flow-ref name="writeStreamWithLockTimeout"/>
+                    <flow-ref name="writeStreamWithLongLockTimeout"/>
                 </route>
             </scatter-gather>
         </munit:execution>
         <munit:validation>
             <file:read config-ref="write-tests" path="text.txt"/>
             <munit-tools:assert-equals actual="#[payload]" expected="Hello World!Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="writeStreamWithShortLockTimeout">
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
+            <file:lock-strategy>
+                <file:with-lock lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+            </file:lock-strategy>
+        </file:write>
+    </flow>
+
+    <munit:test name="writeWithShortLockTimeoutOnLockedFileFails">
+        <munit:execution>
+            <try>
+                <scatter-gather>
+                    <route>
+                        <flow-ref name="writeStreamWithShortLockTimeout"/>
+                    </route>
+                    <route>
+                        <flow-ref name="writeStreamWithShortLockTimeout"/>
+                    </route>
+                </scatter-gather>
+                <error-handler>
+                    <on-error-continue type="COMPOSITE_ROUTING">
+                        <set-payload value="#[error.cause]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
         </munit:validation>
     </munit:test>
 

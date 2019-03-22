@@ -91,9 +91,9 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
     } catch (ModuleException e) {
       throw e;
     } catch (FileAlreadyExistsException e) {
-      throw new org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException(format(
-                                                                                                "Cannot write to path '%s' because it already exists and write mode '%s' was selected. "
-                                                                                                    + "Use a different write mode or point to a path which doesn't exist",
+      throw new org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException(
+                                                                                         format("Cannot write to path '%s' because it already exists and write mode '%s' was selected. "
+                                                                                             + "Use a different write mode or point to a path which doesn't exist",
                                                                                                 path, mode),
                                                                                          e);
     } catch (AccessDeniedException e) {
@@ -105,7 +105,6 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
       if (IS_A_DIRECTORY_MESSAGE.equals(e.getReason())) {
         throw new IllegalPathException(format("Cannot write to path '%s' because it is a Directory.", path), e);
       }
-
       throw exception(format("Exception was found writing to file '%s'", path), e);
     } catch (Exception e) {
       throw exception(format("Exception was found writing to file '%s'", path), e);

@@ -36,8 +36,8 @@ import java.nio.file.Path;
 /**
  * Implementation of {@link FileSystem} for file systems mounted on the host operating system.
  * <p>
- * Whenever the {@link FileSystem} contract refers to locking, this implementation will resolve through a {@link FileChannelPathLock},
- * which produces file system level locks which rely on the host operating system.
+ * Whenever the {@link FileSystem} contract refers to locking, this implementation will resolve through a
+ * {@link FileChannelPathLock}, which produces file system level locks which rely on the host operating system.
  * <p>
  * Also, for any method returning {@link FileAttributes} instances, a {@link LocalFileAttributes} will be used.
  *
@@ -116,35 +116,14 @@ public final class LocalFileSystem extends AbstractFileSystem<LocalFileAttribute
   }
 
   public PathLock lock(Path path, FileChannel channel) {
-    return lock(path, channel, 0L);
+    final FileChannelPathLock lock = new FileChannelPathLock(path, channel);
+    acquireLock(lock);
+    return lock;
   }
 
   public PathLock lock(Path path, FileChannel channel, Long lockTimeout) {
     final FileChannelPathLock lock = new FileChannelPathLock(path, channel);
-
-    boolean success = false;
-    long nanoTimeout = lockTimeout < 0 ? 0 : lockTimeout;
-    long startTime = System.nanoTime();
-    do {
-      try {
-        acquireLock(lock);
-        success = true;
-      } catch (FileLockedException e) {
-        continue;
-      } catch (Exception e) {
-        throw e;
-      }
-    } while (System.nanoTime() - startTime < nanoTimeout && !success);
-    if (!success) {
-      if (nanoTimeout != 0) {
-        throw new FileLockedException(String
-            .format("Could not lock file '%s' for the operation because it remained locked by another process for the whole timeout.",
-                    path));
-      } else {
-        throw new FileLockedException(String
-            .format("Could not lock file '%s' for the operation because it's already owned by another process.", path));
-      }
-    }
+    acquireLock(lock, lockTimeout);
     return lock;
   }
 

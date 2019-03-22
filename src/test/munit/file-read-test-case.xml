@@ -51,7 +51,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="readWithLockOnLockedFile">
+    <munit:test name="readWithLockOnLockedFileFails">
         <munit:execution>
             <try>
                 <scatter-gather>
@@ -116,8 +116,7 @@
                     <flow-ref name="writeWithLockStrategy"/>
                 </route>
                 <route>
-                    <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
-                                        method="sleepThread(int)">
+                    <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="sleepThread(int)">
                         <java:args>
                             #[{arg0: 500}]
                         </java:args>
@@ -134,6 +133,41 @@
         <munit:validation>
             <file:read config-ref="write-tests" path="text.txt"/>
             <munit-tools:assert-equals actual="#[payload]" expected="Hello World!Hello World!"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="readWithShortLockTimeoutOnLockedFileFails">
+        <munit:execution>
+            <try>
+                <scatter-gather>
+                    <route>
+                        <flow-ref name="writeWithLockStrategy"/>
+                    </route>
+                    <route>
+                        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase"
+                                            method="sleepThread(int)">
+                            <java:args>
+                                #[{arg0: 500}]
+                            </java:args>
+                        </java:invoke-static>
+                        <file:read config-ref="read-tests" path="text.txt">
+                            <non-repeatable-stream/>
+                            <file:lock-strategy>
+                                <file:with-lock lockTimeout="10" lockTimeoutUnit="NANOSECONDS"/>
+                            </file:lock-strategy>
+                        </file:read>
+                    </route>
+                </scatter-gather>
+                <error-handler>
+                    <on-error-continue type="COMPOSITE_ROUTING">
+                        <set-payload value="#[error.cause]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
+            <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
         </munit:validation>
     </munit:test>
 
