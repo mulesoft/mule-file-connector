@@ -28,7 +28,6 @@ import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.api.streaming.CursorProvider;
-import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
 import org.mule.runtime.extension.api.annotation.error.Throws;

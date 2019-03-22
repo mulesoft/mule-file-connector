@@ -21,7 +21,7 @@ public class OperationWithLock implements OperationLockStrategy {
   @Summary("Sets the for how long the operation will try to lock the file. Works in tandem with the Lock Timeout Unit parameter. By default it is set to 0, which means it will only try once to lock the file.")
   @Optional(defaultValue = "0")
   @Example("0")
-  private Long lockTimeout;
+  private long lockTimeout;
 
   @Parameter
   @Summary("Time Unit that determines how to interpret the Lock Timeout parameter. By default it is MILLISECONDS. Can be one of: NANOSECONDS, MICROSECONDS, MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS.")
@@ -29,7 +29,7 @@ public class OperationWithLock implements OperationLockStrategy {
   private TimeUnit lockTimeoutUnit;
 
   @Override
-  public Long getLockTimeout() {
+  public long getLockTimeout() {
     return lockTimeout;
   }
 

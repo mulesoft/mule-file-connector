@@ -18,7 +18,6 @@ import org.mule.extension.file.common.api.command.MoveCommand;
 import org.mule.extension.file.common.api.command.ReadCommand;
 import org.mule.extension.file.common.api.command.RenameCommand;
 import org.mule.extension.file.common.api.command.WriteCommand;
-import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.command.LocalCopyCommand;
 import org.mule.extension.file.internal.command.LocalCreateDirectoryCommand;

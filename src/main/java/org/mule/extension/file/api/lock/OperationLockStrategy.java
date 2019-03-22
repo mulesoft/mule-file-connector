@@ -13,7 +13,7 @@ public interface OperationLockStrategy {
   public static final Boolean NO_LOCK = false;
   public static final Boolean WITH_LOCK = true;
 
-  public Long getLockTimeout();
+  public long getLockTimeout();
 
   public TimeUnit getLockTimeoutUnit();
 

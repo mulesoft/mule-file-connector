@@ -33,7 +33,6 @@ import org.mule.runtime.core.api.util.IOUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,8 +40,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
 
 import io.qameta.allure.Feature;
 import org.junit.Test;
