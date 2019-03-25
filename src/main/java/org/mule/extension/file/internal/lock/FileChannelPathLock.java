@@ -84,13 +84,14 @@ public final class FileChannelPathLock implements PathLock {
    */
   @Override
   public boolean tryLock(long timeout) {
-    boolean success = false;
     long nanoTimeout = timeout < 0 ? 0 : timeout;
     long startTime = System.nanoTime();
     do {
       try {
         lock = channel.tryLock();
-        success = (lock != null);
+        if (lock != null) {
+          return isLocked();
+        }
       } catch (OverlappingFileLockException e) {
         sleepThread(nanoTimeout);
         continue;
@@ -106,16 +107,13 @@ public final class FileChannelPathLock implements PathLock {
         }
         return false;
       }
-    } while (System.nanoTime() - startTime < nanoTimeout && !success);
-    if (lock == null) {
-      if (timeout != 0) {
-        throw new FileLockedException(String.format("Could not lock file ''%s'' for the operation because it remained locked" +
-            " by another process for the '%d' nanoseconds timeout.", path, timeout));
-      }
-      throw new FileLockedException(String
-          .format("Could not lock file ''%s'' for the operation because it was already locked by another process.", path));
+    } while (System.nanoTime() - startTime < nanoTimeout && lock == null);
+    if (timeout != 0) {
+      throw new FileLockedException(String.format("Could not lock file ''%s'' for the operation because it remained locked" +
+          " by another process for the '%d' nanoseconds timeout.", path, timeout));
     }
-    return isLocked();
+    throw new FileLockedException(String
+        .format("Could not lock file ''%s'' for the operation because it was already locked by another process.", path));
   }
 
   /**
@@ -153,6 +151,9 @@ public final class FileChannelPathLock implements PathLock {
   }
 
   private void sleepThread(long timeout) {
+    if (timeout <= 0) {
+      return;
+    }
     try {
       Thread.sleep(TimeUnit.NANOSECONDS.toMillis(timeout) / 20L);
     } catch (InterruptedException e) {

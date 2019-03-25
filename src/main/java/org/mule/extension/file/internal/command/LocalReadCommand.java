@@ -13,7 +13,9 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
+import org.mule.extension.file.common.api.FileSystem;
 import org.mule.extension.file.common.api.command.ReadCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileLockedException;
@@ -21,6 +23,7 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.runtime.api.message.Message;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
@@ -78,7 +81,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
    * {@inheritDoc}
    */
   @Override
-<<<<<<< HEAD
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
                                                        Long timeBetweenSizeCheck, long lockTimeout) {
     Path path = resolveExistingPath(filePath);
@@ -104,12 +106,12 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
     return read(config, attributes, lock, timeBetweenSizeCheck, NO_TIMEOUT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck, long lockTimeout) {
-=======
-  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
-                                                       Long timeBetweenSizeCheck) {
->>>>>>> master
     Path path = resolvePath(attributes.getPath());
     FileChannel channel = null;
     PathLock pathLock = null;
@@ -151,7 +153,5 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
       lock.release();
     }
   }
-
-
 
 }
