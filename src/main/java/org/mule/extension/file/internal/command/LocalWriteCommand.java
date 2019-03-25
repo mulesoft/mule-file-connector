@@ -41,7 +41,7 @@ import java.nio.file.Path;
  */
 public final class LocalWriteCommand extends LocalFileCommand implements WriteCommand {
 
-  private final static long NO_TIMEOUT = 0L;
+  private final static long NO_TIMEOUT = 0;
 
   /**
    * {@inheritDoc}

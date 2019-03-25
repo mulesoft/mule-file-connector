@@ -39,7 +39,7 @@ import java.nio.file.Path;
  */
 public final class LocalReadCommand extends LocalFileCommand implements ReadCommand<LocalFileAttributes> {
 
-  private final static long NO_TIMEOUT = 0L;
+  private final static long NO_TIMEOUT = 0;
 
   /**
    * {@inheritDoc}
