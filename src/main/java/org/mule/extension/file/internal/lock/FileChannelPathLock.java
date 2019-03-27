@@ -12,6 +12,7 @@ import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.FileLockedException;
 import org.mule.extension.file.common.api.lock.PathLock;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class FileChannelPathLock implements PathLock {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FileChannelPathLock.class);
+  private static final long MAX_LOCK_RETRIES = 20L;
 
   private final Path path;
   private final FileChannel channel;
@@ -83,8 +85,8 @@ public final class FileChannelPathLock implements PathLock {
    * {@inheritDoc}
    */
   @Override
-  public boolean tryLock(long timeout) {
-    long nanoTimeout = timeout < 0 ? 0 : timeout;
+  public boolean tryLock(Long timeout) {
+    long nanoTimeout = timeout < 0 ? 0 : TimeUnit.MILLISECONDS.toNanos(timeout);
     long startTime = System.nanoTime();
     do {
       try {
@@ -93,7 +95,7 @@ public final class FileChannelPathLock implements PathLock {
           return isLocked();
         }
       } catch (OverlappingFileLockException e) {
-        sleepThread(nanoTimeout);
+        sleepThread(timeout / MAX_LOCK_RETRIES);
         continue;
       } catch (AccessDeniedException e) {
         release();
@@ -110,7 +112,7 @@ public final class FileChannelPathLock implements PathLock {
     } while (System.nanoTime() - startTime < nanoTimeout && lock == null);
     if (timeout != 0) {
       throw new FileLockedException(String.format("Could not lock file ''%s'' for the operation because it remained locked" +
-          " by another process for the '%d' nanoseconds timeout.", path, timeout));
+          " by another process for the '%d' milliseconds timeout.", path, timeout));
     }
     throw new FileLockedException(String
         .format("Could not lock file ''%s'' for the operation because it was already locked by another process.", path));
@@ -150,16 +152,14 @@ public final class FileChannelPathLock implements PathLock {
     return path;
   }
 
-  private void sleepThread(long timeout) {
-    if (timeout <= 0) {
+  private void sleepThread(long duration) {
+    if (duration <= 0) {
       return;
     }
     try {
-      Thread.sleep(TimeUnit.NANOSECONDS.toMillis(timeout) / 20L);
+      Thread.sleep(duration);
     } catch (InterruptedException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(format("Thread was interrupted while attempting to obtain lock on path '%s'", path), e);
-      }
+      throw new FileLockedException(format("Thread was interrupted while attempting to obtain lock on path '%s'", path));
     }
   }
 }

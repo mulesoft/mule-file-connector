@@ -41,8 +41,6 @@ import java.nio.file.Path;
  */
 public final class LocalWriteCommand extends LocalFileCommand implements WriteCommand {
 
-  private final static long NO_TIMEOUT = 0;
-
   /**
    * {@inheritDoc}
    */
@@ -64,17 +62,20 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
    * {@inheritDoc}
    */
   @Override
-  public void write(String filePath, InputStream content, FileWriteMode mode,
-                    boolean lock, boolean createParentDirectory) {
-    write(filePath, content, mode, lock, createParentDirectory, NO_TIMEOUT);
+  public void write(String filePath, InputStream content, FileWriteMode mode, boolean lock, boolean createParentDirectory) {
+    commonWrite(filePath, content, mode, createParentDirectory, lock, NO_TIMEOUT);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void write(String filePath, InputStream content, FileWriteMode mode,
-                    boolean lock, boolean createParentDirectory, long lockTimeout) {
+  public void write(String filePath, InputStream content, FileWriteMode mode, boolean createParentDirectory, Long lockTimeout) {
+    commonWrite(filePath, content, mode, createParentDirectory, true, lockTimeout);
+  }
+
+  private void commonWrite(String filePath, InputStream content, FileWriteMode mode, boolean createParentDirectory, boolean lock,
+                           Long lockTimeout) {
     Path path = resolvePath(filePath);
     assureParentFolderExists(path, createParentDirectory);
 

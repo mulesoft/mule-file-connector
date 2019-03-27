@@ -7,8 +7,8 @@
 package org.mule.extension.file.internal;
 
 import org.mule.extension.file.api.LocalFileAttributes;
-import org.mule.extension.file.api.lock.OperationLockStrategy;
-import org.mule.extension.file.api.lock.OperationWithLock;
+import org.mule.extension.file.api.lock.BasicLockStrategy;
+import org.mule.extension.file.api.lock.LockStrategy;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.exceptions.FileError;
@@ -39,7 +39,7 @@ import static org.mule.runtime.extension.api.annotation.param.display.Placement.
  */
 @Extension(name = "File")
 @Operations({FileOperations.class})
-@SubTypeMapping(baseType = OperationLockStrategy.class, subTypes = {OperationWithLock.class})
+@SubTypeMapping(baseType = LockStrategy.class, subTypes = {BasicLockStrategy.class})
 @ConnectionProviders(LocalFileConnectionProvider.class)
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)

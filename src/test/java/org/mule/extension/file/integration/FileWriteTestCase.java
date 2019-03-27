@@ -210,7 +210,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     return readPathAsString(file.getAbsolutePath());
   }
 
-  public static InputStream getContentStream() {
+  public static InputStream getContentStream(long delay) {
     return (new InputStream() {
 
       String text = "Hello World!";
@@ -220,7 +220,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
       @Override
       public int read() throws IOException {
         try {
-          Thread.sleep(100);
+          Thread.sleep(delay);
         } catch (InterruptedException e) {
           fail();
         }

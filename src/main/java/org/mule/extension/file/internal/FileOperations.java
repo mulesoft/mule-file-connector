@@ -13,7 +13,7 @@ import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
-import org.mule.extension.file.api.lock.OperationLockStrategy;
+import org.mule.extension.file.api.lock.LockStrategy;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
@@ -55,6 +55,8 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0
  */
 public final class FileOperations extends BaseFileSystemOperations {
+
+  private static final Boolean NO_LOCK = false;
 
   /**
    * Lists all the files in the {@code directoryPath} which match the given {@code matcher}.
@@ -98,7 +100,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    * {@link InputStream} with the file's content, and the metadata is represent as a {@link LocalFileAttributes} object that's
    * placed as the message {@link Message#getAttributes() attributes}.
    * <p>
-   * If the {@code lockStrategy} parameter is set to a {@code OperationLockStrategy}, then a file system level lock will be placed on the file until the
+   * If the {@code lockStrategy} parameter is set to a {@code LockStrategy}, then a file system level lock will be placed on the file until the
    * input stream this operation returns is closed or fully consumed. Because the lock is actually provided by the host file
    * system, its behavior might change depending on the mounted drive and the operation system on which mule is running. Take that
    * into consideration before blindly relying on this lock.
@@ -126,18 +128,18 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                            location = EXTERNAL) String path,
                                                        @Optional @ParameterDsl(
                                                            allowReferences = false) @Expression(ExpressionSupport.NOT_SUPPORTED) @Placement(
-                                                               tab = ADVANCED_TAB) @DisplayName("Lock File") OperationLockStrategy lockStrategy,
+                                                               tab = ADVANCED_TAB) @DisplayName("Lock File") LockStrategy lockStrategy,
                                                        @ConfigOverride @Placement(
                                                            tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
                                                        @ConfigOverride @Placement(
                                                            tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
     Result result;
     if (lockStrategy != null) {
-      result = doRead(config, fileSystem, path, OperationLockStrategy.WITH_LOCK,
+      result = doRead(config, fileSystem, path,
                       config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
-                      lockStrategy.getLockTimeoutUnit().toNanos(lockStrategy.getLockTimeout()));
+                      lockStrategy.getLockTimeoutUnit().toMillis(lockStrategy.getLockTimeout()));
     } else {
-      result = doRead(config, fileSystem, path, OperationLockStrategy.NO_LOCK,
+      result = doRead(config, fileSystem, path, NO_LOCK,
                       config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
     }
     return (Result<InputStream, LocalFileAttributes>) result;
@@ -171,14 +173,14 @@ public final class FileOperations extends BaseFileSystemOperations {
                     @Content @Summary("Content to be written into the file") InputStream content,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
                     @Optional() @Placement(tab = ADVANCED_TAB) @ParameterDsl(
-                        allowReferences = false) @Expression(ExpressionSupport.NOT_SUPPORTED) @DisplayName("Lock File") OperationLockStrategy lockStrategy,
+                        allowReferences = false) @Expression(ExpressionSupport.NOT_SUPPORTED) @DisplayName("Lock File") LockStrategy lockStrategy,
                     @Optional(
                         defaultValue = "OVERWRITE") @Summary("How the file is going to be written") @DisplayName("Write Mode") FileWriteMode mode) {
     if (lockStrategy != null) {
-      super.doWrite(config, fileSystem, path, content, createParentDirectories, OperationLockStrategy.WITH_LOCK, mode,
-                    lockStrategy.getLockTimeoutUnit().toNanos(lockStrategy.getLockTimeout()));
+      super.doWrite(config, fileSystem, path, content, createParentDirectories, mode,
+                    lockStrategy.getLockTimeoutUnit().toMillis(lockStrategy.getLockTimeout()));
     } else {
-      super.doWrite(config, fileSystem, path, content, createParentDirectories, OperationLockStrategy.NO_LOCK, mode);
+      super.doWrite(config, fileSystem, path, content, createParentDirectories, NO_LOCK, mode);
     }
   }
 

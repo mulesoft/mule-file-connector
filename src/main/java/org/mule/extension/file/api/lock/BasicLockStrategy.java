@@ -14,11 +14,16 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Implements the {@link LockStrategy} contract.
+ *
+ * @since 2 .0
+ */
 @Alias("withLock")
-public class OperationWithLock implements OperationLockStrategy {
+public class BasicLockStrategy implements LockStrategy {
 
   @Parameter
-  @Summary("Sets the for how long the operation will try to lock the file. Works in tandem with the Lock Timeout Unit parameter. By default it is set to 0, which means it will only try once to lock the file.")
+  @Summary("Sets the maximum time to wait for the lock. Works in tandem with the Lock Timeout Unit parameter. By default it is set to 0, which means it will only try once to lock the file.")
   @Optional(defaultValue = "0")
   @Example("0")
   private long lockTimeout;
@@ -28,11 +33,17 @@ public class OperationWithLock implements OperationLockStrategy {
   @Optional(defaultValue = "MILLISECONDS")
   private TimeUnit lockTimeoutUnit;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getLockTimeout() {
     return lockTimeout;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TimeUnit getLockTimeoutUnit() {
     return lockTimeoutUnit;

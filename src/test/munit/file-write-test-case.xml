@@ -23,7 +23,11 @@
     </munit:before-test>
 
     <flow name="writeStreamWithLock">
-        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream(long)">
+            <java:args>
+                #[{arg0: 100}]
+            </java:args>
+        </java:invoke-static>
         <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
             <file:lock-strategy>
                 <file:with-lock/>
@@ -67,6 +71,7 @@
         <munit:validation>
             <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
             <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
+            <munit-tools:assert-that expression="#[payload.errors[0].description]" is="#[MunitTools::matches('Could not lock file.*for the operation because it was already locked by another process.')]"/>
         </munit:validation>
     </munit:test>
 
@@ -75,7 +80,7 @@
             <set-payload value="Hello World!"/>
             <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND">
                 <file:lock-strategy>
-                    <file:with-lock lockTimeout="100" lockTimeoutUnit="MILLISECONDS"/>
+                    <file:with-lock lockTimeout="1000" lockTimeoutUnit="MILLISECONDS"/>
                 </file:lock-strategy>
             </file:write>
         </munit:execution>
@@ -90,7 +95,7 @@
             <set-payload value="Hello World!"/>
             <file:write config-ref="write-tests" path="text.txt" createParentDirectories="false" mode="APPEND">
                 <file:lock-strategy>
-                    <file:with-lock lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+                    <file:with-lock lockTimeout="1" lockTimeoutUnit="MINUTES"/>
                 </file:lock-strategy>
             </file:write>
         </munit:execution>
@@ -101,15 +106,19 @@
     </munit:test>
 
     <flow name="writeStreamWithLongLockTimeout">
-        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream(long)">
+            <java:args>
+                #[{arg0: 200}]
+            </java:args>
+        </java:invoke-static>
         <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
             <file:lock-strategy>
-                <file:with-lock lockTimeout="30" lockTimeoutUnit="SECONDS"/>
+                <file:with-lock lockTimeout="40" lockTimeoutUnit="SECONDS"/>
             </file:lock-strategy>
         </file:write>
     </flow>
 
-    <munit:test name="writeWithShortLockTimeout">
+    <munit:test name="writeWithLongLockTimeout">
         <munit:execution>
             <scatter-gather>
                 <route>
@@ -127,10 +136,14 @@
     </munit:test>
 
     <flow name="writeStreamWithShortLockTimeout">
-        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream()"/>
+        <java:invoke-static class="org.mule.extension.file.integration.FileWriteTestCase" method="getContentStream(long)">
+            <java:args>
+                #[{arg0: 150}]
+            </java:args>
+        </java:invoke-static>
         <file:write config-ref="write-tests" path="text.txt" mode="APPEND" createParentDirectories="false">
             <file:lock-strategy>
-                <file:with-lock lockTimeout="100" lockTimeoutUnit="NANOSECONDS"/>
+                <file:with-lock lockTimeout="1000" lockTimeoutUnit="MILLISECONDS"/>
             </file:lock-strategy>
         </file:write>
     </flow>
@@ -156,6 +169,7 @@
         <munit:validation>
             <munit-tools:assert-equals actual="#[payload.errors[0].errorType.namespace]" expected="FILE"/>
             <munit-tools:assert-equals actual="#[payload.errors[0].errorType.identifier]" expected="FILE_LOCK"/>
+            <munit-tools:assert-that expression="#[payload.errors[0].description]" is="#[MunitTools::matches('Could not lock file.*for the operation because it remained locked by another process for the.*milliseconds timeout.')]"/>
         </munit:validation>
     </munit:test>
 

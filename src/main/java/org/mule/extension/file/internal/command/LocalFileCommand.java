@@ -23,6 +23,8 @@ import java.nio.file.Paths;
  */
 abstract class LocalFileCommand extends FileCommand<LocalFileSystem> {
 
+  protected final static long NO_TIMEOUT = 0;
+
   /**
    * {@inheritDoc}
    */

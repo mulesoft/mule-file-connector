@@ -39,8 +39,6 @@ import java.nio.file.Path;
  */
 public final class LocalReadCommand extends LocalFileCommand implements ReadCommand<LocalFileAttributes> {
 
-  private final static long NO_TIMEOUT = 0;
-
   /**
    * {@inheritDoc}
    */
@@ -81,8 +79,8 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
    * {@inheritDoc}
    */
   @Override
-  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
-                                                       Long timeBetweenSizeCheck, long lockTimeout) {
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, Long timeBetweenSizeCheck,
+                                                       Long lockTimeout) {
     Path path = resolveExistingPath(filePath);
     if (isDirectory(path)) {
       throw cannotReadDirectoryException(path);
@@ -94,7 +92,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
     }
 
     LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
-    return read(config, fileAttributes, lock, timeBetweenSizeCheck, lockTimeout);
+    return read(config, fileAttributes, timeBetweenSizeCheck, lockTimeout);
   }
 
   /**
@@ -103,15 +101,21 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
-    return read(config, attributes, lock, timeBetweenSizeCheck, NO_TIMEOUT);
+    return commonRead(config, attributes, timeBetweenSizeCheck, lock, NO_TIMEOUT);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
-                                                       Long timeBetweenSizeCheck, long lockTimeout) {
+  public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes,
+                                                       Long timeBetweenSizeCheck, Long lockTimeout) {
+    return commonRead(config, attributes, timeBetweenSizeCheck, true, lockTimeout);
+  }
+
+
+  private Result<InputStream, LocalFileAttributes> commonRead(FileConnectorConfig config, LocalFileAttributes attributes,
+                                                              Long timeBetweenSizeCheck, boolean lock, Long lockTimeout) {
     Path path = resolvePath(attributes.getPath());
     FileChannel channel = null;
     PathLock pathLock = null;
