@@ -93,6 +93,9 @@ public final class FileChannelPathLock implements PathLock {
         lock = channel.tryLock();
         if (lock != null) {
           return isLocked();
+        } else {
+          sleepThread(timeout / MAX_LOCK_RETRIES);
+          continue;
         }
       } catch (OverlappingFileLockException e) {
         sleepThread(timeout / MAX_LOCK_RETRIES);

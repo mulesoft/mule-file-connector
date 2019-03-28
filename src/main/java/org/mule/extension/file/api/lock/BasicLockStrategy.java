@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Implements the {@link LockStrategy} contract.
  *
- * @since 2 .0
+ * @since 2.0
  */
 @Alias("withLock")
 public class BasicLockStrategy implements LockStrategy {

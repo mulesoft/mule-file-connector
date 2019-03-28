@@ -63,7 +63,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
    */
   @Override
   public void write(String filePath, InputStream content, FileWriteMode mode, boolean lock, boolean createParentDirectory) {
-    commonWrite(filePath, content, mode, createParentDirectory, lock, NO_TIMEOUT);
+    doWrite(filePath, content, mode, createParentDirectory, lock, NO_TIMEOUT);
   }
 
   /**
@@ -71,11 +71,11 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
    */
   @Override
   public void write(String filePath, InputStream content, FileWriteMode mode, boolean createParentDirectory, Long lockTimeout) {
-    commonWrite(filePath, content, mode, createParentDirectory, true, lockTimeout);
+    doWrite(filePath, content, mode, createParentDirectory, true, lockTimeout);
   }
 
-  private void commonWrite(String filePath, InputStream content, FileWriteMode mode, boolean createParentDirectory, boolean lock,
-                           Long lockTimeout) {
+  private void doWrite(String filePath, InputStream content, FileWriteMode mode, boolean createParentDirectory, boolean lock,
+                       Long lockTimeout) {
     Path path = resolvePath(filePath);
     assureParentFolderExists(path, createParentDirectory);
 

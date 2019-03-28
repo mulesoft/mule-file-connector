@@ -61,18 +61,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
                                                        Long timeBetweenSizeCheck) {
-    Path path = resolveExistingPath(filePath);
-    if (isDirectory(path)) {
-      throw cannotReadDirectoryException(path);
-    }
-
-    if (!isReadable(path)) {
-      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
-                                                 path));
-    }
-
-    LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
-    return read(config, fileAttributes, lock, timeBetweenSizeCheck);
+    return doRead(config, filePath, lock, timeBetweenSizeCheck, NO_TIMEOUT);
   }
 
   /**
@@ -81,6 +70,11 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, Long timeBetweenSizeCheck,
                                                        Long lockTimeout) {
+    return doRead(config, filePath, true, timeBetweenSizeCheck, lockTimeout);
+  }
+
+  private Result<InputStream, LocalFileAttributes> doRead(FileConnectorConfig config, String filePath, boolean lock,
+                                                          Long timeBetweenSizeCheck, Long lockTimeout) {
     Path path = resolveExistingPath(filePath);
     if (isDirectory(path)) {
       throw cannotReadDirectoryException(path);
@@ -90,9 +84,12 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
       throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
                                                  path));
     }
-
     LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
-    return read(config, fileAttributes, timeBetweenSizeCheck, lockTimeout);
+
+    if (lock) {
+      return read(config, fileAttributes, timeBetweenSizeCheck, lockTimeout);
+    }
+    return read(config, fileAttributes, false, timeBetweenSizeCheck);
   }
 
   /**
@@ -101,7 +98,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
-    return commonRead(config, attributes, timeBetweenSizeCheck, lock, NO_TIMEOUT);
+    return doRead(config, attributes, timeBetweenSizeCheck, lock, NO_TIMEOUT);
   }
 
   /**
@@ -110,12 +107,12 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes,
                                                        Long timeBetweenSizeCheck, Long lockTimeout) {
-    return commonRead(config, attributes, timeBetweenSizeCheck, true, lockTimeout);
+    return doRead(config, attributes, timeBetweenSizeCheck, true, lockTimeout);
   }
 
 
-  private Result<InputStream, LocalFileAttributes> commonRead(FileConnectorConfig config, LocalFileAttributes attributes,
-                                                              Long timeBetweenSizeCheck, boolean lock, Long lockTimeout) {
+  private Result<InputStream, LocalFileAttributes> doRead(FileConnectorConfig config, LocalFileAttributes attributes,
+                                                          Long timeBetweenSizeCheck, boolean lock, Long lockTimeout) {
     Path path = resolvePath(attributes.getPath());
     FileChannel channel = null;
     PathLock pathLock = null;
