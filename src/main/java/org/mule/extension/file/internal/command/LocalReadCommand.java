@@ -74,7 +74,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   /**
    * {@inheritDoc}
    */
-  @Override
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
     Path path = resolvePath(attributes.getPath());
