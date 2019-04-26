@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:java="http://www.mulesoft.org/schema/mule/java"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+      http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+
+    <munit:config name="file-list-test-case.xml"/>
+
+    <file:config name="file-list-config">
+        <file:connection workingDir="${munit.temporary.directory}" />
+    </file:config>
+
+    <munit:test name="listModifiedDirectory" description="Lists the files of a directory while some of those files are deleted">
+
+        <munit:behavior>
+            <set-variable variableName="filesToCreate" value="300"/>
+            <set-variable variableName="filesToDelete" value="100"/>
+            <set-payload value="Hello World!"/>
+            <flow-ref name="writeFiles"/>
+        </munit:behavior>
+
+        <munit:execution>
+                <scatter-gather>
+                    <route>
+                        <flow-ref name="deleteFiles"/>
+                    </route>
+                    <route>
+                        <file:list config-ref="file-list-config" directoryPath="." target="list"/>
+                    </route>
+                </scatter-gather>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[sizeOf(vars.list)]"
+                                     is="#[MunitTools::greaterThan(vars.filesToCreate - vars.filesToDelete)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="writeFiles">
+        <foreach collection="#[1 to vars.filesToCreate]">
+            <file:write config-ref="file-list-config" path="#[payload ++ '.txt']"/>
+        </foreach>
+    </flow>
+
+    <flow name="deleteFiles">
+        <foreach collection="#[vars.filesToCreate to (vars.filesToCreate - vars.filesToDelete + 1)]">
+            <file:delete config-ref="file-list-config" path="#[payload ++ '.txt']"/>
+        </foreach>
+    </flow>
+
+</mule>
