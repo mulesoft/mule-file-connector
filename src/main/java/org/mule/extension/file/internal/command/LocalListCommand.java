@@ -97,17 +97,9 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
       try {
         LocalFileAttributes attributes = new LocalFileAttributes(path);
         if (child.isDirectory()) {
-          if (matcher.test(attributes)) {
-            accumulator.add(Result.<InputStream, LocalFileAttributes>builder().output(null).attributes(attributes).build());
-          }
-
-          if (recursive) {
-            doList(config, child, accumulator, recursive, matcher, timeBetweenSizeCheck);
-          }
+          processDirectory(config, child, accumulator, recursive, matcher, timeBetweenSizeCheck, attributes);
         } else {
-          if (matcher.test(attributes)) {
-            accumulator.add(readCommand.read(config, attributes, false, timeBetweenSizeCheck));
-          }
+          processFile(config, accumulator, matcher, timeBetweenSizeCheck, attributes);
         }
 
       } catch (MuleRuntimeException e) {
@@ -121,5 +113,31 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
       }
     }
   }
+
+
+  private void processDirectory(FileConnectorConfig config,
+                                File directory,
+                                List<Result<InputStream, LocalFileAttributes>> accumulator,
+                                boolean recursive,
+                                Predicate<LocalFileAttributes> matcher,
+                                Long timeBetweenSizeCheck,
+                                LocalFileAttributes directoryAttributes) {
+    if (matcher.test(directoryAttributes)) {
+      accumulator.add(Result.<InputStream, LocalFileAttributes>builder().output(null).attributes(directoryAttributes).build());
+    }
+
+    if (recursive) {
+      doList(config, directory, accumulator, recursive, matcher, timeBetweenSizeCheck);
+    }
+  }
+
+  private void processFile(FileConnectorConfig config, List<Result<InputStream, LocalFileAttributes>> accumulator,
+                           Predicate<LocalFileAttributes> matcher, Long timeBetweenSizeCheck,
+                           LocalFileAttributes fileAttributes) {
+    if (matcher.test(fileAttributes)) {
+      accumulator.add(readCommand.read(config, fileAttributes, false, timeBetweenSizeCheck));
+    }
+  }
+
 
 }
