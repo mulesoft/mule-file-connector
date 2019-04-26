@@ -114,7 +114,6 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     }
   }
 
-
   private void processDirectory(FileConnectorConfig config,
                                 File directory,
                                 List<Result<InputStream, LocalFileAttributes>> accumulator,
@@ -138,6 +137,5 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
       accumulator.add(readCommand.read(config, fileAttributes, false, timeBetweenSizeCheck));
     }
   }
-
 
 }
