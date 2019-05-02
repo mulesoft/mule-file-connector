@@ -86,7 +86,7 @@ public final class FileOperations extends BaseFileSystemOperations {
         doPagedList(config, directoryPath, recursive, matcher,
                     config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
                     streamingHelper);
-    return (PagingProvider<LocalFileSystem, Result<Object, LocalFileAttributes>>) result;
+    return result;
   }
 
   /**
