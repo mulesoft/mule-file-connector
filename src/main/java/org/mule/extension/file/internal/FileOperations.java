@@ -75,23 +75,24 @@ public final class FileOperations extends BaseFileSystemOperations {
    * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exist or is not a directory
    */
   @Summary("List all the files from given directory")
+  @MediaType(value = ANY, strict = false)
   @Throws(FileListErrorTypeProvider.class)
-  public PagingProvider<LocalFileSystem, Result<CursorProvider, LocalFileAttributes>> list(@Config FileConnectorConfig config,
-                                                                                           @Path(type = DIRECTORY,
-                                                                                               location = EXTERNAL) String directoryPath,
-                                                                                           @Optional(
-                                                                                               defaultValue = "false") boolean recursive,
-                                                                                           @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
-                                                                                           @ConfigOverride @Placement(
-                                                                                               tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
-                                                                                           @ConfigOverride @Placement(
-                                                                                               tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
-                                                                                           StreamingHelper streamingHelper) {
+  public PagingProvider<LocalFileSystem, Result<Object, LocalFileAttributes>> list(@Config FileConnectorConfig config,
+                                                                                   @Path(type = DIRECTORY,
+                                                                                       location = EXTERNAL) String directoryPath,
+                                                                                   @Optional(
+                                                                                       defaultValue = "false") boolean recursive,
+                                                                                   @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
+                                                                                   @ConfigOverride @Placement(
+                                                                                       tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                                                   @ConfigOverride @Placement(
+                                                                                       tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
+                                                                                   StreamingHelper streamingHelper) {
     PagingProvider result =
         doPagedList(config, directoryPath, recursive, matcher,
                     config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
                     streamingHelper);
-    return (PagingProvider<LocalFileSystem, Result<CursorProvider, LocalFileAttributes>>) result;
+    return result;
   }
 
   /**
