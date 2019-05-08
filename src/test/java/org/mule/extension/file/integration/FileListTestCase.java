@@ -77,13 +77,21 @@ public class FileListTestCase extends FileConnectorTestCase {
   }
 
   @Test
-  public void listWithoutReadPermission() throws Exception {
+  public void listWithDirectoryWithoutReadPermission() throws Exception {
     assumeFalse(IS_OS_WINDOWS);
-    expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,
-                              "access was denied by the operating system");
 
     temporaryFolder.newFolder("forbiddenDirectory").setReadable(false);
-    doList(".", true);
+    List<Message> messages = doListWithSizeCheck(".", true);
+    assertRecursiveTreeNode(messages);
+  }
+
+  @Test
+  public void listWithFileWithoutReadPermission() throws Exception {
+    List<Message> messages = doList(".", false);
+    temporaryFolder.newFile("forbiddenFile").setReadable(false);
+
+    assertThat(messages, hasSize(6));
+    assertThat(assertListedFiles(messages), is(true));
   }
 
   @Test
