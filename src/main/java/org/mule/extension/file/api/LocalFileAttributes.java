@@ -6,12 +6,15 @@
  */
 package org.mule.extension.file.api;
 
+import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import org.mule.extension.file.common.api.AbstractFileAttributes;
 import org.mule.extension.file.common.api.FileAttributes;
+import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -127,6 +130,8 @@ public class LocalFileAttributes extends AbstractFileAttributes {
   private BasicFileAttributes getAttributes(Path path) {
     try {
       return Files.readAttributes(path, BasicFileAttributes.class);
+    } catch (AccessDeniedException e) {
+      throw new FileAccessDeniedException(format("Access to path '%s' denied by the operating system", path), e);
     } catch (Exception e) {
       throw new MuleRuntimeException(createStaticMessage("Could not read attributes for file " + path), e);
     }
