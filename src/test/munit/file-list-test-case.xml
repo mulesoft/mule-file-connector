@@ -13,10 +13,6 @@
 
     <munit:config name="file-list-test-case.xml"/>
 
-    <file:config name="file-list-config">
-        <file:connection workingDir="${munit.temporary.directory}" />
-    </file:config>
-
     <munit:test name="listModifiedDirectory" description="Lists the files of a directory while some of those files are deleted">
 
         <munit:behavior>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+
+    <munit:config name="file-read-test-case.xml"/>
+
+    <munit:before-test name="file-read-test-case-Before_Test" description="Before tests actions">
+        <file:write config-ref="file-list-config" path="files/hello.json">
+            <file:content>
+                #[output application/json
+                ---
+                "Hello World!"]
+            </file:content>
+        </file:write>
+    </munit:before-test>
+
+    <munit:test name="read-test" description="Read file">
+        <munit:execution>
+            <file:read config-ref="file-list-config" path="files/hello.json"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo('Hello World!')]"/>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withMediaType('text/json')]"/>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withEncoding('UTF-8')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="read-with-forced-mimeType-test" description="Read file with a harcoded mimetype">
+        <munit:execution >
+            <file:read config-ref="file-list-config" path="files/hello.json" outputMimeType="test/test"/>
+        </munit:execution>
+        <munit:validation >
+            <munit-tools:assert-that expression="#[payload.^mediaType]" is="#[MunitTools::equalTo('test/test; charset=UTF-8')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="read-unexisting-test" description="Read file that does not exists">
+        <munit:execution>
+            <try>
+                <file:read config-ref="file-list-config" path="files/not-there.txt" />
+                <munit-tools:fail/>
+                <error-handler >
+                    <on-error-continue enableNotifications="false" logException="false" type="FILE:ILLEGAL_PATH"/>
+                </error-handler>
+            </try>
+        </munit:execution>
+    </munit:test>
+
+    <munit:test name="read-directory-test" description="Read directory">
+        <munit:execution >
+            <try>
+                <file:read config-ref="file-list-config" path="files"/>
+                <munit-tools:fail/>
+                <error-handler >
+                    <on-error-continue enableNotifications="false" logException="false" type="FILE:ILLEGAL_PATH"/>
+                </error-handler>
+            </try>
+        </munit:execution>
+    </munit:test>
+
+    <munit:test name="get-properties-test" description="Test that file properties are read correctly">
+        <munit:execution>
+            <file:read config-ref="file-list-config" path="files/hello.json"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.fileName]" is="#[MunitTools::equalTo('hello.json')]"/>
+            <munit-tools:assert-that expression="#[attributes.directory]" is="#[MunitTools::equalTo(false)]"/>
+            <munit-tools:assert-that expression="#[attributes.regularFile]" is="#[MunitTools::equalTo(true)]"/>
+            <munit-tools:assert-that expression="#[attributes.symbolicLink]" is="#[MunitTools::equalTo(false)]"/>
+            <munit-tools:assert-that expression="#[attributes.size]" is="#[MunitTools::equalTo(14)]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule> 

@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+		http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+
+    <munit:config name="directory-listener-functional-test-case"/>
+
+    <file:matcher name="Matcher" filenamePattern='matchme.txt'/>
+
+    <munit:before-test name="directory-listener-functional-test-case-Before_Test" description="Before tests actions">
+        <munit-tools:store  key="messages">
+            <munit-tools:value >#[[]]</munit-tools:value>
+        </munit-tools:store>
+        <file:create-directory config-ref="file-list-config" directoryPath="matcherless"/>
+        <file:create-directory config-ref="file-list-config" directoryPath="withMatcher"/>
+    </munit:before-test>
+
+    <sub-flow name="storeMessages">
+        <set-variable value="#[message]" variableName="message"/>
+        <munit-tools:retrieve  key="messages"/>
+        <munit-tools:store key="messages">
+            <munit-tools:value >#[
+                %dw 2.0
+                output application/java
+                ---
+                payload ++ [vars.message]
+                ]
+            </munit-tools:value>
+        </munit-tools:store>
+    </sub-flow>
+
+    <flow name="source-on-file-created-test" >
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false">
+            <scheduling-strategy >
+                <fixed-frequency />
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="on-file-created-test" description="Verifies that a created file is picked">
+        <munit:enable-flow-sources >
+            <munit:enable-flow-source value="source-on-file-created-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior >
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <munit-tools:retrieve key="messages"/>
+                    <validation:validate-size value="#[payload]" min="1"/>
+                </until-successful>
+                <error-handler >
+                    <on-error-continue enableNotifications="false" logException="false" type="ANY">
+                        <munit-tools:retrieve key="messages"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload[0].attributes.fileName]" is="#[MunitTools::equalTo('watchme.txt')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-recursive-test">
+        <file:listener config-ref="file-list-config" directory="matcherless">
+            <scheduling-strategy >
+                <fixed-frequency />
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="recursive-test" description="Verifies that files created in subdirs are picked">
+        <munit:enable-flow-sources >
+            <munit:enable-flow-source value="source-recursive-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <file:write config-ref="file-list-config" path="matcherless/subdir/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <munit-tools:retrieve key="messages"/>
+                    <validation:validate-size value="#[payload]" min="1"/>
+                </until-successful>
+                <error-handler>
+                    <on-error-continue enableNotifications="true" logException="true">
+                        <munit-tools:retrieve key="messages"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation >
+            <munit-tools:assert-that expression="#[payload[0].attributes.fileName]" is="#[MunitTools::equalTo('watchme.txt')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-matcher-test">
+        <file:listener config-ref="file-list-config" directory="withMatcher" recursive="false" matcher="Matcher" autoDelete="true">
+            <scheduling-strategy >
+                <fixed-frequency />
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="matcher-test" description="Verifies that only files compliant with the matcher are picked">
+        <munit:enable-flow-sources >
+            <munit:enable-flow-source value="source-matcher-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior >
+            <file:write config-ref="file-list-config" path="withMatcher/matchme.txt">
+                <file:content>Dr. Manhattan</file:content>
+            </file:write>
+            <file:write config-ref="file-list-config" path="withMatcher/watchme.txt">
+                <file:content>who watches the watchmen?w></file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000" >
+                    <munit-tools:retrieve key="messages"/>
+                    <validation:validate-size value="#[payload]" min="1" max="1"/>
+                </until-successful>
+                <error-handler >
+                    <on-error-continue enableNotifications="false" logException="false" type="ANY">
+                        <munit-tools:retrieve key="messages"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+            <set-variable value="#[payload]" variableName="files"/>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <munit-tools:retrieve key="messages" />
+                    <validation:validate-size value="#[payload]" min="2"/>
+                </until-successful>
+                <munit-tools:fail/>
+                <error-handler>
+                    <on-error-continue enableNotifications="false" logException="false" type="MULE:RETRY_EXHAUSTED"/>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.files[0].attributes.fileName]" is="#[MunitTools::equalTo('matchme.txt')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-non-recursive-test">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="non-recursive-test" description="Verifies that files created in subdirs are not picked">
+        <munit:enable-flow-sources >
+            <munit:enable-flow-source value="source-non-recursive-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <file:write config-ref="file-list-config" path="matcherless/subdir/watchme.txt">
+                <file:content >who watches the watchmen?</file:content>
+            </file:write>
+            <file:write config-ref="file-list-config" path="matcherless/nonRecursive.txt">
+                <file:content >you shall not recurse</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution >
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000" >
+                    <munit-tools:retrieve key="messages"/>
+                    <validation:validate-size value="#[payload]" min="1" max="1"/>
+                </until-successful>
+                <error-handler >
+                    <on-error-continue enableNotifications="false" logException="false" type="ANY">
+                        <munit-tools:retrieve key="messages"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+            <set-variable value="#[payload]" variableName="files" />
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000" >
+                    <munit-tools:retrieve key="messages"/>
+                    <validation:validate-size value="#[payload]" min="2"/>
+                </until-successful>
+                <munit-tools:fail message="There are more files than expected"/>
+                <error-handler>
+                    <on-error-continue enableNotifications="false" logException="false" type="MULE:RETRY_EXHAUSTED"/>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.files[0].attributes.fileName]" is="#[MunitTools::equalTo('nonRecursive.txt')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-move-to-test">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared">
+            <scheduling-strategy >
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="move-to-test" description="Verifies that files are moved after processing">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="source-move-to-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content >who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution >
+            <try >
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <file:read config-ref="file-list-config" path="shared/watchme.txt"/>
+                    <validation:is-not-blank-string/>
+                </until-successful>
+                <set-variable value="#[payload]" variableName="file"/>
+                <try>
+                    <until-successful maxRetries="10" millisBetweenRetries="1000">
+                        <file:read config-ref="file-list-config" path="watchme.txt" />
+                        <validation:is-not-blank-string/>
+                    </until-successful>
+                    <munit-tools:fail/>
+                    <error-handler >
+                        <on-error-continue enableNotifications="true" logException="true" type="MULE:RETRY_EXHAUSTED"/>
+                    </error-handler>
+                </try>
+            </try>
+        </munit:execution>
+        <munit:validation >
+            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-move-to-and-auto-delete-test">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="move-to-and-auto-delete-test" description="Verifies that files are moved after processing even if autoDelete is configured">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="source-move-to-and-auto-delete-test"/>
+        </munit:enable-flow-sources>
+        <munit:behavior >
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <file:read config-ref="file-list-config" path="shared/watchme.txt"/>
+                    <validation:is-not-blank-string/>
+                </until-successful>
+                <set-variable value="#[payload]" variableName="file"/>
+                <try>
+                    <until-successful maxRetries="10" millisBetweenRetries="1000">
+                        <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
+                        <validation:is-not-blank-string/>
+                    </until-successful>
+                    <munit-tools:fail/>
+                    <error-handler>
+                        <on-error-continue enableNotifications="false" logException="false" type="MULE:RETRY_EXHAUSTED"/>
+                    </error-handler>
+                </try>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <flow name="source-move-to-and-auto-delete-with-same-file-name">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="move-to-and-auto-delete-with-same-file-name-test" description="Verifies that files that cannot be moved because a file already exists in the other directory with that name are deleted">
+        <munit:enable-flow-sources >
+            <munit:enable-flow-source value="source-move-to-and-auto-delete-with-same-file-name"/>
+        </munit:enable-flow-sources>
+        <munit:behavior >
+            <file:write config-ref="file-list-config" path="shared/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <file:read config-ref="file-list-config" path="watchme.txt"/>
+                    <validation:is-not-blank-string/>
+                </until-successful>
+                <munit-tools:fail message="File not deleted"/>
+                <error-handler>
+                    <on-error-continue enableNotifications="false" logException="false" type="MULE:RETRY_EXHAUSTED"/>
+                </error-handler>
+            </try>
+        </munit:execution>
+    </munit:test>
+
+    <flow name="source-move-to-with-rename">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" renameTo="renamed.txt">
+            <scheduling-strategy>
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="move-to-with-rename-test" description="Verifies that files are moved and renamed after processing">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="source-move-to-with-rename"/>
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <file:read config-ref="file-list-config" path="shared/renamed.txt"/>
+                    <validation:is-not-blank-string/>
+                </until-successful>
+                <set-variable value="#[payload]" variableName="file"/>
+                <try>
+                    <until-successful maxRetries="10" millisBetweenRetries="1000">
+                        <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
+                        <validation:is-not-blank-string/>
+                    </until-successful>
+                    <munit-tools:fail/>
+                    <error-handler>
+                        <on-error-continue enableNotifications="false" logException="false" type="MULE:RETRY_EXHAUSTED"/>
+                    </error-handler>
+                </try>
+            </try>
+        </munit:execution>
+    </munit:test>
+
+    <flow name="source-move-to-with-same-file-name">
+        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared">
+            <scheduling-strategy>
+                <fixed-frequency/>
+            </scheduling-strategy>
+        </file:listener>
+        <flow-ref name="storeMessages"/>
+    </flow>
+    <munit:test name="move-to-with-same-file-name-test" description="Verifies that files that cannot be moved because a file already exists in the other directory with that name remain untouched">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="source-move-to-with-same-file-name"/>
+        </munit:enable-flow-sources>
+        <munit:behavior>
+            <file:write config-ref="file-list-config" path="shared/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+                <file:content>who watches the watchmen?</file:content>
+            </file:write>
+        </munit:behavior>
+        <munit:execution>
+            <try>
+                <until-successful maxRetries="10" millisBetweenRetries="1000">
+                    <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
+                    <validation:is-not-blank-string/>
+                </until-successful>
+                <set-variable value="#[payload]" variableName="file"/>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+        </munit:validation>
+    </munit:test>
+</mule>
