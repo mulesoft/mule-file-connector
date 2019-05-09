@@ -28,8 +28,7 @@
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo('Hello World!')]"/>
-            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withMediaType('text/json')]"/>
-            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withEncoding('UTF-8')]"/>
+            <munit-tools:assert-that expression="#[payload.^mediaType]" is="#[MunitTools::equalTo('text/json; charset=UTF-8')]"/>
         </munit:validation>
     </munit:test>
 
