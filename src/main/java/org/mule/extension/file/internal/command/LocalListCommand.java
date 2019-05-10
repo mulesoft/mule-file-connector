@@ -102,11 +102,15 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
           processFile(config, accumulator, matcher, timeBetweenSizeCheck, attributes);
         }
 
+      } catch (FileAccessDeniedException e) {
+        LOGGER.warn("A file with path {} was found while listing but access was denied", path);
+        LOGGER.debug(e.getMessage(), e);
+
       } catch (MuleRuntimeException e) {
         if (e.getCause() instanceof NoSuchFileException) {
           LOGGER
-              .debug("A file with path %s was found while listing but was not found when trying to open a file channel to access the file",
-                     path.toString());
+              .debug("A file with path {} was found while listing but was not found when trying to open a file channel to access the file",
+                     path);
         } else {
           throw e;
         }
@@ -121,12 +125,17 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                                 Predicate<LocalFileAttributes> matcher,
                                 Long timeBetweenSizeCheck,
                                 LocalFileAttributes directoryAttributes) {
-    if (matcher.test(directoryAttributes)) {
-      accumulator.add(Result.<InputStream, LocalFileAttributes>builder().output(null).attributes(directoryAttributes).build());
-    }
+    try {
+      if (recursive) {
+        doList(config, directory, accumulator, recursive, matcher, timeBetweenSizeCheck);
+      }
 
-    if (recursive) {
-      doList(config, directory, accumulator, recursive, matcher, timeBetweenSizeCheck);
+      if (matcher.test(directoryAttributes)) {
+        accumulator.add(Result.<InputStream, LocalFileAttributes>builder().output(null).attributes(directoryAttributes).build());
+      }
+    } catch (FileAccessDeniedException e) {
+      LOGGER.warn("A directory with path {} was found while listing but read access was denied", directory);
+      LOGGER.debug(e.getMessage(), e);
     }
   }
 
