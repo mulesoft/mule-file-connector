@@ -13,7 +13,7 @@
     <munit:config name="file-read-test-case.xml"/>
 
     <munit:before-test name="file-read-test-case-Before_Test" description="Before tests actions">
-        <file:write config-ref="file-list-config" path="files/hello.json">
+        <file:write config-ref="file-config" path="files/hello.json">
             <file:content>
                 #[output application/json
                 ---
@@ -24,7 +24,7 @@
 
     <munit:test name="read-test" description="Read file">
         <munit:execution>
-            <file:read config-ref="file-list-config" path="files/hello.json"/>
+            <file:read config-ref="file-config" path="files/hello.json"/>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo('Hello World!')]"/>
@@ -35,40 +35,29 @@
 
     <munit:test name="read-with-forced-mimeType-test" description="Read file with a harcoded mimetype">
         <munit:execution >
-            <file:read config-ref="file-list-config" path="files/hello.json" outputMimeType="test/test"/>
+            <file:read config-ref="file-config" path="files/hello.json" outputMimeType="test/test"/>
         </munit:execution>
         <munit:validation >
-            <munit-tools:assert-that expression="#[payload.^mediaType]" is="#[MunitTools::equalTo('test/test; charset=UTF-8')]"/>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withMediaType('test/test')]"/>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::withEncoding('UTF-8')]"/>
         </munit:validation>
     </munit:test>
 
-    <munit:test name="read-unexisting-test" description="Read file that does not exists">
+    <munit:test name="read-unexisting-test" description="Read file that does not exists" expectedErrorType="FILE:ILLEGAL_PATH">
         <munit:execution>
-            <try>
-                <file:read config-ref="file-list-config" path="files/not-there.txt" />
-                <munit-tools:fail/>
-                <error-handler >
-                    <on-error-continue enableNotifications="false" logException="false" type="FILE:ILLEGAL_PATH"/>
-                </error-handler>
-            </try>
+            <file:read config-ref="file-config" path="files/not-there.txt" />
         </munit:execution>
     </munit:test>
 
-    <munit:test name="read-directory-test" description="Read directory">
-        <munit:execution >
-            <try>
-                <file:read config-ref="file-list-config" path="files"/>
-                <munit-tools:fail/>
-                <error-handler >
-                    <on-error-continue enableNotifications="false" logException="false" type="FILE:ILLEGAL_PATH"/>
-                </error-handler>
-            </try>
+    <munit:test name="read-directory-test" description="Read directory" expectedErrorType="FILE:ILLEGAL_PATH">
+        <munit:execution>
+            <file:read config-ref="file-config" path="files"/>
         </munit:execution>
     </munit:test>
 
     <munit:test name="get-properties-test" description="Test that file properties are read correctly">
         <munit:execution>
-            <file:read config-ref="file-list-config" path="files/hello.json"/>
+            <file:read config-ref="file-config" path="files/hello.json"/>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[attributes.fileName]" is="#[MunitTools::equalTo('hello.json')]"/>

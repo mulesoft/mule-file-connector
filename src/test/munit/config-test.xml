@@ -6,7 +6,7 @@
 		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 		http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 
-    <file:config name="file-list-config">
+    <file:config name="file-config">
         <file:connection workingDir="${munit.temporary.directory}"/>
     </file:config>
 

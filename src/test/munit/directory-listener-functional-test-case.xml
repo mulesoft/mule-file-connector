@@ -20,8 +20,8 @@
         <munit-tools:store  key="messages">
             <munit-tools:value >#[[]]</munit-tools:value>
         </munit-tools:store>
-        <file:create-directory config-ref="file-list-config" directoryPath="matcherless"/>
-        <file:create-directory config-ref="file-list-config" directoryPath="withMatcher"/>
+        <file:create-directory config-ref="file-config" directoryPath="matcherless"/>
+        <file:create-directory config-ref="file-config" directoryPath="withMatcher"/>
     </munit:before-test>
 
     <sub-flow name="storeMessages">
@@ -39,7 +39,7 @@
     </sub-flow>
 
     <flow name="source-on-file-created-test" >
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false">
             <scheduling-strategy >
                 <fixed-frequency />
             </scheduling-strategy>
@@ -51,7 +51,7 @@
             <munit:enable-flow-source value="source-on-file-created-test"/>
         </munit:enable-flow-sources>
         <munit:behavior >
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
@@ -69,12 +69,12 @@
             </try>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[payload[0].attributes.fileName]" is="#[MunitTools::equalTo('watchme.txt')]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="watchme.txt" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-recursive-test">
-        <file:listener config-ref="file-list-config" directory="matcherless">
+        <file:listener config-ref="file-config" directory="matcherless">
             <scheduling-strategy >
                 <fixed-frequency />
             </scheduling-strategy>
@@ -86,7 +86,7 @@
             <munit:enable-flow-source value="source-recursive-test"/>
         </munit:enable-flow-sources>
         <munit:behavior>
-            <file:write config-ref="file-list-config" path="matcherless/subdir/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/subdir/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
@@ -104,12 +104,12 @@
             </try>
         </munit:execution>
         <munit:validation >
-            <munit-tools:assert-that expression="#[payload[0].attributes.fileName]" is="#[MunitTools::equalTo('watchme.txt')]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="watchme.txt" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-matcher-test">
-        <file:listener config-ref="file-list-config" directory="withMatcher" recursive="false" matcher="Matcher" autoDelete="true">
+        <file:listener config-ref="file-config" directory="withMatcher" recursive="false" matcher="Matcher" autoDelete="true">
             <scheduling-strategy >
                 <fixed-frequency />
             </scheduling-strategy>
@@ -121,10 +121,10 @@
             <munit:enable-flow-source value="source-matcher-test"/>
         </munit:enable-flow-sources>
         <munit:behavior >
-            <file:write config-ref="file-list-config" path="withMatcher/matchme.txt">
+            <file:write config-ref="file-config" path="withMatcher/matchme.txt">
                 <file:content>Dr. Manhattan</file:content>
             </file:write>
-            <file:write config-ref="file-list-config" path="withMatcher/watchme.txt">
+            <file:write config-ref="file-config" path="withMatcher/watchme.txt">
                 <file:content>who watches the watchmen?w></file:content>
             </file:write>
         </munit:behavior>
@@ -153,12 +153,12 @@
             </try>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[vars.files[0].attributes.fileName]" is="#[MunitTools::equalTo('matchme.txt')]"/>
+            <munit-tools:assert-equals actual="#[vars.files[0].attributes.fileName]" expected="matchme.txt" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-non-recursive-test">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" autoDelete="true">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" autoDelete="true">
             <scheduling-strategy>
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -170,10 +170,10 @@
             <munit:enable-flow-source value="source-non-recursive-test"/>
         </munit:enable-flow-sources>
         <munit:behavior>
-            <file:write config-ref="file-list-config" path="matcherless/subdir/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/subdir/watchme.txt">
                 <file:content >who watches the watchmen?</file:content>
             </file:write>
-            <file:write config-ref="file-list-config" path="matcherless/nonRecursive.txt">
+            <file:write config-ref="file-config" path="matcherless/nonRecursive.txt">
                 <file:content >you shall not recurse</file:content>
             </file:write>
         </munit:behavior>
@@ -202,12 +202,12 @@
             </try>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[vars.files[0].attributes.fileName]" is="#[MunitTools::equalTo('nonRecursive.txt')]"/>
+            <munit-tools:assert-equals actual="#[vars.files[0].attributes.fileName]" expected="nonRecursive.txt" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-move-to-test">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" moveToDirectory="shared">
             <scheduling-strategy >
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -219,21 +219,19 @@
             <munit:enable-flow-source value="source-move-to-test"/>
         </munit:enable-flow-sources>
         <munit:behavior>
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content >who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
-        <munit:execution >
-            <try >
+        <munit:execution>
+            <try>
                 <until-successful maxRetries="10" millisBetweenRetries="1000">
-                    <file:read config-ref="file-list-config" path="shared/watchme.txt"/>
-                    <validation:is-not-blank-string/>
+                    <file:read config-ref="file-config" path="shared/watchme.txt"/>
                 </until-successful>
                 <set-variable value="#[payload]" variableName="file"/>
                 <try>
                     <until-successful maxRetries="10" millisBetweenRetries="1000">
-                        <file:read config-ref="file-list-config" path="watchme.txt" />
-                        <validation:is-not-blank-string/>
+                        <file:read config-ref="file-config" path="matcherless/watchme.txt" />
                     </until-successful>
                     <munit-tools:fail/>
                     <error-handler >
@@ -243,12 +241,12 @@
             </try>
         </munit:execution>
         <munit:validation >
-            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+            <munit-tools:assert-equals actual="#[vars.file]" expected="who watches the watchmen?" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-move-to-and-auto-delete-test">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
             <scheduling-strategy>
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -260,21 +258,19 @@
             <munit:enable-flow-source value="source-move-to-and-auto-delete-test"/>
         </munit:enable-flow-sources>
         <munit:behavior >
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
         <munit:execution>
             <try>
                 <until-successful maxRetries="10" millisBetweenRetries="1000">
-                    <file:read config-ref="file-list-config" path="shared/watchme.txt"/>
-                    <validation:is-not-blank-string/>
+                    <file:read config-ref="file-config" path="shared/watchme.txt"/>
                 </until-successful>
                 <set-variable value="#[payload]" variableName="file"/>
                 <try>
                     <until-successful maxRetries="10" millisBetweenRetries="1000">
-                        <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
-                        <validation:is-not-blank-string/>
+                        <file:read config-ref="file-config" path="matcherless/watchme.txt"/>
                     </until-successful>
                     <munit-tools:fail/>
                     <error-handler>
@@ -284,12 +280,12 @@
             </try>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+            <munit-tools:assert-equals actual="#[vars.file]" expected="who watches the watchmen?" />
         </munit:validation>
     </munit:test>
 
     <flow name="source-move-to-and-auto-delete-with-same-file-name">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" moveToDirectory="shared" autoDelete="true">
             <scheduling-strategy>
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -301,18 +297,17 @@
             <munit:enable-flow-source value="source-move-to-and-auto-delete-with-same-file-name"/>
         </munit:enable-flow-sources>
         <munit:behavior >
-            <file:write config-ref="file-list-config" path="shared/watchme.txt">
+            <file:write config-ref="file-config" path="shared/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
         <munit:execution>
             <try>
                 <until-successful maxRetries="10" millisBetweenRetries="1000">
-                    <file:read config-ref="file-list-config" path="watchme.txt"/>
-                    <validation:is-not-blank-string/>
+                    <file:read config-ref="file-config" path="watchme.txt"/>
                 </until-successful>
                 <munit-tools:fail message="File not deleted"/>
                 <error-handler>
@@ -323,7 +318,7 @@
     </munit:test>
 
     <flow name="source-move-to-with-rename">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared" renameTo="renamed.txt">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" moveToDirectory="shared" renameTo="renamed.txt">
             <scheduling-strategy>
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -335,21 +330,19 @@
             <munit:enable-flow-source value="source-move-to-with-rename"/>
         </munit:enable-flow-sources>
         <munit:behavior>
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
         <munit:execution>
             <try>
                 <until-successful maxRetries="10" millisBetweenRetries="1000">
-                    <file:read config-ref="file-list-config" path="shared/renamed.txt"/>
-                    <validation:is-not-blank-string/>
+                    <file:read config-ref="file-config" path="shared/renamed.txt"/>
                 </until-successful>
                 <set-variable value="#[payload]" variableName="file"/>
                 <try>
                     <until-successful maxRetries="10" millisBetweenRetries="1000">
-                        <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
-                        <validation:is-not-blank-string/>
+                        <file:read config-ref="file-config" path="matcherless/watchme.txt"/>
                     </until-successful>
                     <munit-tools:fail/>
                     <error-handler>
@@ -361,7 +354,7 @@
     </munit:test>
 
     <flow name="source-move-to-with-same-file-name">
-        <file:listener config-ref="file-list-config" directory="matcherless" recursive="false" moveToDirectory="shared">
+        <file:listener config-ref="file-config" directory="matcherless" recursive="false" moveToDirectory="shared">
             <scheduling-strategy>
                 <fixed-frequency/>
             </scheduling-strategy>
@@ -373,24 +366,23 @@
             <munit:enable-flow-source value="source-move-to-with-same-file-name"/>
         </munit:enable-flow-sources>
         <munit:behavior>
-            <file:write config-ref="file-list-config" path="shared/watchme.txt">
+            <file:write config-ref="file-config" path="shared/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
-            <file:write config-ref="file-list-config" path="matcherless/watchme.txt">
+            <file:write config-ref="file-config" path="matcherless/watchme.txt">
                 <file:content>who watches the watchmen?</file:content>
             </file:write>
         </munit:behavior>
         <munit:execution>
             <try>
                 <until-successful maxRetries="10" millisBetweenRetries="1000">
-                    <file:read config-ref="file-list-config" path="matcherless/watchme.txt"/>
-                    <validation:is-not-blank-string/>
+                    <file:read config-ref="file-config" path="matcherless/watchme.txt"/>
                 </until-successful>
                 <set-variable value="#[payload]" variableName="file"/>
             </try>
         </munit:execution>
         <munit:validation>
-            <munit-tools:assert-that expression="#[vars.file]" is="#[MunitTools::equalTo('who watches the watchmen?')]"/>
+            <munit-tools:assert-equals actual="#[vars.file]" expected="who watches the watchmen?" />
         </munit:validation>
     </munit:test>
 </mule>

@@ -23,13 +23,13 @@
             <flow-ref name="write"/>
         </munit:execution>
         <munit:validation>
-            <file:read config-ref="file-list-config" path="${munit.temporary.directory}/text.txt" />
+            <file:read config-ref="file-config" path="${munit.temporary.directory}/text.txt" />
             <munit-tools:assert-equals actual="#[payload]" expected="Hello World!" />
         </munit:validation>
     </munit:test>
 
     <flow name="write">
-        <file:write config-ref="file-list-config" path="#[vars.path]" lock="#[vars.lock]" mode="#[vars.mode]" createParentDirectories="#[vars.createParent]"/>
+        <file:write config-ref="file-config" path="#[vars.path]" lock="#[vars.lock]" mode="#[vars.mode]" createParentDirectories="#[vars.createParent]"/>
     </flow>
 
     <flow name="writeFromStreamWithLock">
