@@ -103,14 +103,14 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
         }
 
       } catch (FileAccessDeniedException e) {
-        LOGGER.warn("A file with path {} was found while listing but access was denied", path.toString());
+        LOGGER.warn("A file with path {} was found while listing but access was denied", path);
         LOGGER.debug(e.getMessage(), e);
 
       } catch (MuleRuntimeException e) {
         if (e.getCause() instanceof NoSuchFileException) {
           LOGGER
               .debug("A file with path {} was found while listing but was not found when trying to open a file channel to access the file",
-                     path.toString());
+                     path);
         } else {
           throw e;
         }
@@ -134,7 +134,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
         accumulator.add(Result.<InputStream, LocalFileAttributes>builder().output(null).attributes(directoryAttributes).build());
       }
     } catch (FileAccessDeniedException e) {
-      LOGGER.warn("A directory with path {} was found while listing but read access was denied", directory.toString());
+      LOGGER.warn("A directory with path {} was found while listing but read access was denied", directory);
       LOGGER.debug(e.getMessage(), e);
     }
   }
