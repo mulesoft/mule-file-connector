@@ -6,12 +6,14 @@
  */
 package org.mule.extension.file.integration;
 
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeFalse;
 import static org.mule.extension.file.AllureConstants.FileFeature.FILE_EXTENSION;
 import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DENIED;
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
@@ -77,6 +79,7 @@ public class FileListTestCase extends FileConnectorTestCase {
 
   @Test
   public void listWithDirectoryWithoutReadPermission() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     temporaryFolder.newFolder("forbiddenDirectory").setReadable(false);
     List<Message> messages = doListWithSizeCheck(".", true);
     assertRecursiveTreeNode(messages);
@@ -84,6 +87,7 @@ public class FileListTestCase extends FileConnectorTestCase {
 
   @Test
   public void listWithFileWithoutReadPermission() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     temporaryFolder.newFile("forbiddenFile").setReadable(false);
     List<Message> messages = doList(".", false);
 
@@ -93,6 +97,7 @@ public class FileListTestCase extends FileConnectorTestCase {
 
   @Test
   public void listDirectoryWithoutReadPermission() throws Exception {
+    assumeFalse(IS_OS_WINDOWS);
     expectedError.expectError(NAMESPACE, ACCESS_DENIED, FileAccessDeniedException.class,
                               "access was denied by the operating system");
 
