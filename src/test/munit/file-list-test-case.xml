@@ -38,7 +38,7 @@
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that expression="#[sizeOf(vars.list)]"
-                                     is="#[MunitTools::greaterThan(vars.filesToCreate - vars.filesToDelete)]"/>
+                                     is="#[MunitTools::greaterThan(vars.filesToCreate - vars.filesToDelete - 1)]"/>
         </munit:validation>
     </munit:test>
 
