@@ -12,11 +12,8 @@
     <munit:config name="file-listener-matcher-test-case.xml"/>
 
     <munit:before-test name="create-file-for-listener">
-        <set-payload value="File Content"/>
-        <file:write config-ref="file-config" path="random.txt"/>
-        <munit-tools:store key="isFileBeingListed">
-            <munit-tools:value>#[false]</munit-tools:value>
-        </munit-tools:store>
+        <flow-ref name="write-file"/>
+        <flow-ref name="reset-file-listed"/>
     </munit:before-test>
 
     <munit:test name="listenFilteringNewFiles" description="Newly added files are filtered by the matcher">
@@ -163,9 +160,7 @@
     </flow>
 
     <flow name="check-no-file-is-listened-over-time">
-        <munit-tools:store key="isFileBeingListed">
-            <munit-tools:value>#[false]</munit-tools:value>
-        </munit-tools:store>
+        <flow-ref name="reset-file-listed"/>
         <try>
             <until-successful maxRetries="10" millisBetweenRetries="1000">
                 <flow-ref name="assert-file-was-listened"/>
@@ -196,18 +191,20 @@
 
     <flow name="assert-file-was-listened">
         <munit-tools:retrieve key="isFileBeingListed"/>
-        <munit-tools:store key="isFileBeingListed">
-            <munit-tools:value>#[false]</munit-tools:value>
-        </munit-tools:store>
+        <flow-ref name="reset-file-listed"/>
         <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo(true)]"/>
     </flow>
 
     <flow name="assert-file-was-not-listened">
         <munit-tools:retrieve key="isFileBeingListed"/>
+        <flow-ref name="reset-file-listed"/>
+        <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo(false)]"/>
+    </flow>
+
+    <flow name="reset-file-listed">
         <munit-tools:store key="isFileBeingListed">
             <munit-tools:value>#[false]</munit-tools:value>
         </munit-tools:store>
-        <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo(false)]"/>
     </flow>
 
 </mule>

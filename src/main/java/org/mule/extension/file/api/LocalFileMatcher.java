@@ -13,10 +13,10 @@ import org.mule.runtime.extension.api.annotation.dsl.xml.TypeDsl;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.extension.file.common.api.matcher.FileMatcher;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -74,15 +74,27 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
   @Optional
   private LocalDateTime accessedUntil;
 
+  /**
+   * Minimum time that should have passed since a file was updated to pass.This attribute works in tandem with {@link #timeUnit}.
+   */
   @Parameter
   @Optional
   private Long notUpdatedInTheLast;
 
+  /**
+   * Maximum time that should have passed since a file was updated to pass.This attribute works in tandem with {@link #timeUnit}.
+   */
   @Parameter
   @Optional
   private Long updatedInTheLast;
 
+  /**
+   * A {@link TimeUnit} which qualifies the {@link #updatedInTheLast} and the {@link #notUpdatedInTheLast} attributes.
+   * <p>
+   * Defaults to {@code MILLISECONDS}
+   */
   @Parameter
+  @Summary("Time unit to be used to interpret the parameters 'notUpdatedInTheLast' and 'updatedInTheLast'")
   @Optional(defaultValue = "MILLISECONDS")
   private TimeUnit timeUnit;
 
@@ -160,17 +172,21 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return this;
   }
 
-  public TimeUnit getTimeUnit() {
-    return timeUnit;
+  public LocalFileMatcher setAccessedUntil(LocalDateTime accessedUntil) {
+    this.accessedUntil = accessedUntil;
+    return this;
   }
 
   public void setTimeUnit(TimeUnit timeUnit) {
     this.timeUnit = timeUnit;
   }
 
-  public LocalFileMatcher setAccessedUntil(LocalDateTime accessedUntil) {
-    this.accessedUntil = accessedUntil;
-    return this;
+  public void setUpdatedInTheLast(Long updatedInTheLast) {
+    this.updatedInTheLast = updatedInTheLast;
+  }
+
+  public void setNotUpdatedInTheLast(Long notUpdatedInTheLast) {
+    this.notUpdatedInTheLast = notUpdatedInTheLast;
   }
 
   public LocalDateTime getCreatedSince() {
@@ -197,19 +213,16 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return accessedUntil;
   }
 
-  public Long getNotUpdatedInTheLast() {
-    return notUpdatedInTheLast;
-  }
-
-  public void setNotUpdatedInTheLast(Long notUpdatedInTheLast) {
-    this.notUpdatedInTheLast = notUpdatedInTheLast;
+  public TimeUnit getTimeUnit() {
+    return timeUnit;
   }
 
   public Long getUpdatedInTheLast() {
     return updatedInTheLast;
   }
 
-  public void setUpdatedInTheLast(Long updatedInTheLast) {
-    this.updatedInTheLast = updatedInTheLast;
+  public Long getNotUpdatedInTheLast() {
+    return notUpdatedInTheLast;
   }
+
 }

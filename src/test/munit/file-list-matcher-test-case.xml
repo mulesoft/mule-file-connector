@@ -12,8 +12,7 @@
     <munit:config name="file-list-matcher-test-case.xml"/>
 
     <munit:before-test name="create-file-for-list">
-        <set-payload value="File Content"/>
-        <file:write config-ref="file-config" path="random.txt"/>
+        <flow-ref name="write-file"/>
     </munit:before-test>
 
     <munit:test name="listFilteringNewFiles" description="Newly added files are filtered by the matcher">

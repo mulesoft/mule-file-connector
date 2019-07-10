@@ -16,4 +16,10 @@
         <file:write config-ref="file-config" path="random.txt" mode="APPEND"/>
     </flow>
 
+
+    <flow name="write-file">
+        <set-payload value="File Content"/>
+        <file:write config-ref="file-config" path="random.txt"/>
+    </flow>
+
 </mule>
