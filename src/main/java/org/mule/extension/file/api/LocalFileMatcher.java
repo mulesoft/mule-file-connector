@@ -6,6 +6,8 @@
  */
 package org.mule.extension.file.api;
 
+import static java.time.LocalDateTime.now;
+
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.dsl.xml.TypeDsl;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
@@ -13,6 +15,9 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.extension.file.common.api.matcher.FileMatcher;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -69,6 +74,18 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
   @Optional
   private LocalDateTime accessedUntil;
 
+  @Parameter
+  @Optional
+  private Long notUpdatedInTheLast;
+
+  @Parameter
+  @Optional
+  private Long updatedInTheLast;
+
+  @Parameter
+  @Optional(defaultValue = "MILLISECONDS")
+  private TimeUnit timeUnit;
+
   @Override
   protected Predicate<LocalFileAttributes> addConditions(Predicate<LocalFileAttributes> predicate) {
     if (createdSince != null) {
@@ -95,7 +112,27 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
       predicate = predicate.and(attributes -> FILE_TIME_SINCE.apply(accessedUntil, attributes.getLastAccessTime()));
     }
 
+    // We want to make sure that the same time is used when comparing multiple files consecutively.
+    LocalDateTime now = now();
+
+    if (notUpdatedInTheLast != null) {
+      predicate = predicate.and(attributes -> FILE_TIME_UNTIL.apply(minusTime(now, notUpdatedInTheLast, timeUnit),
+                                                                    attributes.getLastModifiedTime()));
+    }
+
+    if (updatedInTheLast != null) {
+      predicate = predicate
+          .and(attributes -> FILE_TIME_SINCE.apply(minusTime(now, updatedInTheLast, timeUnit), attributes.getLastModifiedTime()));
+    }
     return predicate;
+  }
+
+  private LocalDateTime minusTime(LocalDateTime localDateTime, Long time, TimeUnit timeUnit) {
+    return localDateTime.minus(getTimeInMillis(time, timeUnit), ChronoUnit.MILLIS);
+  }
+
+  private long getTimeInMillis(Long time, TimeUnit timeUnit) {
+    return timeUnit.toMillis(time);
   }
 
   public LocalFileMatcher setCreatedSince(LocalDateTime createdSince) {
@@ -121,6 +158,14 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
   public LocalFileMatcher setAccessedSince(LocalDateTime accessedSince) {
     this.accessedSince = accessedSince;
     return this;
+  }
+
+  public TimeUnit getTimeUnit() {
+    return timeUnit;
+  }
+
+  public void setTimeUnit(TimeUnit timeUnit) {
+    this.timeUnit = timeUnit;
   }
 
   public LocalFileMatcher setAccessedUntil(LocalDateTime accessedUntil) {
@@ -150,5 +195,21 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
 
   public LocalDateTime getAccessedUntil() {
     return accessedUntil;
+  }
+
+  public Long getNotUpdatedInTheLast() {
+    return notUpdatedInTheLast;
+  }
+
+  public void setNotUpdatedInTheLast(Long notUpdatedInTheLast) {
+    this.notUpdatedInTheLast = notUpdatedInTheLast;
+  }
+
+  public Long getUpdatedInTheLast() {
+    return updatedInTheLast;
+  }
+
+  public void setUpdatedInTheLast(Long updatedInTheLast) {
+    this.updatedInTheLast = updatedInTheLast;
   }
 }

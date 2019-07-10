@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="file-directory-listener-with-different-matchers-test-case.xml">
+        <munit:parameterizations>
+            <munit:parameterization name="process-new-files">
+                <munit:parameters>
+                    <munit:parameter propertyName="matcherName" value="new-files"/>
+                </munit:parameters>
+            </munit:parameterization>
+            <munit:parameterization name="process-old-files">
+                <munit:parameters>
+                    <munit:parameter propertyName="matcherName" value="old-files"/>
+                </munit:parameters>
+            </munit:parameterization>
+            <munit:parameterization name="process-all-files">
+                <munit:parameters>
+                    <munit:parameter propertyName="matcherName" value="all-files"/>
+                </munit:parameters>
+            </munit:parameterization>
+            <munit:parameterization name="process-recent-files-that-are-not-new">
+                <munit:parameters>
+                    <munit:parameter propertyName="matcherName" value="recent-files-that-are-not-new"/>
+                </munit:parameters>
+            </munit:parameterization>
+        </munit:parameterizations>
+    </munit:config>
+
+    <munit:test name="listenerProcessesAllFiles">
+
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="fileListenerFlow"/>
+        </munit:enable-flow-sources>
+
+        <munit:behavior>
+            <set-variable variableName="amountOfFiles" value="#[100]"/>
+            <set-variable variableName="fileContent" value="File content"/>
+        </munit:behavior>
+        <munit:execution>
+            <foreach collection="#[1 to vars.amountOfFiles]">
+                <file:write config-ref="file-config" path="#[payload ++ '.txt']">
+                    <file:content>#[vars.fileContent]</file:content>
+                </file:write>
+                <logger level="ERROR" message="#[%dw 2.0 import * from dw::Runtime output application/json
+                            ---
+                            'Waiting for 100 milliseconds to write next file' wait 100]"/>
+            </foreach>
+        </munit:execution>
+        <munit:validation>
+            <until-successful maxRetries="100" millisBetweenRetries="500">
+                <munit-tools:assert-that expression="#[MunitTools::queueSize()]"
+                                         is="#[MunitTools::equalTo(vars.amountOfFiles)]"/>
+            </until-successful>
+            <flow-ref name="wait-2-seconds"/>
+            <munit-tools:assert-that expression="#[MunitTools::queueSize()]"
+                                     is="#[MunitTools::equalTo(vars.amountOfFiles)]"/>
+        </munit:validation>
+    </munit:test>
+
+    <file:matcher name="new-files" updatedInTheLast="3" timeUnit="SECONDS"/>
+
+    <file:matcher name="old-files" notUpdatedInTheLast="3000" timeUnit="MILLISECONDS"/>
+
+    <file:matcher name="all-files"/>
+
+    <file:matcher name="recent-files-that-are-not-new" notUpdatedInTheLast="3" updatedInTheLast="6"
+                  timeUnit="SECONDS"/>
+
+    <flow name="fileListenerFlow">
+        <file:listener config-ref="file-config" directory="." watermarkMode="MODIFIED_TIMESTAMP" matcher="${matcherName}">
+            <scheduling-strategy>
+                <fixed-frequency frequency="1000"/>
+            </scheduling-strategy>
+        </file:listener>
+        <set-payload value="attributes.fileName"/>
+        <munit-tools:queue/>
+    </flow>
+
+
+</mule>
