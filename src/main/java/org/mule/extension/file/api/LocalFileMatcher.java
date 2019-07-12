@@ -13,6 +13,7 @@ import org.mule.runtime.extension.api.annotation.dsl.xml.TypeDsl;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.extension.file.common.api.matcher.FileMatcher;
+import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.time.LocalDateTime;
@@ -85,6 +86,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    */
   @Parameter
   @Summary("Minimum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
+  @Example("10000")
   @Optional
   private Long notUpdatedInTheLast;
 
@@ -93,6 +95,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    */
   @Parameter
   @Summary("Maximum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
+  @Example("10000")
   @Optional
   private Long updatedInTheLast;
 
