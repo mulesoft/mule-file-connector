@@ -36,6 +36,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files created before this date are rejected.
    */
   @Parameter
+  @Summary("Files created before this date are rejected.")
   @Optional
   private LocalDateTime createdSince;
 
@@ -43,6 +44,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files created after this date are rejected
    */
   @Parameter
+  @Summary("Files created after this date are rejected")
   @Optional
   private LocalDateTime createdUntil;
 
@@ -50,6 +52,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files modified before this date are rejected
    */
   @Parameter
+  @Summary("Files modified before this date are rejected")
   @Optional
   private LocalDateTime updatedSince;
 
@@ -57,6 +60,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files modified after this date are rejected
    */
   @Parameter
+  @Summary("Files modified after this date are rejected")
   @Optional
   private LocalDateTime updatedUntil;
 
@@ -64,6 +68,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files which were last accessed before this date are rejected
    */
   @Parameter
+  @Summary("Files which were last accessed before this date are rejected")
   @Optional
   private LocalDateTime accessedSince;
 
@@ -71,20 +76,23 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files which were last accessed after this date are rejected
    */
   @Parameter
+  @Summary("Files which were last accessed after this date are rejected")
   @Optional
   private LocalDateTime accessedUntil;
 
   /**
-   * Minimum time that should have passed since a file was updated to pass.This attribute works in tandem with {@link #timeUnit}.
+   * Minimum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with {@link #timeUnit}.
    */
   @Parameter
+  @Summary("Minimum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
   @Optional
   private Long notUpdatedInTheLast;
 
   /**
-   * Maximum time that should have passed since a file was updated to pass.This attribute works in tandem with {@link #timeUnit}.
+   * Maximum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with {@link #timeUnit}.
    */
   @Parameter
+  @Summary("Maximum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
   @Optional
   private Long updatedInTheLast;
 
