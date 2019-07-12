@@ -168,7 +168,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   protected void doStart() throws MuleException {
     fileSystem = fileSystemProvider.connect();
 
-    matcher = predicateBuilder != null ? predicateBuilder.build() : new NullFilePayloadPredicate<>();
+    refreshMatcher();
     directoryPath = resolveRootPath();
   }
 
@@ -191,7 +191,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   @Override
   public void poll(PollContext<InputStream, LocalFileAttributes> pollContext) {
-
+    refreshMatcher();
     if (pollContext.isSourceStopping()) {
       return;
     }
@@ -247,6 +247,10 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       }
     }
 
+  }
+
+  private void refreshMatcher() {
+    matcher = predicateBuilder != null ? predicateBuilder.build() : new NullFilePayloadPredicate<>();
   }
 
   private PollContext.PollItemStatus processFile(Result<InputStream, LocalFileAttributes> file, LocalFileAttributes attributes,

@@ -6,13 +6,19 @@
  */
 package org.mule.extension.file.api;
 
+import static java.time.LocalDateTime.now;
+
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.dsl.xml.TypeDsl;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.extension.file.common.api.matcher.FileMatcher;
+import org.mule.runtime.extension.api.annotation.param.display.Example;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -31,6 +37,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files created before this date are rejected.
    */
   @Parameter
+  @Summary("Files created before this date are rejected.")
   @Optional
   private LocalDateTime createdSince;
 
@@ -38,6 +45,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files created after this date are rejected
    */
   @Parameter
+  @Summary("Files created after this date are rejected")
   @Optional
   private LocalDateTime createdUntil;
 
@@ -45,6 +53,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files modified before this date are rejected
    */
   @Parameter
+  @Summary("Files modified before this date are rejected")
   @Optional
   private LocalDateTime updatedSince;
 
@@ -52,6 +61,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files modified after this date are rejected
    */
   @Parameter
+  @Summary("Files modified after this date are rejected")
   @Optional
   private LocalDateTime updatedUntil;
 
@@ -59,6 +69,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files which were last accessed before this date are rejected
    */
   @Parameter
+  @Summary("Files which were last accessed before this date are rejected")
   @Optional
   private LocalDateTime accessedSince;
 
@@ -66,8 +77,37 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
    * Files which were last accessed after this date are rejected
    */
   @Parameter
+  @Summary("Files which were last accessed after this date are rejected")
   @Optional
   private LocalDateTime accessedUntil;
+
+  /**
+   * Minimum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with {@link #timeUnit}.
+   */
+  @Parameter
+  @Summary("Minimum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
+  @Example("10000")
+  @Optional
+  private Long notUpdatedInTheLast;
+
+  /**
+   * Maximum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with {@link #timeUnit}.
+   */
+  @Parameter
+  @Summary("Maximum time that should have passed since a file was updated to not be rejected. This attribute works in tandem with timeUnit.")
+  @Example("10000")
+  @Optional
+  private Long updatedInTheLast;
+
+  /**
+   * A {@link TimeUnit} which qualifies the {@link #updatedInTheLast} and the {@link #notUpdatedInTheLast} attributes.
+   * <p>
+   * Defaults to {@code MILLISECONDS}
+   */
+  @Parameter
+  @Summary("Time unit to be used to interpret the parameters 'notUpdatedInTheLast' and 'updatedInTheLast'")
+  @Optional(defaultValue = "MILLISECONDS")
+  private TimeUnit timeUnit;
 
   @Override
   protected Predicate<LocalFileAttributes> addConditions(Predicate<LocalFileAttributes> predicate) {
@@ -95,7 +135,27 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
       predicate = predicate.and(attributes -> FILE_TIME_SINCE.apply(accessedUntil, attributes.getLastAccessTime()));
     }
 
+    // We want to make sure that the same time is used when comparing multiple files consecutively.
+    LocalDateTime now = now();
+
+    if (notUpdatedInTheLast != null) {
+      predicate = predicate.and(attributes -> FILE_TIME_UNTIL.apply(minusTime(now, notUpdatedInTheLast, timeUnit),
+                                                                    attributes.getLastModifiedTime()));
+    }
+
+    if (updatedInTheLast != null) {
+      predicate = predicate
+          .and(attributes -> FILE_TIME_SINCE.apply(minusTime(now, updatedInTheLast, timeUnit), attributes.getLastModifiedTime()));
+    }
     return predicate;
+  }
+
+  private LocalDateTime minusTime(LocalDateTime localDateTime, Long time, TimeUnit timeUnit) {
+    return localDateTime.minus(getTimeInMillis(time, timeUnit), ChronoUnit.MILLIS);
+  }
+
+  private long getTimeInMillis(Long time, TimeUnit timeUnit) {
+    return timeUnit.toMillis(time);
   }
 
   public LocalFileMatcher setCreatedSince(LocalDateTime createdSince) {
@@ -128,6 +188,18 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return this;
   }
 
+  public void setTimeUnit(TimeUnit timeUnit) {
+    this.timeUnit = timeUnit;
+  }
+
+  public void setUpdatedInTheLast(Long updatedInTheLast) {
+    this.updatedInTheLast = updatedInTheLast;
+  }
+
+  public void setNotUpdatedInTheLast(Long notUpdatedInTheLast) {
+    this.notUpdatedInTheLast = notUpdatedInTheLast;
+  }
+
   public LocalDateTime getCreatedSince() {
     return createdSince;
   }
@@ -151,4 +223,17 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
   public LocalDateTime getAccessedUntil() {
     return accessedUntil;
   }
+
+  public TimeUnit getTimeUnit() {
+    return timeUnit;
+  }
+
+  public Long getUpdatedInTheLast() {
+    return updatedInTheLast;
+  }
+
+  public Long getNotUpdatedInTheLast() {
+    return notUpdatedInTheLast;
+  }
+
 }
