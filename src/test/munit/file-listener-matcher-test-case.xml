@@ -31,7 +31,7 @@
         </munit:enable-flow-sources>
         <munit:execution>
             <flow-ref name="check-no-file-is-listened"/>
-            <flow-ref name="list-until-one-file-is-listened"/>
+            <flow-ref name="check-until-one-file-is-listened"/>
         </munit:execution>
     </munit:test>
 
@@ -40,7 +40,7 @@
             <munit:enable-flow-source value="listen-filtering-not-updated-recently"/>
         </munit:enable-flow-sources>
         <munit:execution>
-            <flow-ref name="list-until-no-file-is-listened"/>
+            <flow-ref name="check-until-no-file-is-listened"/>
         </munit:execution>
     </munit:test>
 
@@ -50,8 +50,8 @@
             <munit:enable-flow-source value="listen-filtering-not-updated-recently"/>
         </munit:enable-flow-sources>
         <munit:execution>
-            <flow-ref name="list-until-one-file-is-listened"/>
-            <flow-ref name="list-until-no-file-is-listened"/>
+            <flow-ref name="check-until-one-file-is-listened"/>
+            <flow-ref name="check-until-no-file-is-listened"/>
         </munit:execution>
     </munit:test>
 
@@ -62,8 +62,8 @@
         </munit:enable-flow-sources>
         <munit:execution>
             <flow-ref name="check-no-file-is-listened"/>
-            <flow-ref name="list-until-one-file-is-listened"/>
-            <flow-ref name="list-until-no-file-is-listened"/>
+            <flow-ref name="check-until-one-file-is-listened"/>
+            <flow-ref name="check-until-no-file-is-listened"/>
             <flow-ref name="check-no-file-is-listened-over-time"/>
         </munit:execution>
     </munit:test>
@@ -147,13 +147,13 @@
         <flow-ref name="assert-file-was-not-listened"/>
     </flow>
 
-    <flow name="list-until-one-file-is-listened">
+    <flow name="check-until-one-file-is-listened">
         <until-successful maxRetries="50" millisBetweenRetries="1000">
             <flow-ref name="assert-file-was-listened"/>
         </until-successful>
     </flow>
 
-    <flow name="list-until-no-file-is-listened">
+    <flow name="check-until-no-file-is-listened">
         <until-successful maxRetries="100" millisBetweenRetries="1000">
             <flow-ref name="assert-file-was-not-listened"/>
         </until-successful>
