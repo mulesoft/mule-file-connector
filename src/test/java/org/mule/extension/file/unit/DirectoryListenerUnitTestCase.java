@@ -7,8 +7,6 @@
 package org.mule.extension.file.unit;
 
 import static java.util.Optional.empty;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -28,7 +26,6 @@ import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -37,7 +34,6 @@ import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class DirectoryListenerUnitTestCase {
@@ -51,7 +47,6 @@ public class DirectoryListenerUnitTestCase {
   private List<Result<InputStream, LocalFileAttributes>> listResult;
   private PollContext pollContext = mock(PollContext.class);
   private DirectoryListener directoryListener;
-
 
   @Before
   public void setup() throws Exception {
@@ -93,7 +88,6 @@ public class DirectoryListenerUnitTestCase {
     when(attributes.isDirectory()).thenReturn(false);
     return attributes;
   }
-
 
   @Test
   public void resultsAreClosedWhenSourceIsStopping() throws Exception {
@@ -140,6 +134,5 @@ public class DirectoryListenerUnitTestCase {
       return this;
     }
   }
-
 
 }
