@@ -42,7 +42,7 @@ import java.nio.file.Path;
  *
  * @since 1.0
  */
-public final class LocalFileSystem extends AbstractFileSystem<LocalFileAttributes> {
+public class LocalFileSystem extends AbstractFileSystem<LocalFileAttributes> {
 
   private final CopyCommand copyCommand;
   private final CreateDirectoryCommand createDirectoryCommand;
