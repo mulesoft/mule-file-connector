@@ -164,6 +164,13 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   private ComponentLocation location;
   private Predicate<LocalFileAttributes> matcher;
 
+  public DirectoryListener(FileConnector config, ConnectionProvider<LocalFileSystem> fileSystemProvider) {
+    this.config = config;
+    this.fileSystemProvider = fileSystemProvider;
+  }
+
+  public DirectoryListener() {}
+
   @Override
   protected void doStart() throws MuleException {
     fileSystem = fileSystemProvider.connect();
@@ -217,10 +224,16 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         return;
       }
 
+      boolean sourceIsStopping = false;
       for (Result<InputStream, LocalFileAttributes> file : fileList) {
 
         LocalFileAttributes attributes = file.getAttributes().orElse(null);
         if (attributes == null || attributes.isDirectory()) {
+          continue;
+        }
+
+        if (sourceIsStopping) {
+          closeResultQuietly(file);
           continue;
         }
 
@@ -234,7 +247,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         PollContext.PollItemStatus status = processFile(file, attributes, pollContext);
 
         if (status == SOURCE_STOPPING) {
-          break;
+          sourceIsStopping = true;
         }
       }
     } catch (Exception e) {
@@ -307,6 +320,10 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   @Override
   public void onRejectedItem(Result<InputStream, LocalFileAttributes> result, SourceCallbackContext callbackContext) {
+    closeResultQuietly(result);
+  }
+
+  private void closeResultQuietly(Result<InputStream, LocalFileAttributes> result) {
     closeQuietly(result.getOutput());
   }
 
