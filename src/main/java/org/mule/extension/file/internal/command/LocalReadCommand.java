@@ -60,14 +60,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
                                                        Long timeBetweenSizeCheck) {
     Path path = resolveExistingPath(filePath);
-    if (isDirectory(path)) {
-      throw cannotReadDirectoryException(path);
-    }
-
-    if (!isReadable(path)) {
-      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
-                                                 path));
-    }
 
     LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
     return read(config, fileAttributes, lock, timeBetweenSizeCheck);
@@ -80,6 +72,16 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
     Path path = resolvePath(attributes.getPath());
+
+    if (isDirectory(path)) {
+      throw cannotReadDirectoryException(path);
+    }
+
+    if (!isReadable(path)) {
+      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
+                                                 path));
+    }
+
     LazyValue<FileChannel> lazyChannel = null;
     PathLock pathLock = null;
     InputStream payload = null;
