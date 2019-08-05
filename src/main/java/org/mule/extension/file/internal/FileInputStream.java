@@ -17,6 +17,8 @@ import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
 import org.mule.extension.file.common.api.stream.LazyStreamSupplier;
 import org.mule.extension.file.internal.lock.PathLockChannelWrapper;
 import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.api.util.LazyValue;
+
 import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
@@ -41,7 +43,7 @@ import java.nio.file.Path;
  */
 public final class FileInputStream extends AbstractFileInputStream {
 
-  private final FileChannel channel;
+  private final LazyValue<FileChannel> lazyChannel;
 
   /**
    * Creates a new instance
@@ -50,14 +52,19 @@ public final class FileInputStream extends AbstractFileInputStream {
    * @param lock a {@link PathLock}
    */
   public FileInputStream(FileChannel channel, PathLock lock, Path path, Long timeBetweenSizeCheck, FileAttributes attributes) {
-    super(new LazyStreamSupplier(new LocalFileInputStreamSupplier(timeBetweenSizeCheck, path, channel, attributes)),
-          new PathLockChannelWrapper(lock, channel));
-    this.channel = channel;
+    this(new LazyValue<>(channel), lock, path, timeBetweenSizeCheck, attributes);
+  }
+
+  public FileInputStream(LazyValue<FileChannel> lazyChannel, PathLock lock, Path path, Long timeBetweenSizeCheck,
+                         FileAttributes attributes) {
+    super(new LazyStreamSupplier(new LocalFileInputStreamSupplier(timeBetweenSizeCheck, path, lazyChannel, attributes)),
+          new PathLockChannelWrapper(lock, lazyChannel));
+    this.lazyChannel = lazyChannel;
   }
 
   @Override
   protected void doClose() throws IOException {
-    closeQuietly(channel);
+    lazyChannel.ifComputed(channel -> closeQuietly(channel));
   }
 
   protected static final class LocalFileInputStreamSupplier extends AbstractFileInputStreamSupplier {
@@ -65,12 +72,17 @@ public final class FileInputStream extends AbstractFileInputStream {
     private static final Logger LOGGER = getLogger(LocalFileInputStreamSupplier.class);
 
     private final Path path;
-    private final FileChannel channel;
+    private final LazyValue<FileChannel> lazyChannel;
 
     LocalFileInputStreamSupplier(Long timeBetweenSizeCheck, Path path, FileChannel channel, FileAttributes attributes) {
+      this(timeBetweenSizeCheck, path, new LazyValue<>(channel), attributes);
+    }
+
+    LocalFileInputStreamSupplier(Long timeBetweenSizeCheck, Path path, LazyValue<FileChannel> lazyChannel,
+                                 FileAttributes attributes) {
       super(attributes, timeBetweenSizeCheck);
       this.path = path;
-      this.channel = channel;
+      this.lazyChannel = lazyChannel;
     }
 
     @Override
@@ -92,7 +104,7 @@ public final class FileInputStream extends AbstractFileInputStream {
     protected InputStream getContentInputStream() {
       // Get updated attributes to check whether the file still exists
       getUpdatedAttributes();
-      return new BufferedInputStream(Channels.newInputStream(channel));
+      return new BufferedInputStream(Channels.newInputStream(lazyChannel.get()));
     }
   }
 }
