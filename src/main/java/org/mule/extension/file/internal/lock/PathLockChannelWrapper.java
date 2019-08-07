@@ -9,6 +9,7 @@ package org.mule.extension.file.internal.lock;
 import static java.lang.String.format;
 
 import org.mule.extension.file.common.api.lock.PathLock;
+import org.mule.runtime.api.util.LazyValue;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -28,11 +29,16 @@ public class PathLockChannelWrapper implements PathLock {
   private static final Logger LOGGER = LoggerFactory.getLogger(PathLockChannelWrapper.class);
 
   private PathLock pathLock;
-  private FileChannel fileChannel;
+  private LazyValue<FileChannel> lazyFileChannel;
 
   public PathLockChannelWrapper(PathLock pathLock, FileChannel fileChannel) {
     this.pathLock = pathLock;
-    this.fileChannel = fileChannel;
+    this.lazyFileChannel = new LazyValue<>(fileChannel);
+  }
+
+  public PathLockChannelWrapper(PathLock pathLock, LazyValue<FileChannel> fileChannel) {
+    this.pathLock = pathLock;
+    this.lazyFileChannel = fileChannel;
   }
 
   /**
@@ -57,13 +63,16 @@ public class PathLockChannelWrapper implements PathLock {
   @Override
   public void release() {
     pathLock.release();
-    try {
-      fileChannel.close();
-    } catch (IOException e) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(format("Found exception attempting to close the channel for the lock on path '%s'", pathLock.getPath()), e);
+    lazyFileChannel.ifComputed(fileChannel -> {
+      try {
+        fileChannel.close();
+      } catch (IOException e) {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug(format("Found exception attempting to close the channel for the lock on path '%s'", pathLock.getPath()),
+                       e);
+        }
       }
-    }
+    });
   }
 
   /**
