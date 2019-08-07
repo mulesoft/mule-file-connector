@@ -20,8 +20,10 @@ import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
+import org.mule.runtime.api.util.LazyValue;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.AccessDeniedException;
@@ -58,14 +60,6 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, String filePath, boolean lock,
                                                        Long timeBetweenSizeCheck) {
     Path path = resolveExistingPath(filePath);
-    if (isDirectory(path)) {
-      throw cannotReadDirectoryException(path);
-    }
-
-    if (!isReadable(path)) {
-      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
-                                                 path));
-    }
 
     LocalFileAttributes fileAttributes = new LocalFileAttributes(path);
     return read(config, fileAttributes, lock, timeBetweenSizeCheck);
@@ -77,20 +71,36 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   public Result<InputStream, LocalFileAttributes> read(FileConnectorConfig config, LocalFileAttributes attributes, boolean lock,
                                                        Long timeBetweenSizeCheck) {
     Path path = resolvePath(attributes.getPath());
-    FileChannel channel = null;
+
+    if (isDirectory(path)) {
+      throw cannotReadDirectoryException(path);
+    }
+
+    if (!isReadable(path)) {
+      throw new FileAccessDeniedException(format("Could not read the file '%s' because access was denied by the operating system",
+                                                 path));
+    }
+
+    LazyValue<FileChannel> lazyChannel = null;
     PathLock pathLock = null;
     InputStream payload = null;
 
     try {
       if (lock) {
-        channel = FileChannel.open(path, READ, WRITE);
-        pathLock = fileSystem.lock(path, channel);
+        lazyChannel = new LazyValue<>(FileChannel.open(path, READ, WRITE));
+        pathLock = fileSystem.lock(path, lazyChannel.get());
       } else {
-        channel = FileChannel.open(path, READ);
+        lazyChannel = new LazyValue<>(() -> {
+          try {
+            return FileChannel.open(path, READ);
+          } catch (IOException e) {
+            throw exception(format("Unexpected error reading file '%s': %s", path, e.getMessage()), e);
+          }
+        });
         pathLock = new NullPathLock(path);
       }
 
-      payload = new FileInputStream(channel, pathLock, path, timeBetweenSizeCheck, attributes);
+      payload = new FileInputStream(lazyChannel, pathLock, path, timeBetweenSizeCheck, attributes);
 
       return Result.<InputStream, LocalFileAttributes>builder()
           .output(payload)
@@ -99,17 +109,19 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
           .build();
 
     } catch (AccessDeniedException e) {
-      onException(payload, channel, pathLock);
+      onException(payload, lazyChannel, pathLock);
       throw new FileAccessDeniedException(format("Access to path '%s' denied by the operating system", path), e);
     } catch (Exception e) {
-      onException(payload, channel, pathLock);
+      onException(payload, lazyChannel, pathLock);
       throw exception(format("Unexpected error reading file '%s': %s", path, e.getMessage()), e);
     }
   }
 
-  private void onException(InputStream payload, FileChannel channel, PathLock lock) {
+  private void onException(InputStream payload, LazyValue<FileChannel> lazyChannel, PathLock lock) {
     closeQuietly(payload);
-    closeQuietly(channel);
+    if (lazyChannel != null) {
+      lazyChannel.ifComputed(channel -> closeQuietly(channel));
+    }
     if (lock != null) {
       lock.release();
     }

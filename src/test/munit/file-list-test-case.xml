@@ -42,6 +42,28 @@
         </munit:validation>
     </munit:test>
 
+    <munit:test name="listLotsOfFiles" description="Lists the files of a directory that are greater than the amount of file allowed to open">
+        <munit:behavior>
+            <set-variable variableName="filesToCreate" value="11000"/>
+            <set-payload value="Hello World!"/>
+            <flow-ref name="writeFiles"/>
+        </munit:behavior>
+
+        <munit:execution>
+            <file:list config-ref="file-list-config" directoryPath=".">
+                <repeatable-in-memory-iterable maxBufferSize="20000" />
+            </file:list>
+        </munit:execution>
+
+        <munit:validation>
+            <munit-tools:assert>
+                <munit-tools:that>#[ import * from dw::test::Asserts ---
+                    payload must haveSize(vars.filesToCreate) ]
+                </munit-tools:that>
+            </munit-tools:assert>
+        </munit:validation>
+    </munit:test>
+
     <flow name="writeFiles">
         <foreach collection="#[1 to vars.filesToCreate]">
             <file:write config-ref="file-list-config" path="#[payload ++ '.txt']"/>
