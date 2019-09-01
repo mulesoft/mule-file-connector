@@ -13,10 +13,6 @@
 
     <munit:config name="file-list-test-case.xml"/>
 
-    <file:config name="file-list-config">
-        <file:connection workingDir="${munit.temporary.directory}" />
-    </file:config>
-
     <munit:test name="listModifiedDirectory" description="Lists the files of a directory while some of those files are deleted">
 
         <munit:behavior>
@@ -32,7 +28,7 @@
                         <flow-ref name="deleteFiles"/>
                     </route>
                     <route>
-                        <file:list config-ref="file-list-config" directoryPath="." target="list"/>
+                        <file:list config-ref="file-config" directoryPath="." target="list"/>
                     </route>
                 </scatter-gather>
         </munit:execution>
@@ -66,13 +62,13 @@
 
     <flow name="writeFiles">
         <foreach collection="#[1 to vars.filesToCreate]">
-            <file:write config-ref="file-list-config" path="#[payload ++ '.txt']"/>
+            <file:write config-ref="file-config" path="#[payload ++ '.txt']"/>
         </foreach>
     </flow>
 
     <flow name="deleteFiles">
         <foreach collection="#[vars.filesToCreate to (vars.filesToCreate - vars.filesToDelete + 1)]">
-            <file:delete config-ref="file-list-config" path="#[payload ++ '.txt']"/>
+            <file:delete config-ref="file-config" path="#[payload ++ '.txt']"/>
         </foreach>
     </flow>
 
