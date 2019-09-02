@@ -50,9 +50,8 @@
                 <file:write config-ref="file-config" path="#[payload ++ '.txt']">
                     <file:content>#[vars.fileContent]</file:content>
                 </file:write>
-                <logger level="ERROR" message="#[%dw 2.0 import * from dw::Runtime output application/json
-                            ---
-                            'Waiting for 100 milliseconds to write next file' wait 100]"/>
+                <logger level="DEBUG" message="Waiting 100 milliseconds before writing the next file"/>
+                <munit-tools:sleep time="100"/>
             </foreach>
         </munit:execution>
         <munit:validation>
@@ -84,6 +83,5 @@
         <set-payload value="attributes.fileName"/>
         <munit-tools:queue/>
     </flow>
-
 
 </mule>
