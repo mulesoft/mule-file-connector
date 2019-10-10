@@ -19,7 +19,7 @@
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
 
     <properties>
-        <commonsLangVersion>3.7</commonsLangVersion>
+        <commonsLangVersion>3.8.1</commonsLangVersion>
         <commonsIoVersion>2.6</commonsIoVersion>
         <muleFileCommonsVersion>1.2.1</muleFileCommonsVersion>
 
