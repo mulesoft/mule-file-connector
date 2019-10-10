@@ -195,7 +195,8 @@ public class FileReadTestCase extends FileConnectorTestCase {
     @Override
     public CoreEvent process(CoreEvent event) {
       try {
-        AbstractFileInputStream payload = (AbstractFileInputStream) event.getMessage().getPayload().getValue();
+        AbstractNonFinalizableFileInputStream payload =
+            (AbstractNonFinalizableFileInputStream) event.getMessage().getPayload().getValue();
         payloadString = IOUtils.toString(payload);
       } catch (Exception e) {
         fail();
