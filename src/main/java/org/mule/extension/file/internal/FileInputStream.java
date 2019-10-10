@@ -13,13 +13,11 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.AbstractFileInputStreamSupplier;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.lock.PathLock;
-import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
+import org.mule.extension.file.common.api.stream.AbstractNonFinalizableFileInputStream;
 import org.mule.extension.file.common.api.stream.LazyStreamSupplier;
 import org.mule.extension.file.internal.lock.PathLockChannelWrapper;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.util.LazyValue;
-
-import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -30,8 +28,10 @@ import java.nio.channels.FileChannel;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
+import org.slf4j.Logger;
+
 /**
- * {@link AbstractFileInputStream} implementation used to obtain a file's content based on a {@link Reader}.
+ * {@link AbstractNonFinalizableFileInputStream} implementation used to obtain a file's content based on a {@link Reader}.
  * <p>
  * This stream will automatically close itself once fully consumed but will not fail if {@link #close()} is invoked after that.
  * <p>
@@ -41,7 +41,7 @@ import java.nio.file.Path;
  *
  * @since 1.0
  */
-public final class FileInputStream extends AbstractFileInputStream {
+public final class FileInputStream extends AbstractNonFinalizableFileInputStream {
 
   private final LazyValue<FileChannel> lazyChannel;
 

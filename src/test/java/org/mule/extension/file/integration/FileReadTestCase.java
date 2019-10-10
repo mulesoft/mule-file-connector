@@ -19,11 +19,10 @@ import static org.mule.extension.file.common.api.exceptions.FileError.ACCESS_DEN
 import static org.mule.extension.file.common.api.exceptions.FileError.ILLEGAL_PATH;
 import static org.mule.runtime.api.metadata.MediaType.JSON;
 
-import org.junit.Ignore;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
-import org.mule.extension.file.common.api.stream.AbstractFileInputStream;
+import org.mule.extension.file.common.api.stream.AbstractNonFinalizableFileInputStream;
 import org.mule.runtime.api.event.Event;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
@@ -40,8 +39,10 @@ import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import io.qameta.allure.Feature;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import io.qameta.allure.Feature;
 
 @Feature(FILE_EXTENSION)
 public class FileReadTestCase extends FileConnectorTestCase {
@@ -181,7 +182,7 @@ public class FileReadTestCase extends FileConnectorTestCase {
 
   private Message readWithLock(String path) throws Exception {
     Message message = flowRunner("readWithLock").keepStreamsOpen().withVariable("path", path).run().getMessage();
-    assertThat(((AbstractFileInputStream) message.getPayload().getValue()).isLocked(), is(true));
+    assertThat(((AbstractNonFinalizableFileInputStream) message.getPayload().getValue()).isLocked(), is(true));
     return message;
   }
 
