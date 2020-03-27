@@ -11,6 +11,8 @@ import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
+
+import org.mule.extension.api.annotation.param.ForwardTest;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
@@ -25,7 +27,6 @@ import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
-import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
@@ -33,6 +34,7 @@ import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.Content;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
+import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Path;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
@@ -42,6 +44,8 @@ import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
 import org.mule.runtime.extension.api.runtime.streaming.StreamingHelper;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +56,22 @@ import java.util.concurrent.TimeUnit;
  */
 public final class FileOperations extends BaseFileSystemOperations {
 
+  @Parameter(extra = "hack")
+  private String enhancedValue;
+
+  @ForwardTest
+  public boolean test() throws Exception {
+    Method method = getClass().getMethod("test");
+    return method.getAnnotation(ForwardTest.class) != null;
+  }
+
+  @MediaType(value = "application/text", strict = true)
+  public String extra() throws Exception {
+    Field field = getClass().getDeclaredField("enhancedValue");
+    Parameter p = field.getAnnotation(Parameter.class);
+    return p.extra();
+  }
+
   /**
    * Lists all the files in the {@code directoryPath} which match the given {@code matcher}.
    * <p>
@@ -59,11 +79,11 @@ public final class FileOperations extends BaseFileSystemOperations {
    * {@code recursive} parameter.
    * <p>
    *
-   * @param config        the config that is parameterizing this operation
-   * @param directoryPath the path to the directory to be listed
-   * @param recursive     whether to include the contents of sub-directories. Defaults to false.
-   * @param matcher     a matcher used to filter the output list
-   * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
+   * @param config                   the config that is parameterizing this operation
+   * @param directoryPath            the path to the directory to be listed
+   * @param recursive                whether to include the contents of sub-directories. Defaults to false.
+   * @param matcher                  a matcher used to filter the output list
+   * @param timeBetweenSizeCheck     wait time between size checks to determine if a file is ready to be read.
    * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
    * @return a {@link List} of {@link Message messages} each one containing each file's content in the payload and metadata in the attributes
    * @throws IllegalArgumentException if {@code directoryPath} points to a file which doesn't exist or is not a directory
@@ -103,11 +123,11 @@ public final class FileOperations extends BaseFileSystemOperations {
    * be used to make an educated guess on the file's mime type. The user also has the chance to force the output encoding and
    * mimeType through the {@code outputEncoding} and {@code outputMimeType} optional parameters.
    *
-   * @param config     the config that is parameterizing this operation
-   * @param fileSystem a reference to the host {@link FileSystem}
-   * @param path       the path to the file to be read
-   * @param lock       whether or not to lock the file. Defaults to false.
-   * @param timeBetweenSizeCheck wait time between size checks to determine if a file is ready to be read.
+   * @param config                   the config that is parameterizing this operation
+   * @param fileSystem               a reference to the host {@link FileSystem}
+   * @param path                     the path to the file to be read
+   * @param lock                     whether or not to lock the file. Defaults to false.
+   * @param timeBetweenSizeCheck     wait time between size checks to determine if a file is ready to be read.
    * @param timeBetweenSizeCheckUnit time unit to be used in the wait time between size checks.
    * @return the file's content and metadata on a {@link FileAttributes} instance
    * @throws IllegalArgumentException if the file at the given path doesn't exist
@@ -242,7 +262,8 @@ public final class FileOperations extends BaseFileSystemOperations {
    * <p>
    * {@code to} argument should not contain any path separator. {@code FILE:ILLEGAL_PATH} will be thrown if this
    * precondition is not honored.
-   *  @param fileSystem a reference to the host {@link FileSystem}
+   *
+   * @param fileSystem a reference to the host {@link FileSystem}
    * @param path       the path to the file to be renamed
    * @param to         the file's new name
    * @param overwrite  whether or not overwrite the file if the target destination already exists.
