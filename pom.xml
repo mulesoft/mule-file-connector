@@ -32,7 +32,6 @@
         <muleTestsRunnerVersion>4.1.5</muleTestsRunnerVersion>
 
         <formatterConfigPath>formatter.xml</formatterConfigPath>
-        <runtimeVersion>4.3.0-SNAPSHOT</runtimeVersion>
     </properties>
 
     <build>
@@ -82,6 +81,7 @@
                         <discoverRuntimes>
                             <product>EE</product>
                             <includeSnapshots>true</includeSnapshots>
+                             <minMuleVersion>4.3.0</minMuleVersion>
                         </discoverRuntimes>
                     </runtimeConfiguration>
                 </configuration>
