@@ -123,7 +123,7 @@
     <flow name="renameToFlow">
         <file:listener config-ref="file-config" directory="." renameTo="renamed.bak" recursive="false">
             <scheduling-strategy>
-                <fixed-frequency />
+                <fixed-frequency frequency="500"/>
             </scheduling-strategy>
             <file:matcher filenamePattern="*.txt" />
         </file:listener>
@@ -133,7 +133,7 @@
     <flow name="renameToAndAutoDeleteFlow">
         <file:listener config-ref="file-config" directory="." renameTo="renamed.bak" recursive="false" autoDelete="true">
             <scheduling-strategy>
-                <fixed-frequency />
+                <fixed-frequency frequency="500"/>
             </scheduling-strategy>
             <file:matcher filenamePattern="*.txt" />
         </file:listener>

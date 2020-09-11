@@ -20,8 +20,8 @@
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
 
     <properties>
-        <commonsLangVersion>3.9</commonsLangVersion>
-        <commonsIoVersion>2.6</commonsIoVersion>
+        <commonsLangVersion>3.11</commonsLangVersion>
+        <commonsIoVersion>2.7</commonsIoVersion>
         <muleFileCommonsVersion>1.4.0-SNAPSHOT</muleFileCommonsVersion>
 
         <munit.input.directory>src/test/munit</munit.input.directory>
