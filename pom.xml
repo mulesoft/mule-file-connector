@@ -21,7 +21,7 @@
 
     <properties>
         <commonsLangVersion>3.11</commonsLangVersion>
-        <commonsIoVersion>2.8.0</commonsIoVersion>
+        <commonsIoVersion>20030203.000550</commonsIoVersion>
         <muleFileCommonsVersion>1.4.0-SNAPSHOT</muleFileCommonsVersion>
 
         <munit.input.directory>src/test/munit</munit.input.directory>
