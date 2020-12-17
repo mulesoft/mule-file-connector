@@ -28,7 +28,7 @@
         <munit.output.directory>${basedir}/target/test-mule/munit</munit.output.directory>
         <munit.extensions.maven.plugin.version>1.0.0</munit.extensions.maven.plugin.version>
         <munit.version>2.3.1</munit.version>
-        <mavenResourcesVersion>3.0.2</mavenResourcesVersion>
+        <mavenResourcesVersion>3.2.0</mavenResourcesVersion>
         <muleTestsRunnerVersion>4.1.5</muleTestsRunnerVersion>
 
         <formatterConfigPath>formatter.xml</formatterConfigPath>
