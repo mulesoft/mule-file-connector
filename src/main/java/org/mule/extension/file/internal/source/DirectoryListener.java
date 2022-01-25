@@ -6,17 +6,9 @@
  */
 package org.mule.extension.file.internal.source;
 
-import static java.lang.Integer.MAX_VALUE;
 import static java.lang.String.format;
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
-import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
-import static java.nio.file.FileVisitResult.TERMINATE;
 import static java.nio.file.Files.walkFileTree;
-import static java.util.stream.Collectors.toList;
-import static org.mule.extension.file.api.WatermarkMode.CREATED_TIMESTAMP;
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
-import static org.mule.extension.file.api.WatermarkMode.MODIFIED_TIMESTAMP;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
@@ -26,7 +18,6 @@ import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItem
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
 import org.mule.extension.file.api.WatermarkMode;
-import org.mule.extension.file.common.api.exceptions.FileAlreadyExistsException;
 import org.mule.extension.file.common.api.lock.NullPathLock;
 import org.mule.extension.file.common.api.matcher.NullFilePayloadPredicate;
 import org.mule.extension.file.internal.FileConnector;
@@ -37,7 +28,6 @@ import org.mule.runtime.api.component.location.ComponentLocation;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
-import org.mule.runtime.api.meta.model.display.PathModel;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.execution.OnError;
 import org.mule.runtime.extension.api.annotation.execution.OnSuccess;
@@ -56,18 +46,13 @@ import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.PollingSource;
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -163,6 +148,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   private LocalFileSystem fileSystem;
   private ComponentLocation location;
   private Predicate<LocalFileAttributes> matcher;
+  private AtomicInteger usingDirectoryCounter;
 
   public DirectoryListener(FileConnector config, ConnectionProvider<LocalFileSystem> fileSystemProvider) {
     this.config = config;
@@ -173,6 +159,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   @Override
   protected void doStart() throws MuleException {
+    usingDirectoryCounter = new AtomicInteger(0);
     fileSystem = fileSystemProvider.connect();
 
     refreshMatcher();
@@ -198,68 +185,60 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   @Override
   public void poll(PollContext<InputStream, LocalFileAttributes> pollContext) {
-    refreshMatcher();
-    if (pollContext.isSourceStopping()) {
+    if (isDirectoryBeingUsed()) {
+      LOGGER.debug("Poll will be skipped, since last poll directories are still being processed");
       return;
     }
-
-    LocalFileSystem fileSystem;
     try {
-      fileSystem = fileSystemProvider.connect();
-    } catch (Exception e) {
-      LOGGER.error(format("Could not obtain connection while trying to poll directory '%s'. %s", directoryPath.toString(),
-                          e.getMessage()),
-                   e);
-      return;
-    }
-
-    try {
-      Long timeBetweenSizeCheckInMillis =
-          config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null);
-
-      List<Result<InputStream, LocalFileAttributes>> fileList =
-          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis);
-
-      if (fileList.isEmpty()) {
+      refreshMatcher();
+      if (pollContext.isSourceStopping()) {
         return;
       }
 
-      boolean sourceIsStopping = false;
-      for (Result<InputStream, LocalFileAttributes> file : fileList) {
+      try {
 
-        LocalFileAttributes attributes = file.getAttributes().orElse(null);
-        if (attributes == null || attributes.isDirectory()) {
-          continue;
-        }
+        List<Result<InputStream, LocalFileAttributes>> fileList = beginUsingDirectory();
+        LOGGER.debug("opened directory. " + usingDirectoryCounter.get());
+        LOGGER.debug("File list: " + fileList.size());
 
-        if (sourceIsStopping) {
-          closeResultQuietly(file);
-          continue;
-        }
-
-        if (!matcher.test(attributes)) {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
-          }
+        if (fileList.isEmpty()) {
           return;
         }
 
-        PollContext.PollItemStatus status = processFile(file, attributes, pollContext);
+        boolean sourceIsStopping = false;
+        for (Result<InputStream, LocalFileAttributes> file : fileList) {
 
-        if (status == SOURCE_STOPPING) {
-          sourceIsStopping = true;
+          LocalFileAttributes attributes = file.getAttributes().orElse(null);
+          if (attributes == null || attributes.isDirectory()) {
+            continue;
+          }
+
+          if (sourceIsStopping) {
+            closeResultQuietly(file);
+            continue;
+          }
+
+          if (!matcher.test(attributes)) {
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
+            }
+            return;
+          }
+
+          PollContext.PollItemStatus status = processFile(file, attributes, pollContext);
+
+          if (status == SOURCE_STOPPING) {
+            sourceIsStopping = true;
+          }
         }
+      } catch (Exception e) {
+        LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
+                            directoryPath.toString(), e.getMessage()),
+                     e);
       }
-    } catch (Exception e) {
-      LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
-                          directoryPath.toString(), e.getMessage()),
-                   e);
     } finally {
-      if (fileSystem != null) {
-        fileSystemProvider.disconnect(fileSystem);
-      }
+      endUsingDirectory();
     }
-
   }
 
   private void refreshMatcher() {
@@ -332,6 +311,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
     if (fileSystem != null) {
       fileSystemProvider.disconnect(fileSystem);
     }
+    usingDirectoryCounter = null;
   }
 
   private Path resolveRootPath() {
@@ -346,6 +326,57 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         return attributes.getCreationTime();
       default:
         throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
+    }
+  }
+
+  private synchronized boolean isDirectoryBeingUsed() {
+    synchronized (usingDirectoryCounter) {
+      LOGGER.debug("isDirectoryBeingUsed." + usingDirectoryCounter.get());
+      return usingDirectoryCounter.get() != 0;
+    }
+  }
+
+  private List<Result<InputStream, LocalFileAttributes>> beginUsingDirectory() {
+    synchronized (usingDirectoryCounter) {
+      LOGGER.debug("beginUsingDirectory.");
+      int currentUsingDirectoryCounter = usingDirectoryCounter.incrementAndGet();
+      if (currentUsingDirectoryCounter == 1) {
+        LOGGER.debug("Opening directory.");
+        LocalFileSystem fileSystem;
+        try {
+          fileSystem = fileSystemProvider.connect();
+        } catch (Exception e) {
+          LOGGER.error(format("Could not obtain connection while trying to poll directory '%s'. %s", directoryPath.toString(),
+                              e.getMessage()),
+                       e);
+          return null;
+        }
+
+        try {
+          Long timeBetweenSizeCheckInMillis =
+              config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null);
+
+          return fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis);
+        } catch (Exception e) {
+          LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
+                              directoryPath.toString(), e.getMessage()),
+                       e);
+        }
+      }
+    }
+    return null;
+  }
+
+  private void endUsingDirectory() {
+    synchronized (usingDirectoryCounter) {
+      LOGGER.debug("endUsingDirectory.");
+      int currentUsingDirectoryCounter = usingDirectoryCounter.decrementAndGet();
+      if (currentUsingDirectoryCounter == 0) {
+        LOGGER.debug("Closing directory.");
+        if (fileSystem != null) {
+          fileSystemProvider.disconnect(fileSystem);
+        }
+      }
     }
   }
 }
