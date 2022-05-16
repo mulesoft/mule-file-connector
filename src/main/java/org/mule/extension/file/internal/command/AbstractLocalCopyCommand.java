@@ -58,12 +58,10 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
     CopyOption copyOption = null;
     targetPath = buildTargetPath(overwrite, createParentDirectory, source, targetPath, targetFileName);
 
-    if (Files.exists(targetPath)) {
-      if (overwrite) {
-        copyOption = StandardCopyOption.REPLACE_EXISTING;
-      } else {
-        throw alreadyExistsException(targetPath);
-      }
+    if (overwrite) {
+      copyOption = StandardCopyOption.REPLACE_EXISTING;
+    } else if (Files.exists(targetPath)) {
+      throw alreadyExistsException(targetPath);
     }
 
     try {
