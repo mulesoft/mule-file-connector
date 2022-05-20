@@ -63,7 +63,6 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
     } else if (Files.exists(targetPath)) {
       throw alreadyExistsException(targetPath);
     }
-
     try {
       doExecute(source, targetPath, overwrite, copyOption != null ? new CopyOption[] {copyOption} : new CopyOption[] {});
     } catch (FileAlreadyExistsException e) {
