@@ -6,12 +6,16 @@
  */
 package org.mule.extension.file.internal.command;
 
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.extension.file.api.subset.LocalSubsetList;
+import org.mule.extension.file.api.subset.SortOrder;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ListCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
+import org.mule.extension.file.common.api.SubsetList;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
@@ -21,6 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -56,7 +61,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                                                              String directoryPath,
                                                              boolean recursive,
                                                              Predicate<LocalFileAttributes> matcher) {
-    return list(config, directoryPath, recursive, matcher, null);
+    return list(config, directoryPath, recursive, matcher, null, null);
   }
 
   /**
@@ -67,7 +72,8 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                                                              String directoryPath,
                                                              boolean recursive,
                                                              Predicate<LocalFileAttributes> matcher,
-                                                             Long timeBetweenSizeCheck) {
+                                                             Long timeBetweenSizeCheck,
+                                                             SubsetList subsetList) {
     Path path = resolveExistingPath(directoryPath);
     if (!Files.isDirectory(path)) {
       throw cannotListFileException(path);
@@ -75,7 +81,36 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
 
     List<Result<InputStream, LocalFileAttributes>> accumulator = new LinkedList<>();
     doList(config, path.toFile(), accumulator, recursive, matcher, timeBetweenSizeCheck);
+    if (subsetList != null) {
+      return limitAndOrder(accumulator, (LocalSubsetList) subsetList);
+    }
+    return accumulator;
+  }
 
+  private List<Result<InputStream, LocalFileAttributes>> limitAndOrder(List<Result<InputStream, LocalFileAttributes>> accumulator,
+                                                                       LocalSubsetList subsetList) {
+    Integer offset = subsetList.getOffset();
+    Integer limit = subsetList.getLimit();
+    checkArgument(limit >= 0, "Limite mayor a 0");
+    checkArgument(offset >= 0, "Offset mayor a 0");
+    if (limit == 0) {
+      limit = accumulator.size();
+    }
+    if (offset == 0) {
+      offset = 1;
+    }
+    if (offset > accumulator.size()) {
+      return Collections.emptyList();
+    }
+    int to = offset - 1 + limit;
+    if (to > accumulator.size()) {
+      to = accumulator.size();
+    }
+    Collections.sort(accumulator, subsetList.getCriteria().getComparator());
+    if (subsetList.getOrder().equals(SortOrder.DESCENDING)) {
+      Collections.reverse(accumulator);
+    }
+    accumulator = accumulator.subList(offset - 1, to);
     return accumulator;
   }
 

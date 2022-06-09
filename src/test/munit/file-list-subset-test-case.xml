@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd">
+
+    <munit:config name="file-list-matcher-test-case.xml"/>
+
+    <munit:before-test name="create-file-for-list">
+        <set-payload value="File Content Larger"/>
+        <file:write config-ref="file-config" path="random1.txt"/>
+        <munit-tools:sleep time="1100"/>
+        <set-payload value="File Content Even Larger"/>
+        <file:write config-ref="file-config" path="random2.txt"/>
+        <munit-tools:sleep time="1100"/>
+        <set-payload value="File Content"/>
+        <file:write config-ref="file-config" path="random3.txt"/>
+    </munit:before-test>
+
+    <munit:test name="listLimit" description="A subset will be returned instead of all and random3 will be first because by default it's ordered by date modified descending">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order limit="2" />
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[2]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random3.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listLimitAndOffset" description="A subset will be returned instead of all with an offset">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order limit="1" offset="2"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[1]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random2.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listOffsetGreater" description="Since offset is larger than size no results will be returned">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order offset="4"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[0]"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listOffsetEqualSize" description="Since offset is equal to size, 1 file will be returned">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order limit="4" offset="3"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[1]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random1.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listSubset" description="It will be ordered by date modified descending by default">
+        <munit:execution>
+            <set-payload value="File Content Larger"/>
+            <file:write config-ref="file-config" path="random2.txt"/>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random2.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listDateCreated" description="Subset will be returned ordered by date created">
+        <munit:execution>
+            <set-payload value="File Content Larger"/>
+            <file:write config-ref="file-config" path="random2.txt"/>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="DATE_CREATED" order="ASCENDING"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random1.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listDateCreatedDescending" description="Subset will be returned ordered by date created Descending">
+        <munit:execution>
+            <set-payload value="File Content Larger"/>
+            <file:write config-ref="file-config" path="random2.txt"/>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="DATE_CREATED"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random3.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listSize" description="Subset will be returned ordered by size">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="SIZE" order="ASCENDING"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random3.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listSizeDescending" description="Subset will be returned ordered by size Descending">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="SIZE"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random2.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listAlphabetically" description="Subset will be returned ordered by alphabetically ">
+        <munit:execution>
+            <set-payload value="File Content Larger"/>
+            <file:write config-ref="file-config" path="random0.txt"/>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="ALPHABETICALLY" order="ASCENDING"/>
+            </file:list>
+            <file:delete config-ref="file-config" path="random0.txt"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[4]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random0.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="listAlphabeticallyDescending" description="Subset will be returned ordered by alphabetically Descending">
+        <munit:execution>
+            <set-payload value="File Content Larger"/>
+            <file:write config-ref="file-config" path="random5.txt"/>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order criteria="ALPHABETICALLY"/>
+            </file:list>
+            <file:delete config-ref="file-config" path="random5.txt"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[4]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random5.txt"/>
+        </munit:validation>
+    </munit:test>
+
+    <munit:after-test name="afterTest">
+        <file:delete config-ref="file-config" path="random1.txt"/>
+        <file:delete config-ref="file-config" path="random2.txt"/>
+        <file:delete config-ref="file-config" path="random3.txt"/>
+    </munit:after-test>
+
+</mule>

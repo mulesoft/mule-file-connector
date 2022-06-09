@@ -250,6 +250,7 @@ public class DirectoryListenerFunctionalTestCase extends FileConnectorTestCase {
     write(file, modifiedData);
 
     check(PROBER_TIMEOUT, PROBER_DELAY, () -> {
+      System.out.println("THE SIZE IS " + RECEIVED_MESSAGES.size());
       if (RECEIVED_MESSAGES.size() == 1) {
         Message message = RECEIVED_MESSAGES.get(0);
         return containsPath(message, file.getPath()) && message.getPayload().getValue().toString().contains(modifiedData);

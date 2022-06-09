@@ -218,7 +218,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null);
 
       List<Result<InputStream, LocalFileAttributes>> fileList =
-          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis);
+          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null);
 
       if (fileList.isEmpty()) {
         return;

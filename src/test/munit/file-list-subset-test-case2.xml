@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+      http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+      http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd">
+
+    <munit:config name="file-list-matcher-test-case.xml"/>
+
+    <munit:before-test name="create-file-for-list">
+        <set-payload value="File Content Larger"/>
+        <file:write config-ref="file-config" path="random1.txt"/>
+        <munit-tools:sleep time="1100"/>
+        <set-payload value="File Content Even Larger"/>
+        <file:write config-ref="file-config" path="random2.txt"/>
+        <munit-tools:sleep time="1100"/>
+        <set-payload value="File Content"/>
+        <file:write config-ref="file-config" path="random3.txt"/>
+    </munit:before-test>
+
+    <munit:test name="listOffsetEqualSize" description="Since offset is equal to size, 1 file will be returned">
+        <munit:execution>
+            <file:list config-ref="file-config" directoryPath=".">
+                <file:limit-order limit="4" offset="3"/>
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[1]"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random3.txt"/>
+        </munit:validation>
+    </munit:test>
+
+
+
+    <munit:after-test name="afterTest">
+        <file:delete config-ref="file-config" path="random1.txt"/>
+        <file:delete config-ref="file-config" path="random2.txt"/>
+        <file:delete config-ref="file-config" path="random3.txt"/>
+    </munit:after-test>
+
+</mule>
