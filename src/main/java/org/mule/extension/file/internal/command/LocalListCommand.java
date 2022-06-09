@@ -64,6 +64,19 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     return list(config, directoryPath, recursive, matcher, null, null);
   }
 
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<Result<InputStream, LocalFileAttributes>> list(FileConnectorConfig config,
+                                                             String directoryPath,
+                                                             boolean recursive,
+                                                             Predicate<LocalFileAttributes> matcher,
+                                                             Long timeBetweenSizeCheck) {
+    return list(config, directoryPath, recursive, matcher, timeBetweenSizeCheck, null);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -91,8 +104,10 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
                                                                        LocalSubsetList subsetList) {
     Integer offset = subsetList.getOffset();
     Integer limit = subsetList.getLimit();
-    checkArgument(limit >= 0, "Limite mayor a 0");
-    checkArgument(offset >= 0, "Offset mayor a 0");
+    checkArgument(limit >= 0,
+                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "limit", limit));
+    checkArgument(offset >= 0,
+                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "offset", offset));
     if (limit == 0) {
       limit = accumulator.size();
     }

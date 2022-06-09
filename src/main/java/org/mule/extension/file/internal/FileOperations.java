@@ -84,11 +84,11 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                                                        tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
                                                                                    StreamingHelper streamingHelper,
                                                                                    @Optional @Placement(
-                                                                                       tab = ADVANCED_TAB) @Summary("Limit and ordering") LocalSubsetList limitOrder) {
+                                                                                       tab = ADVANCED_TAB) @Summary("Limit and ordering") LocalSubsetList subset) {
     PagingProvider result =
         doPagedList(config, directoryPath, recursive, matcher,
                     config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
-                    streamingHelper, limitOrder);
+                    streamingHelper, subset);
     return result;
   }
 

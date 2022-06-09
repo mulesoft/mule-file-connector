@@ -25,7 +25,7 @@
     <munit:test name="listLimit" description="A subset will be returned instead of all and random3 will be first because by default it's ordered by date modified descending">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order limit="2" />
+                <file:subset limit="2" />
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -37,7 +37,7 @@
     <munit:test name="listLimitAndOffset" description="A subset will be returned instead of all with an offset">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order limit="1" offset="2"/>
+                <file:subset limit="1" offset="2"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -49,7 +49,7 @@
     <munit:test name="listOffsetGreater" description="Since offset is larger than size no results will be returned">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order offset="4"/>
+                <file:subset offset="4"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -60,7 +60,7 @@
     <munit:test name="listOffsetEqualSize" description="Since offset is equal to size, 1 file will be returned">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order limit="4" offset="3"/>
+                <file:subset limit="4" offset="3"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -74,7 +74,7 @@
             <set-payload value="File Content Larger"/>
             <file:write config-ref="file-config" path="random2.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order/>
+                <file:subset/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -87,7 +87,7 @@
             <set-payload value="File Content Larger"/>
             <file:write config-ref="file-config" path="random2.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="DATE_CREATED" order="ASCENDING"/>
+                <file:subset criteria="DATE_CREATED" order="ASCENDING"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -101,7 +101,7 @@
             <set-payload value="File Content Larger"/>
             <file:write config-ref="file-config" path="random2.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="DATE_CREATED"/>
+                <file:subset criteria="DATE_CREATED"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -113,7 +113,7 @@
     <munit:test name="listSize" description="Subset will be returned ordered by size">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="SIZE" order="ASCENDING"/>
+                <file:subset criteria="SIZE" order="ASCENDING"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -125,7 +125,7 @@
     <munit:test name="listSizeDescending" description="Subset will be returned ordered by size Descending">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="SIZE"/>
+                <file:subset criteria="SIZE"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -139,7 +139,7 @@
             <set-payload value="File Content Larger"/>
             <file:write config-ref="file-config" path="random0.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="ALPHABETICALLY" order="ASCENDING"/>
+                <file:subset criteria="ALPHABETICALLY" order="ASCENDING"/>
             </file:list>
             <file:delete config-ref="file-config" path="random0.txt"/>
         </munit:execution>
@@ -154,7 +154,7 @@
             <set-payload value="File Content Larger"/>
             <file:write config-ref="file-config" path="random5.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:limit-order criteria="ALPHABETICALLY"/>
+                <file:subset criteria="ALPHABETICALLY"/>
             </file:list>
             <file:delete config-ref="file-config" path="random5.txt"/>
         </munit:execution>
