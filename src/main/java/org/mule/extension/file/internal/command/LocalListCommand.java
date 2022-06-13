@@ -105,9 +105,11 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     Integer offset = subsetList.getOffset();
     Integer limit = subsetList.getLimit();
     checkArgument(limit >= 0,
-                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "limit", limit));
+                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "limit",
+                                limit));
     checkArgument(offset >= 0,
-                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "offset", offset));
+                  String.format("Subset attribute '%s' must be greater than or equal to zero but '%d' was received", "offset",
+                                offset));
     if (limit == 0) {
       limit = accumulator.size();
     }

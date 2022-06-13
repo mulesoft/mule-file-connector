@@ -11,7 +11,7 @@ import java.util.Comparator;
 public enum ListComparator {
 
   ALPHABETICALLY(new AlphabeticalComparator()), DATE_MODIFIED(new DateModifiedComparator()), DATE_CREATED(
-      new DateCreatedComparator()), SIZE(new SizeComparator());
+      new DateCreatedComparator()), SIZE(new SizeComparator()), PATH(new PathComparator());
 
   private Comparator comparator;
 
