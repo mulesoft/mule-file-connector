@@ -37,7 +37,7 @@
     <munit:test name="listLimitAndOffset" description="A subset will be returned instead of all with an offset">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:subset limit="1" offset="2"/>
+                <file:subset limit="1" offset="1"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -46,10 +46,10 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="listOffsetGreater" description="Since offset is larger than size no results will be returned">
+    <munit:test name="listOffsetGreater" description="Since offset is equal to size no results will be returned">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:subset offset="4"/>
+                <file:subset offset="3"/>
             </file:list>
         </munit:execution>
         <munit:validation>
@@ -57,10 +57,10 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="listOffsetEqualSize" description="Since offset is equal to size, 1 file will be returned">
+    <munit:test name="listOffsetOneLessSize" description="Since offset is 1 less than size, 1 file will be returned">
         <munit:execution>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:subset limit="4" offset="3"/>
+                <file:subset limit="4" offset="2"/>
             </file:list>
         </munit:execution>
         <munit:validation>

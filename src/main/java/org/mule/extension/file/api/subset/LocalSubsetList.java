@@ -21,7 +21,7 @@ public class LocalSubsetList implements SubsetList {
   private Integer limit;
 
   @Parameter
-  @Optional(defaultValue = "1")
+  @Optional(defaultValue = "0")
   @DisplayName("Offset")
   @ParameterDsl(allowReferences = false)
   private Integer offset;

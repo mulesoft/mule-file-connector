@@ -113,13 +113,10 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     if (limit == 0) {
       limit = accumulator.size();
     }
-    if (offset == 0) {
-      offset = 1;
-    }
-    if (offset > accumulator.size()) {
+    if (offset >= accumulator.size()) {
       return Collections.emptyList();
     }
-    int to = offset - 1 + limit;
+    int to = offset + limit;
     if (to > accumulator.size()) {
       to = accumulator.size();
     }
@@ -127,7 +124,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
     if (subsetList.getOrder().equals(SortOrder.DESCENDING)) {
       Collections.reverse(accumulator);
     }
-    accumulator = accumulator.subList(offset - 1, to);
+    accumulator = accumulator.subList(offset, to);
     return accumulator;
   }
 

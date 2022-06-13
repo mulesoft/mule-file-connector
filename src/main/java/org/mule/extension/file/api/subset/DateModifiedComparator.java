@@ -10,21 +10,12 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 
 public class DateModifiedComparator implements Comparator<Result<InputStream, LocalFileAttributes>> {
 
   @Override
   public int compare(Result<InputStream, LocalFileAttributes> o1, Result<InputStream, LocalFileAttributes> o2) {
-    LocalDateTime date1 = o1.getAttributes().get().getLastModifiedTime();
-    LocalDateTime date2 = o2.getAttributes().get().getLastModifiedTime();
-    if (date1.isBefore(date2)) {
-      return -1;
-    }
-    if (date1.isAfter(date2)) {
-      return 1;
-    }
-    return 0;
+    return o1.getAttributes().get().getLastModifiedTime().compareTo(o2.getAttributes().get().getLastModifiedTime());
   }
 }

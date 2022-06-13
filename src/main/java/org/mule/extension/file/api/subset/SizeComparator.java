@@ -10,7 +10,6 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 
 public class SizeComparator implements Comparator<Result<InputStream, LocalFileAttributes>> {
@@ -19,12 +18,6 @@ public class SizeComparator implements Comparator<Result<InputStream, LocalFileA
   public int compare(Result<InputStream, LocalFileAttributes> o1, Result<InputStream, LocalFileAttributes> o2) {
     long size1 = o1.getAttributes().get().getSize();
     long size2 = o2.getAttributes().get().getSize();
-    if (size1 < size2) {
-      return -1;
-    }
-    if (size1 > size2) {
-      return 1;
-    }
-    return 0;
+    return Long.compare(size1, size2);
   }
 }

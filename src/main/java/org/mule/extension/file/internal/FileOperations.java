@@ -84,7 +84,7 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                                                        tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
                                                                                    StreamingHelper streamingHelper,
                                                                                    @Optional @Placement(
-                                                                                       tab = ADVANCED_TAB) @Summary("Limit and ordering") LocalSubsetList subset) {
+                                                                                       tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
     PagingProvider result =
         doPagedList(config, directoryPath, recursive, matcher,
                     config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
