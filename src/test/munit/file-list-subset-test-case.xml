@@ -9,9 +9,9 @@
       http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
       http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd">
 
-    <munit:config name="file-list-matcher-test-case.xml"/>
+    <munit:config name="file-list-subset-test-case.xml"/>
 
-    <munit:before-test name="create-file-for-list">
+    <munit:before-test name="create-file-for-list-subset">
         <set-payload value="File Content Larger"/>
         <file:write config-ref="file-config" path="random1.txt"/>
         <munit-tools:sleep time="1100"/>
@@ -164,7 +164,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:after-test name="afterTest">
+    <munit:after-test name="after-list-subset-test">
         <file:delete config-ref="file-config" path="random1.txt"/>
         <file:delete config-ref="file-config" path="random2.txt"/>
         <file:delete config-ref="file-config" path="random3.txt"/>
