@@ -15,7 +15,7 @@ import org.mule.extension.file.api.subset.SortOrder;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ListCommand;
 import org.mule.extension.file.common.api.exceptions.FileAccessDeniedException;
-import org.mule.extension.file.common.api.SubsetList;
+import org.mule.extension.file.common.api.subset.SubsetList;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.extension.api.runtime.operation.Result;

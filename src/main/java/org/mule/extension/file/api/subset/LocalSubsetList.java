@@ -6,7 +6,7 @@
  */
 package org.mule.extension.file.api.subset;
 
-import org.mule.extension.file.common.api.SubsetList;
+import org.mule.extension.file.common.api.subset.SubsetList;
 import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
