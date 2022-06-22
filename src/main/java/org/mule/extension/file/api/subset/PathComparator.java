@@ -12,6 +12,11 @@ import org.mule.runtime.extension.api.runtime.operation.Result;
 import java.io.InputStream;
 import java.util.Comparator;
 
+/**
+ * A {@link Comparator} for comparing files by their path.
+ *
+ * @since 1.4.0
+ */
 public class PathComparator implements Comparator<Result<InputStream, LocalFileAttributes>> {
 
   @Override

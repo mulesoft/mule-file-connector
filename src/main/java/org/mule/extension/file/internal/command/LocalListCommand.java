@@ -8,6 +8,7 @@ package org.mule.extension.file.internal.command;
 
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static java.lang.String.format;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.subset.LocalSubsetList;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A {@link LocalFileCommand} which implements the {@link ListCommand}
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class LocalListCommand extends LocalFileCommand implements ListCommand<LocalFileAttributes> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LocalListCommand.class);
+  private static final Logger LOGGER = getLogger(LocalListCommand.class);
 
   private final LocalReadCommand readCommand;
 

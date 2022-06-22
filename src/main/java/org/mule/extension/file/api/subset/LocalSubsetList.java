@@ -12,6 +12,11 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 
+/**
+ * Used to obtain a subset of all the files retrieved.
+ *
+ * @since 1.4.0
+ */
 public class LocalSubsetList implements SubsetList {
 
   @Parameter
