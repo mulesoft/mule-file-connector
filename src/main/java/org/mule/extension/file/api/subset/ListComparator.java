@@ -6,6 +6,10 @@
  */
 package org.mule.extension.file.api.subset;
 
+import org.mule.extension.file.api.LocalFileAttributes;
+import org.mule.runtime.extension.api.runtime.operation.Result;
+
+import java.io.InputStream;
 import java.util.Comparator;
 
 /**
@@ -36,13 +40,13 @@ public enum ListComparator {
    */
   PATH(new PathComparator());
 
-  private final Comparator comparator;
+  private final Comparator<Result<InputStream, LocalFileAttributes>> comparator;
 
-  ListComparator(Comparator comparator) {
+  ListComparator(Comparator<Result<InputStream, LocalFileAttributes>> comparator) {
     this.comparator = comparator;
   }
 
-  public Comparator getComparator() {
+  public Comparator<Result<InputStream, LocalFileAttributes>> getComparator() {
     return comparator;
   }
 }

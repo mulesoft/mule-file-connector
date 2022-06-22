@@ -9,7 +9,7 @@ package org.mule.extension.file.api.subset;
 /**
  * To sort the files ascending or descending depending on the {@link ListComparator} chosen
  *
- * @since 1.0
+ * @since 1.4.0
  */
 public enum SortOrder {
   ASCENDING, DESCENDING;
