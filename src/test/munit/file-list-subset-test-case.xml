@@ -96,18 +96,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="listDateCreatedDescending" description="Subset will be returned ordered by date created Descending">
+    <munit:test name="listModifiedDescending" description="Subset will be returned ordered by date modified Descending">
         <munit:execution>
             <munit-tools:sleep time="1100"/>
-            <set-payload value="File Content Larger"/>
-            <file:write config-ref="file-config" path="random2.txt"/>
+            <set-payload value="a"/>
+            <file:write config-ref="file-config" path="random2.txt" mode="APPEND"/>
             <file:list config-ref="file-config" directoryPath=".">
-                <file:subset criteria="DATE_CREATED"/>
+                <file:subset criteria="DATE_MODIFIED"/>
             </file:list>
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
-            <munit-tools:assert-equals actual="#[payload]" expected="random3.txt"/>
+            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random2.txt"/>
         </munit:validation>
     </munit:test>
 
