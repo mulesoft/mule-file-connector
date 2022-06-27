@@ -107,7 +107,7 @@
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-equals actual="#[sizeOf(payload)]" expected="#[3]"/>
-            <munit-tools:assert-equals actual="#[payload[0].attributes.fileName]" expected="random3.txt"/>
+            <munit-tools:assert-equals actual="#[payload]" expected="random3.txt"/>
         </munit:validation>
     </munit:test>
 
