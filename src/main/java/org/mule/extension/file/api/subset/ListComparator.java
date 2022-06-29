@@ -19,23 +19,23 @@ import java.util.Comparator;
  */
 public enum ListComparator {
 
-  /*
+  /**
    * Sort by name of the file.
    */
   ALPHABETICALLY(new AlphabeticalComparator()),
-  /*
+  /**
    * Sort by date modified of the file.
    */
   DATE_MODIFIED(new DateModifiedComparator()),
-  /*
+  /**
    * Sort by date created of the file.
    */
   DATE_CREATED(new DateCreatedComparator()),
-  /*
+  /**
    * Sort by size of the file.
    */
   SIZE(new SizeComparator()),
-  /*
+  /**
    * Sort by path of the file.
    */
   PATH(new PathComparator());

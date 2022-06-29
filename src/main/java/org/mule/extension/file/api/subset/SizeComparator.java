@@ -19,6 +19,10 @@ import java.util.Comparator;
  */
 public class SizeComparator implements Comparator<Result<InputStream, LocalFileAttributes>> {
 
+  /**
+   * Compares the size of the files found in the attributes
+   *
+   */
   @Override
   public int compare(Result<InputStream, LocalFileAttributes> o1, Result<InputStream, LocalFileAttributes> o2) {
     long size1 = o1.getAttributes().get().getSize();

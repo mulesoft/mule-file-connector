@@ -19,6 +19,10 @@ import java.util.Comparator;
  */
 public class AlphabeticalComparator implements Comparator<Result<InputStream, LocalFileAttributes>> {
 
+  /**
+   * Compares the name of the files found in the attributes
+   *
+   */
   @Override
   public int compare(Result<InputStream, LocalFileAttributes> o1, Result<InputStream, LocalFileAttributes> o2) {
     return o1.getAttributes().get().getName().compareTo(o2.getAttributes().get().getName());

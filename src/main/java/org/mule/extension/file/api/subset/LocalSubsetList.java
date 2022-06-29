@@ -11,6 +11,7 @@ import org.mule.runtime.extension.api.annotation.dsl.xml.ParameterDsl;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 /**
  * Used to obtain a subset of all the files retrieved.
@@ -23,24 +24,28 @@ public class LocalSubsetList implements SubsetList {
   @Optional(defaultValue = "0")
   @DisplayName("Limit")
   @ParameterDsl(allowReferences = false)
+  @Summary("Limits the number of files returned by the operation.")
   private Integer limit;
 
   @Parameter
   @Optional(defaultValue = "0")
   @DisplayName("Offset")
   @ParameterDsl(allowReferences = false)
+  @Summary("Specifies how many files are skipped.")
   private Integer offset;
 
   @Parameter
   @Optional(defaultValue = "DATE_MODIFIED")
   @DisplayName("Criteria")
   @ParameterDsl(allowReferences = false)
+  @Summary("The criteria according to which files are sorted.")
   protected ListComparator criteria;
 
   @Parameter
   @Optional(defaultValue = "DESCENDING")
   @DisplayName("Order")
   @ParameterDsl(allowReferences = false)
+  @Summary("Specifies whether the order is ASCENDING or DESCENDING according to the criteria.")
   protected SortOrder order;
 
   public Integer getLimit() {
