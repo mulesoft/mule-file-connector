@@ -27,6 +27,7 @@ import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
+import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
@@ -72,24 +73,22 @@ public final class FileOperations extends BaseFileSystemOperations {
   @Summary("List all the files from given directory")
   @MediaType(value = ANY, strict = false)
   @Throws(FileListErrorTypeProvider.class)
-  public PagingProvider<LocalFileSystem, Result<Object, LocalFileAttributes>> list(@Config FileConnectorConfig config,
-                                                                                   @Path(type = DIRECTORY,
-                                                                                       location = EXTERNAL) String directoryPath,
-                                                                                   @Optional(
-                                                                                       defaultValue = "false") boolean recursive,
-                                                                                   @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
-                                                                                   @ConfigOverride @Placement(
-                                                                                       tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
-                                                                                   @ConfigOverride @Placement(
-                                                                                       tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
-                                                                                   StreamingHelper streamingHelper,
-                                                                                   @Optional @Placement(
-                                                                                       tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
-    PagingProvider result =
-        doPagedList(config, directoryPath, recursive, matcher,
-                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
-                    streamingHelper, subset);
-    return result;
+  public PagingProvider<FileSystem, Result<CursorProvider, FileAttributes>> list(@Config FileConnectorConfig config,
+                                                                                 @Path(type = DIRECTORY,
+                                                                                     location = EXTERNAL) String directoryPath,
+                                                                                 @Optional(
+                                                                                     defaultValue = "false") boolean recursive,
+                                                                                 @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
+                                                                                 @ConfigOverride @Placement(
+                                                                                     tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                                                 @ConfigOverride @Placement(
+                                                                                     tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
+                                                                                 StreamingHelper streamingHelper,
+                                                                                 @Optional @Placement(
+                                                                                     tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
+    return doPagedList(config, directoryPath, recursive, matcher,
+                       config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
+                       streamingHelper, subset);
   }
 
   /**
