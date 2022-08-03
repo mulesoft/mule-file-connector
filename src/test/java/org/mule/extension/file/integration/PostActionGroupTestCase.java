@@ -22,22 +22,22 @@ public class PostActionGroupTestCase extends AbstractMuleTestCase {
   @Test
   @Description("tests all the valid states of post action parameters")
   public void validAction() {
-    new PostActionGroup(true, null, null, true).validateSelf();
-    new PostActionGroup(true, null, null, false).validateSelf();
-    new PostActionGroup(false, "someDir", null, false).validateSelf();
-    new PostActionGroup(false, "someDir", "thisone.txt", false).validateSelf();
-    new PostActionGroup(false, null, "thisone.txt", false).validateSelf();
+    new PostActionGroup(true, null, null, true, false).validateSelf();
+    new PostActionGroup(true, null, null, false, false).validateSelf();
+    new PostActionGroup(false, "someDir", null, false, false).validateSelf();
+    new PostActionGroup(false, "someDir", "thisone.txt", false, false).validateSelf();
+    new PostActionGroup(false, null, "thisone.txt", false, false).validateSelf();
   }
 
   @Test(expected = IllegalArgumentException.class)
   @Description("verifies that autoDelete and moveToDirectory cannot be set at the same time")
   public void deleteAndMove() {
-    new PostActionGroup(true, "someDir", null, true).validateSelf();
+    new PostActionGroup(true, "someDir", null, true, false).validateSelf();
   }
 
   @Test(expected = IllegalArgumentException.class)
   @Description("verifies that autoDelete and renameTo cannot be set at the same time")
   public void deleteAndRename() {
-    new PostActionGroup(true, null, "thisone.txt", true).validateSelf();
+    new PostActionGroup(true, null, "thisone.txt", true, false).validateSelf();
   }
 }
