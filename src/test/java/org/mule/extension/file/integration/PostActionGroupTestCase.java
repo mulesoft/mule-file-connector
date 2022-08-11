@@ -122,7 +122,7 @@ public class PostActionGroupTestCase extends AbstractMuleTestCase {
       return false;
     }
 
-
+    @Override
     public boolean getOverwrite() {
       return overwrite;
     }
