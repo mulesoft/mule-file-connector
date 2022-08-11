@@ -31,8 +31,10 @@ import java.nio.channels.FileChannel;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
+import java.nio.file.InvalidPathException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A {@link LocalFileCommand} which implements the {@link WriteCommand} contract
@@ -64,6 +66,8 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
   @Override
   public void write(String filePath, InputStream content, FileWriteMode mode,
                     boolean lock, boolean createParentDirectory) {
+    validateFileSystemPath(filePath);
+
     Path path = resolvePath(filePath);
     assureParentFolderExists(path, createParentDirectory);
 
@@ -104,6 +108,14 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
       }
 
       closeQuietly(channel);
+    }
+  }
+
+  private void validateFileSystemPath(final String path) {
+    try {
+      Paths.get(path);
+    } catch (InvalidPathException ex) {
+      throw new IllegalPathException(format("%s Invalid path", path), ex);
     }
   }
 

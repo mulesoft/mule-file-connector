@@ -54,7 +54,7 @@ public class DirectoryListenerUnitTestCase {
     when(config.getTimeBetweenSizeCheckInMillis(anyLong(), any())).thenReturn(empty());
     when(fileSystemProvider.connect()).thenReturn(localFileSystem);
     setupListResult();
-    when(localFileSystem.list(any(), any(), anyBoolean(), any(), any())).thenReturn(listResult);
+    when(localFileSystem.list(any(), any(), anyBoolean(), any(), any(), any())).thenReturn(listResult);
     when(localFileSystem.getBasePath()).thenReturn(".");
     when(pollContext.accept(any())).then((Answer<PollContext.PollItemStatus>) invocationOnMock -> {
       Consumer<PollContext.PollItem> pollItemConsumer = (Consumer<PollContext.PollItem>) invocationOnMock.getArguments()[0];

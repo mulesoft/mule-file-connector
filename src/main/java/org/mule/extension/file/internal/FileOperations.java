@@ -11,8 +11,10 @@ import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.FILE;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
+
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
+import org.mule.extension.file.api.subset.LocalSubsetList;
 import org.mule.extension.file.common.api.BaseFileSystemOperations;
 import org.mule.extension.file.common.api.FileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
@@ -25,7 +27,6 @@ import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
-import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
@@ -81,11 +82,13 @@ public final class FileOperations extends BaseFileSystemOperations {
                                                                                        tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
                                                                                    @ConfigOverride @Placement(
                                                                                        tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
-                                                                                   StreamingHelper streamingHelper) {
+                                                                                   StreamingHelper streamingHelper,
+                                                                                   @Optional @Placement(
+                                                                                       tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
     PagingProvider result =
         doPagedList(config, directoryPath, recursive, matcher,
                     config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
-                    streamingHelper);
+                    streamingHelper, subset);
     return result;
   }
 
