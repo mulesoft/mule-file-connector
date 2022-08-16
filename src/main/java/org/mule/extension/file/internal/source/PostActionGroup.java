@@ -64,10 +64,7 @@ public class PostActionGroup extends AbstractPostActionGroup {
 
 
   public PostActionGroup(boolean autoDelete, String moveToDirectory, String renameTo, boolean applyPostActionWhenFailed) {
-    this.autoDelete = autoDelete;
-    this.moveToDirectory = moveToDirectory;
-    this.renameTo = renameTo;
-    this.applyPostActionWhenFailed = applyPostActionWhenFailed;
+    this(autoDelete, moveToDirectory, renameTo, applyPostActionWhenFailed, false);
   }
 
   public PostActionGroup(boolean autoDelete, String moveToDirectory, String renameTo, boolean applyPostActionWhenFailed,
