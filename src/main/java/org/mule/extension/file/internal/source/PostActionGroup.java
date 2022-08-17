@@ -52,14 +52,28 @@ public class PostActionGroup extends AbstractPostActionGroup {
   @Optional(defaultValue = "true")
   private boolean applyPostActionWhenFailed = true;
 
+  /**
+   * Whether the target file should be overwritten when the destination has the file with same name
+   */
+  @Parameter
+  @Optional(defaultValue = "false")
+  private boolean overwrite = false;
+
 
   public PostActionGroup() {}
 
+
   public PostActionGroup(boolean autoDelete, String moveToDirectory, String renameTo, boolean applyPostActionWhenFailed) {
+    this(autoDelete, moveToDirectory, renameTo, applyPostActionWhenFailed, false);
+  }
+
+  public PostActionGroup(boolean autoDelete, String moveToDirectory, String renameTo, boolean applyPostActionWhenFailed,
+                         boolean overwrite) {
     this.autoDelete = autoDelete;
     this.moveToDirectory = moveToDirectory;
     this.renameTo = renameTo;
     this.applyPostActionWhenFailed = applyPostActionWhenFailed;
+    this.overwrite = overwrite;
   }
 
   public boolean isAutoDelete() {
@@ -78,4 +92,7 @@ public class PostActionGroup extends AbstractPostActionGroup {
     return applyPostActionWhenFailed;
   }
 
+  public boolean getOverwrite() {
+    return overwrite;
+  }
 }
