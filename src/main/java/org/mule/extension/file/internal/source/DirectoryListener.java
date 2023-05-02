@@ -6,9 +6,6 @@
  */
 package org.mule.extension.file.internal.source;
 
-import static java.lang.String.format;
-import static java.lang.Thread.sleep;
-import static java.util.Objects.isNull;
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
@@ -17,15 +14,9 @@ import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
 
-import java.io.InputStream;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
+import static java.lang.String.format;
+import static java.lang.Thread.sleep;
+import static java.util.Objects.isNull;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
@@ -56,6 +47,17 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.PollingSource;
+
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

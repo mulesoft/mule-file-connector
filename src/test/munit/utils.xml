@@ -12,6 +12,11 @@
         <munit-tools:sleep time="2000"/>
     </flow>
 
+    <flow name="wait-60-seconds">
+        <logger level="ERROR" message="Waiting for 60 seconds"/>
+        <munit-tools:sleep time="60000"/>
+    </flow>
+
     <flow name="modify-file">
         <set-payload value="Content to apend"/>
         <file:write config-ref="file-config" path="random.txt" mode="APPEND"/>
