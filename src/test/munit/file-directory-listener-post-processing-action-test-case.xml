@@ -124,7 +124,7 @@
 
     <munit:test name="deleteWhileFileStillWritten" description="Verifies that files that cannot be renamed (because a file already exists in the directory with that name) remain untouched">
         <munit:enable-flow-sources>
-            <munit:enable-flow-source value="writeFiles"/>
+            <munit:enable-flow-source value="writeFilesToDelete"/>
             <munit:enable-flow-source value="deleteWhileFileStillBeingWriting"/>
         </munit:enable-flow-sources>
         <munit:execution>
@@ -184,7 +184,7 @@
         </try>
     </flow>
 
-    <flow name="writeFiles">
+    <flow name="writeFilesToDelete">
         <scheduler>
             <scheduling-strategy >
                 <fixed-frequency frequency="1" timeUnit="DAYS"/>
