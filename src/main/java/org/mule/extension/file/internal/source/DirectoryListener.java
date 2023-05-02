@@ -6,6 +6,7 @@
  */
 package org.mule.extension.file.internal.source;
 
+
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
@@ -13,6 +14,7 @@ import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import static java.lang.String.format;
 import static java.lang.Thread.sleep;
@@ -47,20 +49,19 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.PollingSource;
+import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
+import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
-
-import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 /**
  * Polls a directory looking for files that have been created or updated. One message will be generated for each file that is
@@ -89,7 +90,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
   private static final int MAX_SIZE_CHECK_RETRIES = 2;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
+  private static final Logger LOGGER = getLogger(DirectoryListener.class);
   private static final String ATTRIBUTES_CONTEXT_VAR = "attributes";
   private static final String POST_PROCESSING_GROUP_NAME = "Post processing action";
 
@@ -317,15 +318,15 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
     while (retries <= MAX_SIZE_CHECK_RETRIES) {
       try {
         List<Result<InputStream, LocalFileAttributes>> currentList =
-            fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null);;
+            fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null);
 
         if (currentList.isEmpty()) {
           return;
         }
 
-        Map<String, Result<InputStream, LocalFileAttributes>> oldFileMap = null;
         Map<String, Result<InputStream, LocalFileAttributes>> currentFilesMap = toMap(currentList);
-        oldFileMap = new HashMap<>(currentFilesMap);
+        Map<String, Result<InputStream, LocalFileAttributes>> oldFileMap = currentFilesMap;
+
         if (timeBetweenSizeCheckInMillis != null) {
           sleep(timeBetweenSizeCheckInMillis);
         }
@@ -337,17 +338,19 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
           return;
         }
 
-        for (final String path : oldFileMap.keySet()) {
+        Map<String, Result<InputStream, LocalFileAttributes>> finalCurrentFilesMap = currentFilesMap;
+        Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap = oldFileMap.entrySet().stream()
+            .filter(entry -> finalCurrentFilesMap.containsKey(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        for (final String path : filteredOldMap.keySet()) {
           if (sourceIsStopping) {
-            closeResultQuietly(oldFileMap.get(path));
+            closeResultQuietly(filteredOldMap.get(path));
             continue;
           }
-          Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = oldFileMap.get(path);
-          Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(path);
 
-          if (isNull(oldInputStreamLocalFileAttributesResult) || isNull(currentInputStreamLocalFileAttributesResult)) {
-            return;
-          }
+          Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = filteredOldMap.get(path);
+          Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(path);
 
           LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
           LocalFileAttributes oldAttributes = oldInputStreamLocalFileAttributesResult.getAttributes().get();
@@ -378,13 +381,8 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   }
 
   private Map<String, Result<InputStream, LocalFileAttributes>> toMap(final List<Result<InputStream, LocalFileAttributes>> fileList) {
-    final Map<String, Result<InputStream, LocalFileAttributes>> filesMap = new HashMap<>();
-    for (Result<InputStream, LocalFileAttributes> file : fileList) {
-      if (file.getAttributes().isPresent()) {
-        final LocalFileAttributes localFileAttributes = file.getAttributes().get();
-        filesMap.put(localFileAttributes.getPath(), file);
-      }
-    }
-    return filesMap;
+    return fileList.stream()
+        .filter(file -> file.getAttributes().isPresent())
+        .collect(Collectors.toMap(file -> file.getAttributes().get().getPath(), Function.identity()));
   }
 }
