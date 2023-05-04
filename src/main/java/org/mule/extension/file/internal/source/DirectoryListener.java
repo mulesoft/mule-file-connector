@@ -19,7 +19,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import static java.lang.String.format;
 import static java.lang.Thread.sleep;
-import static java.util.Objects.isNull;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
@@ -320,22 +319,23 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
 
 
     Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck =
-        calculateFilesPendingFromProcessDueSizeCheck(filesToProcess, timeBetweenSizeCheckInMillis, pollContext);
+        processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(filesToProcess, timeBetweenSizeCheckInMillis, pollContext);
 
     int retries = 0;
     if (isNotNull(timeBetweenSizeCheckInMillis) && timeBetweenSizeCheckInMillis > 0 && !pendingFilesByTimeCheck.isEmpty()) {
       while (retries < MAX_SIZE_CHECK_RETRIES) {
         pendingFilesByTimeCheck =
-            calculateFilesPendingFromProcessDueSizeCheck(pendingFilesByTimeCheck, timeBetweenSizeCheckInMillis, pollContext);
+            processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(pendingFilesByTimeCheck, timeBetweenSizeCheckInMillis,
+                                                                        pollContext);
         retries++;
       }
     }
 
   }
 
-  private Map<String, Result<InputStream, LocalFileAttributes>> calculateFilesPendingFromProcessDueSizeCheck(final Map<String, Result<InputStream, LocalFileAttributes>> filesToProcess,
-                                                                                                             final Long timeBetweenSizeCheckInMillis,
-                                                                                                             final PollContext<InputStream, LocalFileAttributes> pollContext) {
+  private Map<String, Result<InputStream, LocalFileAttributes>> processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(final Map<String, Result<InputStream, LocalFileAttributes>> filesToProcess,
+                                                                                                                            final Long timeBetweenSizeCheckInMillis,
+                                                                                                                            final PollContext<InputStream, LocalFileAttributes> pollContext) {
     try {
       Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck = new HashMap<>();
       Map<String, Result<InputStream, LocalFileAttributes>> oldFileMap = filesToProcess;
@@ -362,14 +362,14 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
       boolean sourceIsStopping = false;
-      for (final String path : filteredOldMap.keySet()) {
+      for (final Map.Entry<String, Result<InputStream, LocalFileAttributes>> file : filteredOldMap.entrySet()) {
         if (sourceIsStopping) {
-          closeResultQuietly(filteredOldMap.get(path));
+          closeResultQuietly(file.getValue());
           continue;
         }
 
-        Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = filteredOldMap.get(path);
-        Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(path);
+        Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = filteredOldMap.get(file.getKey());
+        Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
 
         LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
         LocalFileAttributes oldAttributes = oldInputStreamLocalFileAttributesResult.getAttributes().get();
@@ -381,8 +381,8 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
               sourceIsStopping = true;
             }
           } else {
-            LOGGER.warn("File on path " + currentAttributes.getPath() + " is still being written.");
-            pendingFilesByTimeCheck.put(path, filteredOldMap.get(path));// tracking files that fails for size check
+            LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
+            pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
           }
         } else {
           if (LOGGER.isDebugEnabled()) {
@@ -392,7 +392,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       }
       return pendingFilesByTimeCheck;
     } catch (InterruptedException e) {
-      throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"));
+      throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"), e);
     }
   }
 
