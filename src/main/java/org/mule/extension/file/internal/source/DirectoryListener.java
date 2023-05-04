@@ -338,9 +338,8 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
                                                                                                                             final PollContext<InputStream, LocalFileAttributes> pollContext) {
     try {
       Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck = new HashMap<>();
-      Map<String, Result<InputStream, LocalFileAttributes>> oldFileMap = filesToProcess;
 
-      if (oldFileMap.isEmpty()) {
+      if (filesToProcess.isEmpty()) {
         return pendingFilesByTimeCheck;// no files to process
       }
 
@@ -356,46 +355,51 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         return pendingFilesByTimeCheck;// files already processed
       }
 
-      Map<String, Result<InputStream, LocalFileAttributes>> finalCurrentFilesMap = currentFilesMap;
-      Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap = oldFileMap.entrySet().stream()
-          .filter(entry -> finalCurrentFilesMap.containsKey(entry.getKey()))
+      Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap = filesToProcess.entrySet().stream()
+          .filter(entry -> currentFilesMap.containsKey(entry.getKey()))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-      boolean sourceIsStopping = false;
-      for (final Map.Entry<String, Result<InputStream, LocalFileAttributes>> file : filteredOldMap.entrySet()) {
-        if (sourceIsStopping) {
-          closeResultQuietly(file.getValue());
-          continue;
-        }
-
-        Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = filteredOldMap.get(file.getKey());
-        Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
-
-        LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
-        LocalFileAttributes oldAttributes = oldInputStreamLocalFileAttributesResult.getAttributes().get();
-        if (matcher.test(currentAttributes)) {
-          if (currentAttributes.getSize() == oldAttributes.getSize()) {
-            PollContext.PollItemStatus status =
-                processFile(currentInputStreamLocalFileAttributesResult, currentAttributes, pollContext);
-            if (status == SOURCE_STOPPING) {
-              sourceIsStopping = true;
-            }
-          } else {
-            LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
-            pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
-          }
-        } else {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
-          }
-        }
-      }
+      processFiles(pollContext, pendingFilesByTimeCheck, currentFilesMap, filteredOldMap);
       return pendingFilesByTimeCheck;
     } catch (InterruptedException e) {
       throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"), e);
     }
   }
 
+  private void processFiles(PollContext<InputStream, LocalFileAttributes> pollContext,
+                            Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck,
+                            Map<String, Result<InputStream, LocalFileAttributes>> currentFilesMap,
+                            Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap) {
+    boolean sourceIsStopping = false;
+    for (final Map.Entry<String, Result<InputStream, LocalFileAttributes>> file : filteredOldMap.entrySet()) {
+      if (sourceIsStopping) {
+        closeResultQuietly(file.getValue());
+        continue;
+      }
+
+      Result<InputStream, LocalFileAttributes> oldInputStreamLocalFileAttributesResult = filteredOldMap.get(file.getKey());
+      Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
+
+      LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
+      LocalFileAttributes oldAttributes = oldInputStreamLocalFileAttributesResult.getAttributes().get();
+      if (matcher.test(currentAttributes)) {
+        if (currentAttributes.getSize() == oldAttributes.getSize()) {
+          PollContext.PollItemStatus status =
+              processFile(currentInputStreamLocalFileAttributesResult, currentAttributes, pollContext);
+          if (status == SOURCE_STOPPING) {
+            sourceIsStopping = true;
+          }
+        } else {
+          LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
+          pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
+        }
+      } else {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
+        }
+      }
+    }
+  }
 
 
   private Map<String, Result<InputStream, LocalFileAttributes>> toMap(final List<Result<InputStream, LocalFileAttributes>> fileList) {
