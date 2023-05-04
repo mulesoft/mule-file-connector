@@ -118,6 +118,7 @@ public class DirectoryListenerUnitTestCase {
     directoryListener.poll(pollContext);
     assertAllStreamsAreClosed();
   }
+
   private void assertAllStreamsAreClosed() throws Exception {
     for (Result<InputStream, LocalFileAttributes> result : listResult) {
       assertStreamIsClosed(result);
