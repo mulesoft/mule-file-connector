@@ -38,6 +38,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.junit.Before;
@@ -111,6 +112,12 @@ public class DirectoryListenerUnitTestCase {
     assertAllStreamsAreClosed();
   }
 
+  @Test
+  public void filesAreProcessOneTime() throws Exception {
+    when(config.getTimeBetweenSizeCheckInMillis(anyLong(), any())).thenReturn(Optional.of(25L));
+    directoryListener.poll(pollContext);
+    assertAllStreamsAreClosed();
+  }
   private void assertAllStreamsAreClosed() throws Exception {
     for (Result<InputStream, LocalFileAttributes> result : listResult) {
       assertStreamIsClosed(result);
