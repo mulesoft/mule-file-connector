@@ -16,6 +16,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.mockito.Mockito;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.internal.FileConnector;
 import org.mule.extension.file.internal.LocalFileSystem;
@@ -28,8 +30,13 @@ import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.junit.Before;
@@ -66,31 +73,46 @@ public class DirectoryListenerUnitTestCase {
     directoryListener.onStart(mock(SourceCallback.class));
   }
 
-  private void setupListResult() {
+  private void setupListResult() throws IllegalAccessException {
     listResult = new LinkedList<>();
     for (int i = 0; i < AMOUNT_OF_MOCK_RESULTS; i++) {
-      listResult.add(createMockResult());
+      listResult.add(createMockResult("test_file_" + i + ".txt"));
     }
   }
 
-  private Result<InputStream, LocalFileAttributes> createMockResult() {
+  private Result<InputStream, LocalFileAttributes> createMockResult(final String fileName) throws IllegalAccessException {
     return Result.<InputStream, LocalFileAttributes>builder().output(createMockedInputStream())
-        .attributes(createMockedAttributes()).build();
+        .attributes(createMockedAttributes(fileName)).build();
   }
 
   private InputStream createMockedInputStream() {
     return mock(InputStream.class);
   }
 
-  private LocalFileAttributes createMockedAttributes() {
-    LocalFileAttributes attributes = mock(LocalFileAttributes.class);
-    when(attributes.getPath()).thenReturn(FILE_PATH);
-    when(attributes.isDirectory()).thenReturn(false);
+  private LocalFileAttributes createMockedAttributes(final String fileName) throws IllegalAccessException {
+    BasicFileAttributes basicFileAttributes = Mockito.mock(BasicFileAttributes.class);
+    FileTime now = FileTime.from(Instant.now());
+    when(basicFileAttributes.lastModifiedTime()).thenReturn(now);
+    when(basicFileAttributes.creationTime()).thenReturn(now);
+    when(basicFileAttributes.lastAccessTime()).thenReturn(now);
+
+    LocalFileAttributes attributes = new LocalFileAttributes(Paths.get(FILE_PATH + "/" + fileName), basicFileAttributes);
+
+    FieldUtils.writeField(attributes, "fileName", fileName, true);
+    FieldUtils.writeField(attributes, "directory", false, true);
+
     return attributes;
   }
 
   @Test
   public void resultsAreClosedWhenSourceIsStopping() throws Exception {
+    directoryListener.poll(pollContext);
+    assertAllStreamsAreClosed();
+  }
+
+  @Test
+  public void filesAreProcessOneTime() throws Exception {
+    when(config.getTimeBetweenSizeCheckInMillis(anyLong(), any())).thenReturn(Optional.of(25L));
     directoryListener.poll(pollContext);
     assertAllStreamsAreClosed();
   }

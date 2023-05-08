@@ -4,11 +4,13 @@
       xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
       xsi:schemaLocation="
         http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
-		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
 
     <munit:config name="file-directory-listener-post-processing-action-test-case.xml" />
 
@@ -120,10 +122,30 @@
         </munit:validation>
     </munit:test>
 
+    <munit:test name="deleteWhileFileStillWritten" description="Verifies that files that cannot be renamed (because a file already exists in the directory with that name) remain untouched">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="writeFilesToDelete"/>
+            <munit:enable-flow-source value="deleteWhileFileStillBeingWriting"/>
+        </munit:enable-flow-sources>
+        <munit:execution>
+            <flow-ref name="wait-60-seconds"/>
+            <file:list config-ref="file-config" directoryPath="${munit.temporary.directory}">
+                <repeatable-in-memory-iterable maxBufferSize="20000" />
+            </file:list>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert>
+                <munit-tools:that>#[ import * from dw::test::Asserts ---
+                    payload must haveSize(1) ]
+                </munit-tools:that>
+            </munit-tools:assert>
+        </munit:validation>
+    </munit:test>
+
     <flow name="renameToFlow">
         <file:listener config-ref="file-config" directory="." renameTo="renamed.bak" recursive="false">
             <scheduling-strategy>
-                <fixed-frequency frequency="500"/>
+                <fixed-frequency frequency="1000"/>
             </scheduling-strategy>
             <file:matcher filenamePattern="*.txt" />
         </file:listener>
@@ -133,11 +155,21 @@
     <flow name="renameToAndAutoDeleteFlow">
         <file:listener config-ref="file-config" directory="." renameTo="renamed.bak" recursive="false" autoDelete="true">
             <scheduling-strategy>
-                <fixed-frequency frequency="500"/>
+                <fixed-frequency frequency="1000"/>
             </scheduling-strategy>
             <file:matcher filenamePattern="*.txt" />
         </file:listener>
         <logger level="INFO" message="#[attributes.fileName]"/>
+    </flow>
+
+    <flow name="deleteWhileFileStillBeingWriting">
+        <file:listener config-ref="file-config" directory="${munit.temporary.directory}" autoDelete="true" outputMimeType="text/plain" applyPostActionWhenFailed="false" timeBetweenSizeCheck="25" timeBetweenSizeCheckUnit="SECONDS" recursive="false" overwrite="true" watermarkMode="MODIFIED_TIMESTAMP">
+            <reconnect-forever/>
+            <scheduling-strategy >
+                <fixed-frequency frequency="50000"/>
+            </scheduling-strategy>
+        </file:listener>
+        <logger level="INFO"  message='a - completed'/>
     </flow>
 
     <flow name="file-exists">
@@ -152,4 +184,25 @@
         </try>
     </flow>
 
+    <flow name="writeFilesToDelete">
+        <scheduler>
+            <scheduling-strategy >
+                <fixed-frequency frequency="1" timeUnit="DAYS"/>
+            </scheduling-strategy>
+        </scheduler>
+        <scripting:execute engine="python">
+            <scripting:code ><![CDATA[import time
+
+f1 = open(path + "/test.txt", "a")
+for x in range(200):
+ time.sleep(1)
+ f1.write("Now the file has more content - Now the file has more contentNow the file has more contentNow the file has more contentNow the file has more contentNow the file has more contentNow the file has more contentNow the file has more contentNow the file has more contentNow the file has more content")
+f1.close()
+
+]]></scripting:code>
+            <scripting:parameters ><![CDATA[#[{
+        path: "${munit.temporary.directory}"
+    }]]]></scripting:parameters>
+        </scripting:execute>
+    </flow>
 </mule>

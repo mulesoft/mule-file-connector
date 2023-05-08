@@ -6,13 +6,19 @@
  */
 package org.mule.extension.file.internal.source;
 
-import static java.lang.String.format;
+
 import static org.mule.extension.file.api.WatermarkMode.DISABLED;
 import static org.mule.extension.file.common.api.FileDisplayConstants.MATCHER;
+import static org.mule.metadata.api.utils.MetadataTypeUtils.isNotNull;
+import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.meta.model.display.PathModel.Type.DIRECTORY;
 import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import static java.lang.String.format;
+import static java.lang.Thread.sleep;
 
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.api.LocalFileMatcher;
@@ -44,17 +50,19 @@ import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.PollingSource;
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
+import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
 
 /**
  * Polls a directory looking for files that have been created or updated. One message will be generated for each file that is
@@ -81,7 +89,9 @@ import org.slf4j.LoggerFactory;
 @Alias("listener")
 public class DirectoryListener extends PollingSource<InputStream, LocalFileAttributes> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(DirectoryListener.class);
+  private static final int MAX_SIZE_CHECK_RETRIES = 2;
+
+  private static final Logger LOGGER = getLogger(DirectoryListener.class);
   private static final String ATTRIBUTES_CONTEXT_VAR = "attributes";
   private static final String POST_PROCESSING_GROUP_NAME = "Post processing action";
 
@@ -200,41 +210,10 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       Long timeBetweenSizeCheckInMillis =
           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null);
 
-      List<Result<InputStream, LocalFileAttributes>> fileList =
-          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null);
+      validateFilesSize(timeBetweenSizeCheckInMillis, pollContext);
 
-      if (fileList.isEmpty()) {
-        return;
-      }
-
-      boolean sourceIsStopping = false;
-      for (Result<InputStream, LocalFileAttributes> file : fileList) {
-
-        LocalFileAttributes attributes = file.getAttributes().orElse(null);
-        if (attributes == null || attributes.isDirectory()) {
-          continue;
-        }
-
-        if (sourceIsStopping) {
-          closeResultQuietly(file);
-          continue;
-        }
-
-        if (!matcher.test(attributes)) {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Skipping file '{}' because the matcher rejected it", attributes.getPath());
-          }
-          return;
-        }
-
-        PollContext.PollItemStatus status = processFile(file, attributes, pollContext);
-
-        if (status == SOURCE_STOPPING) {
-          sourceIsStopping = true;
-        }
-      }
     } catch (Exception e) {
-      LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. ",
+      LOGGER.error(format("Found exception trying to poll directory '%s'. Will try again on the next poll. %s",
                           directoryPath.toString(), e.getMessage()),
                    e);
     } finally {
@@ -252,6 +231,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   private PollContext.PollItemStatus processFile(Result<InputStream, LocalFileAttributes> file, LocalFileAttributes attributes,
                                                  PollContext<InputStream, LocalFileAttributes> pollContext) {
     String fullPath = attributes.getPath();
+
 
     return pollContext.accept(item -> {
       SourceCallbackContext ctx = item.getSourceCallbackContext();
@@ -330,5 +310,97 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       default:
         throw new IllegalArgumentException("Watermark not supported for mode " + watermarkMode);
     }
+  }
+
+  private void validateFilesSize(final Long timeBetweenSizeCheckInMillis,
+                                 PollContext<InputStream, LocalFileAttributes> pollContext) {
+    Map<String, Result<InputStream, LocalFileAttributes>> filesToProcess =
+        toMap(fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null));
+
+
+    Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck =
+        processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(filesToProcess, timeBetweenSizeCheckInMillis, pollContext);
+
+    int retries = 0;
+    if (isNotNull(timeBetweenSizeCheckInMillis) && timeBetweenSizeCheckInMillis > 0 && !pendingFilesByTimeCheck.isEmpty()) {
+      while (retries < MAX_SIZE_CHECK_RETRIES) {
+        pendingFilesByTimeCheck =
+            processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(pendingFilesByTimeCheck, timeBetweenSizeCheckInMillis,
+                                                                        pollContext);
+        retries++;
+      }
+    }
+
+  }
+
+  private Map<String, Result<InputStream, LocalFileAttributes>> processFilesAndCalculateFilesPendingFromProcessDueSizeCheck(final Map<String, Result<InputStream, LocalFileAttributes>> filesToProcess,
+                                                                                                                            final Long timeBetweenSizeCheckInMillis,
+                                                                                                                            final PollContext<InputStream, LocalFileAttributes> pollContext) {
+    try {
+      Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck = new HashMap<>();
+
+      if (filesToProcess.isEmpty()) {
+        return pendingFilesByTimeCheck;// no files to process
+      }
+
+      if (isNotNull(timeBetweenSizeCheckInMillis) && timeBetweenSizeCheckInMillis > 0) {
+        sleep(timeBetweenSizeCheckInMillis);
+      }
+
+      List<Result<InputStream, LocalFileAttributes>> currentList =
+          fileSystem.list(config, directoryPath.toString(), recursive, matcher, timeBetweenSizeCheckInMillis, null);
+
+
+      if (currentList.isEmpty()) {
+        return pendingFilesByTimeCheck;// files already processed
+      }
+
+      Map<String, Result<InputStream, LocalFileAttributes>> currentFilesMap = toMap(currentList);
+      Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap = filesToProcess.entrySet().stream()
+          .filter(entry -> currentFilesMap.containsKey(entry.getKey()))
+          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+      processFiles(pollContext, pendingFilesByTimeCheck, currentFilesMap, filteredOldMap);
+      return pendingFilesByTimeCheck;
+    } catch (InterruptedException e) {
+      throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"), e);
+    }
+  }
+
+  private void processFiles(PollContext<InputStream, LocalFileAttributes> pollContext,
+                            Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck,
+                            Map<String, Result<InputStream, LocalFileAttributes>> currentFilesMap,
+                            Map<String, Result<InputStream, LocalFileAttributes>> filteredOldMap) {
+    PollContext.PollItemStatus status = null;
+    for (final Map.Entry<String, Result<InputStream, LocalFileAttributes>> file : filteredOldMap.entrySet()) {
+      if (status == SOURCE_STOPPING) {
+        closeResultQuietly(file.getValue());
+        continue;
+      }
+
+      Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
+      LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
+      LocalFileAttributes oldAttributes = file.getValue().getAttributes().get();
+      if (matcher.test(currentAttributes)) {
+        if (currentAttributes.getSize() == oldAttributes.getSize()) {
+          status =
+              processFile(file.getValue(), currentAttributes, pollContext);
+        } else {
+          LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
+          pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
+        }
+      } else {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
+        }
+      }
+    }
+  }
+
+
+  private Map<String, Result<InputStream, LocalFileAttributes>> toMap(final List<Result<InputStream, LocalFileAttributes>> fileList) {
+    return fileList.stream()
+        .filter(file -> file.getAttributes().isPresent())
+        .collect(Collectors.toMap(file -> file.getAttributes().get().getPath(), Function.identity()));
   }
 }
