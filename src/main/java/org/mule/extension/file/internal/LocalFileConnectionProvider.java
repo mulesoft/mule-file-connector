@@ -42,6 +42,7 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
     implements CachedConnectionProvider<LocalFileSystem> {
 
   private static final Logger LOGGER = getLogger(LocalFileConnectionProvider.class);
+  private static final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
 
   /**
    * The directory to be considered as the root of every relative path used with this connector. If not provided, it will default
@@ -83,7 +84,10 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
 
   private void validateWorkingDir() throws ConnectionException {
     if (workingDir == null) {
-      workingDir = System.getProperty("user.home");
+      String userHome = System.getProperty("user.home");
+      // This is resolved to paths like /C:/Users/Administrator wghich is not a valid windows path, so we remove a leading forward slash
+      workingDir = isWindows && userHome.startsWith("/") ? userHome.substring(1) : userHome;
+
       if (workingDir == null) {
         throw new FileConnectionException("Could not obtain user's home directory. Please provide a explicit value for the workingDir parameter",
                                           ILLEGAL_PATH);
