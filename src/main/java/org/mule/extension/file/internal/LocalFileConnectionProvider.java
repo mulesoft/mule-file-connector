@@ -84,7 +84,7 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
 
   private void validateWorkingDir() throws ConnectionException {
     if (workingDir == null) {
-      String userHome = System.getProperty("user.home");
+      workingDir = System.getProperty("user.home");
 
       if (workingDir == null) {
         throw new FileConnectionException("Could not obtain user's home directory. Please provide a explicit value for the workingDir parameter",
