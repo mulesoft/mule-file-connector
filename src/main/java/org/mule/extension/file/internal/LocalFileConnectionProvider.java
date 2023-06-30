@@ -85,7 +85,7 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
   private void validateWorkingDir() throws ConnectionException {
     if (workingDir == null) {
       String userHome = System.getProperty("user.home");
-      // This is resolved to paths like /C:/Users/Administrator wghich is not a valid windows path, so we remove a leading forward slash
+      // This is resolved to path like /C:/Users/Administrator which is not a valid windows path, so we remove a leading forward slash in path
       workingDir = isWindows && userHome.startsWith("/") ? userHome.substring(1) : userHome;
 
       if (workingDir == null) {
