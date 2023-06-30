@@ -85,8 +85,6 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
   private void validateWorkingDir() throws ConnectionException {
     if (workingDir == null) {
       String userHome = System.getProperty("user.home");
-      // This is resolved to path like /C:/Users/Administrator which is not a valid windows path, so we remove a leading forward slash in path
-      workingDir = isWindows && userHome.startsWith("/") ? userHome.substring(1) : userHome;
 
       if (workingDir == null) {
         throw new FileConnectionException("Could not obtain user's home directory. Please provide a explicit value for the workingDir parameter",
@@ -96,6 +94,9 @@ public final class LocalFileConnectionProvider extends FileSystemProvider<LocalF
       LOGGER.warn("File connector '{}' does not specify the workingDir property. Defaulting to '{}'", getConfigName(),
                   workingDir);
     }
+
+    // This is resolved to path like /C:/Users/Administrator which is not a valid windows path, so we remove a leading forward slash in path
+    workingDir = isWindows && workingDir.startsWith("/") ? workingDir.substring(1) : workingDir;
 
     Path workingDirPath = Paths.get(workingDir);
     if (notExists(workingDirPath)) {
