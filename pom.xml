@@ -23,7 +23,8 @@
         <commonsLangVersion>3.12.0</commonsLangVersion>
         <commonsIoVersion>2.11.0</commonsIoVersion>
         <muleFileCommonsVersion>1.5.0-SNAPSHOT</muleFileCommonsVersion>
-
+        <jacoco.version>0.8.10</jacoco.version>
+        <mtf.javaopts></mtf.javaopts>
         <munit.input.directory>src/test/munit</munit.input.directory>
         <munit.output.directory>${basedir}/target/test-mule/munit</munit.output.directory>
         <munit.extensions.maven.plugin.version>1.1.3</munit.extensions.maven.plugin.version>
@@ -31,11 +32,28 @@
         <mavenResourcesVersion>3.3.0</mavenResourcesVersion>
         <muleTestsRunnerVersion>4.1.5</muleTestsRunnerVersion>
 
+
         <formatterConfigPath>formatter.xml</formatterConfigPath>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jdeps-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jdkinternals</goal> <!-- verify main classes -->
+                            <goal>test-jdkinternals</goal> <!-- verify test classes -->
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnWarning>true</failOnWarning>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>${mavenResourcesVersion}</version>
@@ -77,6 +95,11 @@
                             -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${session.executionRootDirectory}/target/jacoco.exec
                         </argLine>
                     </argLines>
+                    <environmentVariables>
+                        <!-- Toggles the JDK17 style flag -->
+                        <!-- ugly hack -->
+                        <_JAVA_OPTIONS>-XX:+PrintCommandLineFlags ${mtf.javaopts}</_JAVA_OPTIONS>
+                    </environmentVariables>
                     <runtimeConfiguration>
                         <discoverRuntimes>
                             <product>EE</product>
