@@ -21,6 +21,8 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.sdk.api.annotation.JavaVersionSupport;
+import org.mule.sdk.api.meta.JavaVersion;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,7 @@ import static org.mule.runtime.extension.api.annotation.param.display.Placement.
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)
 @Export(classes = LocalFileAttributes.class)
+@JavaVersionSupport({JavaVersion.JAVA_8, JavaVersion.JAVA_11})
 public class FileConnector extends FileConnectorConfig {
 
   /**
