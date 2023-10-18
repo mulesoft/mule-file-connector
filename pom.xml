@@ -14,7 +14,7 @@
     <groupId>org.mule.connectors</groupId>
     <artifactId>mule-file-connector</artifactId>
     <packaging>mule-extension</packaging>
-    <version>1.5.2-Q4TESTING</version>
+    <version>1.5.2-SNAPSHOT</version>
 
     <name>File Connector</name>
     <description>A Mule extension that provides functionality to manage files in a local file system</description>
