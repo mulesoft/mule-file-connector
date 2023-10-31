@@ -188,6 +188,9 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return this;
   }
 
+  public LocalFileMatcher() {
+  }
+
   public void setTimeUnit(TimeUnit timeUnit) {
     this.timeUnit = timeUnit;
   }
@@ -204,33 +207,59 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return createdSince;
   }
 
+  public void setCreatedsince(LocalDateTime createdSince) {
+    this.createdSince = createdSince;
+  }
+
   public LocalDateTime getCreatedUntil() {
     return createdUntil;
+  }
+
+  public void setCreateduntil(LocalDateTime createdUntil) {
+    this.createdUntil = createdUntil;
   }
 
   public LocalDateTime getUpdatedSince() {
     return updatedSince;
   }
 
+  public void setUpdatedsince(LocalDateTime updatedSince) {
+    this.updatedSince = updatedSince;
+  }
+
   public LocalDateTime getUpdatedUntil() {
     return updatedUntil;
+  }
+
+  public void setUpdateduntil(LocalDateTime updatedUntil) {
+    this.updatedUntil = updatedUntil;
   }
 
   public LocalDateTime getAccessedSince() {
     return accessedSince;
   }
 
+  public void setAccessedsince(LocalDateTime accessedSince) {
+    this.accessedSince = accessedSince;
+  }
+
   public LocalDateTime getAccessedUntil() {
     return accessedUntil;
+  }
+
+  public void setAccesseduntil(LocalDateTime accessedUntil) {
+    this.accessedUntil= accessedUntil;
   }
 
   public TimeUnit getTimeUnit() {
     return timeUnit;
   }
 
+
   public Long getUpdatedInTheLast() {
     return updatedInTheLast;
   }
+
 
   public Long getNotUpdatedInTheLast() {
     return notUpdatedInTheLast;
