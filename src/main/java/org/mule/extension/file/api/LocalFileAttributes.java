@@ -68,10 +68,10 @@ public class LocalFileAttributes extends AbstractFileAttributes {
 
   public LocalFileAttributes() {
     super(DEFAULT_PATH);
-    this.lastModifiedTime=LocalDateTime.now();
-    this.lastAccessTime=LocalDateTime.now();
-    this.creationTime=LocalDateTime.now();
-    this.size=0;
+    this.lastModifiedTime = LocalDateTime.now();
+    this.lastAccessTime = LocalDateTime.now();
+    this.creationTime = LocalDateTime.now();
+    this.size = 0;
   }
 
 

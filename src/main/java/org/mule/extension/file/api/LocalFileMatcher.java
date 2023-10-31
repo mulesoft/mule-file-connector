@@ -188,8 +188,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
     return this;
   }
 
-  public LocalFileMatcher() {
-  }
+  public LocalFileMatcher() {}
 
   public void setTimeUnit(TimeUnit timeUnit) {
     this.timeUnit = timeUnit;
@@ -248,7 +247,7 @@ public class LocalFileMatcher extends FileMatcher<LocalFileMatcher, LocalFileAtt
   }
 
   public void setAccesseduntil(LocalDateTime accessedUntil) {
-    this.accessedUntil= accessedUntil;
+    this.accessedUntil = accessedUntil;
   }
 
   public TimeUnit getTimeUnit() {

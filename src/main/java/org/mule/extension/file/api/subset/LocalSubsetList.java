@@ -49,8 +49,7 @@ public class LocalSubsetList implements SubsetList {
   protected SortOrder order;
 
 
-  public LocalSubsetList() {
-  }
+  public LocalSubsetList() {}
 
   public Integer getLimit() {
     return limit;
