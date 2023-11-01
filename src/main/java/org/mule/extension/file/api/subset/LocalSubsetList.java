@@ -48,20 +48,41 @@ public class LocalSubsetList implements SubsetList {
   @Summary("Specifies whether the order is ASCENDING or DESCENDING according to the criteria.")
   protected SortOrder order;
 
+
+  public LocalSubsetList() {}
+
   public Integer getLimit() {
     return limit;
+  }
+
+  public void setLimit(Integer limit) {
+    this.limit = limit;
   }
 
   public Integer getOffset() {
     return offset;
   }
 
+  public void setOffset(Integer offset) {
+    this.offset = offset;
+  }
+
   public ListComparator getCriteria() {
     return criteria;
+  }
+
+  public void setCriteria(ListComparator criteria) {
+    this.criteria = criteria;
   }
 
   public SortOrder getOrder() {
     return order;
   }
 
+  public void setOrder(SortOrder order) {
+    this.order = order;
+  }
+
 }
+
+
