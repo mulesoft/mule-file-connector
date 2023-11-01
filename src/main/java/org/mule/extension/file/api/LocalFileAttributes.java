@@ -51,6 +51,8 @@ public class LocalFileAttributes extends AbstractFileAttributes {
   @Parameter
   private boolean symbolicLink;
 
+  private static final Path DEFAULT_PATH = Paths.get("/default/path");
+
   /**
    * {@inheritDoc}
    */
@@ -63,6 +65,15 @@ public class LocalFileAttributes extends AbstractFileAttributes {
     super(path);
     initAttributes(attributes);
   }
+
+  public LocalFileAttributes() {
+    super(DEFAULT_PATH);
+    this.lastModifiedTime = LocalDateTime.now();
+    this.lastAccessTime = LocalDateTime.now();
+    this.creationTime = LocalDateTime.now();
+    this.size = 0;
+  }
+
 
   protected void initAttributes(BasicFileAttributes attributes) {
     this.lastModifiedTime = asDateTime(attributes.lastModifiedTime());
@@ -81,6 +92,11 @@ public class LocalFileAttributes extends AbstractFileAttributes {
     return lastModifiedTime;
   }
 
+  public void setLastModifiedTime(LocalDateTime lastModifiedTime) {
+    this.lastModifiedTime = lastModifiedTime;
+  }
+
+
   /**
    * @return The last time the file was accessed
    */
@@ -88,11 +104,19 @@ public class LocalFileAttributes extends AbstractFileAttributes {
     return lastAccessTime;
   }
 
+  public void setLastAccessTime(LocalDateTime lastAccessTime) {
+    this.lastAccessTime = lastAccessTime;
+  }
+
   /**
    * @return the time at which the file was created
    */
   public LocalDateTime getCreationTime() {
     return creationTime;
+  }
+
+  public void setCreationTime(LocalDateTime creationTime) {
+    this.creationTime = creationTime;
   }
 
   /**
@@ -103,6 +127,11 @@ public class LocalFileAttributes extends AbstractFileAttributes {
     return size;
   }
 
+  public void setSize(long size) {
+    this.size = size;
+  }
+
+
   /**
    * {@inheritDoc}
    */
@@ -110,6 +139,11 @@ public class LocalFileAttributes extends AbstractFileAttributes {
   public boolean isRegularFile() {
     return regularFile;
   }
+
+  public void setRegularFile(boolean isRegularFile) {
+    this.regularFile = isRegularFile;
+  }
+
 
   /**
    * {@inheritDoc}
@@ -119,12 +153,20 @@ public class LocalFileAttributes extends AbstractFileAttributes {
     return directory;
   }
 
+  public void setDirectory(boolean directory) {
+    this.directory = directory;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   public boolean isSymbolicLink() {
     return symbolicLink;
+  }
+
+  public void setSymbolicLink(boolean symbolicLink) {
+    this.symbolicLink = symbolicLink;
   }
 
   private BasicFileAttributes getAttributes(Path path) {
