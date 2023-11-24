@@ -44,7 +44,7 @@ import static org.mule.sdk.api.meta.JavaVersion.JAVA_8;
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)
 @Export(classes = LocalFileAttributes.class)
-@JavaVersionSupport({JAVA_8, JAVA_11})
+@JavaVersionSupport({JAVA_8, JAVA_11, JAVA_17})
 public class FileConnector extends FileConnectorConfig {
 
   /**
