@@ -4,4 +4,4 @@ additionalTestConfigs:
     testJdkTool: OPEN-JDK11
   jdk17:
     testJdkTool: OPEN-JDK17
-    mavenAdditionalArgs: -DdiscoverRuntimes.minMuleVersion=4.6.0
+    mavenAdditionalArgs: -DdiscoverRuntimes.minMuleVersion=4.6.0-rc2
