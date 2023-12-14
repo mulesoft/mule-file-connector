@@ -29,4 +29,3 @@ testdir/
 hostkey.ser
 *.h2.db
 *.factorypath
-/test.sh
