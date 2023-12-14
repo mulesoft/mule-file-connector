@@ -1,5 +1,5 @@
 /*
- * Copyright (c) MuleSoft, Inc.  All rights reserved.  http://www.mulesoft.com
+ * Copyright 2023 Salesforce, Inc. All rights reserved.
  * The software in this package is published under the terms of the CPAL v1.0
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
@@ -21,10 +21,14 @@ import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.sdk.api.annotation.JavaVersionSupport;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.mule.runtime.extension.api.annotation.param.display.Placement.ADVANCED_TAB;
+import static org.mule.sdk.api.meta.JavaVersion.JAVA_11;
+import static org.mule.sdk.api.meta.JavaVersion.JAVA_17;
+import static org.mule.sdk.api.meta.JavaVersion.JAVA_8;
 
 /**
  * File connector used to manipulate file systems mounted on the host operation system.
@@ -40,6 +44,7 @@ import static org.mule.runtime.extension.api.annotation.param.display.Placement.
 @ErrorTypes(FileError.class)
 @Sources(DirectoryListener.class)
 @Export(classes = LocalFileAttributes.class)
+@JavaVersionSupport({JAVA_8, JAVA_11, JAVA_17})
 public class FileConnector extends FileConnectorConfig {
 
   /**

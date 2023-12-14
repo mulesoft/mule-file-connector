@@ -72,6 +72,7 @@
     <munit:test name="listSubset" description="It will be ordered by date modified descending by default">
         <munit:execution>
             <set-payload value="File Content Larger"/>
+            <munit-tools:sleep time="1100"/>
             <file:write config-ref="file-config" path="random2.txt"/>
             <file:list config-ref="file-config" directoryPath=".">
                 <file:subset/>
