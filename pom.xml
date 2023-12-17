@@ -44,6 +44,7 @@
         <mtf.tools.version>1.2.0-rc1</mtf.tools.version>
         <mtf.javaopts></mtf.javaopts>
         <mule-sdk-api.version>0.7.0</mule-sdk-api.version>
+        <mule.scripting.module>2.1.0</mule.scripting.module>
     </properties>
 
     <build>
@@ -162,7 +163,7 @@
                     <dependency>
                         <groupId>org.mule.modules</groupId>
                         <artifactId>mule-scripting-module</artifactId>
-                        <version>2.0.3</version>
+                        <version>${mule.scripting.module}</version>
                         <classifier>mule-plugin</classifier>
                     </dependency>
                     <dependency>
