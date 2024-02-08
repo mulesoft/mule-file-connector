@@ -37,7 +37,7 @@
         <licensePath>LICENSE_HEADER_CPAL.txt</licensePath>
         <licenseYear>2023</licenseYear>
 
-        <munit.extensions.maven.plugin.version>1.2.0-rc2</munit.extensions.maven.plugin.version>
+        <munit.extensions.maven.plugin.version>1.2.0</munit.extensions.maven.plugin.version>
         <munit.version>3.1.0-rc3</munit.version>
 
         <jacoco.version>0.8.10</jacoco.version>
