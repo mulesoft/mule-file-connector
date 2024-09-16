@@ -44,7 +44,7 @@
         <mtf.tools.version>1.2.0-rc1</mtf.tools.version>
         <mtf.javaopts></mtf.javaopts>
         <mule-sdk-api.version>0.7.0</mule-sdk-api.version>
-        <mule.scripting.module>2.1.0</mule.scripting.module>
+        <mule.scripting.module>2.1.1</mule.scripting.module>
     </properties>
 
     <build>
