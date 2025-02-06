@@ -38,7 +38,7 @@
         <licenseYear>2023</licenseYear>
 
         <munit.extensions.maven.plugin.version>1.4.0</munit.extensions.maven.plugin.version>
-        <munit.version>3.3.1</munit.version>
+        <munit.version>3.4.0</munit.version>
 
         <jacoco.version>0.8.10</jacoco.version>
         <mtf.tools.version>1.2.0</mtf.tools.version>
