@@ -45,6 +45,30 @@
         <mtf.javaopts></mtf.javaopts>
         <mule-sdk-api.version>0.7.0</mule-sdk-api.version>
         <mule.scripting.module>2.1.0</mule.scripting.module>
+        <sonar.coverage.exclusions>
+            **org/mule/extension/file/api/subset/AlphabeticalComparator.java,
+            **org/mule/extension/file/api/subset/DateCreatedComparator.java,
+            **org/mule/extension/file/api/subset/DateModifiedComparator.java,
+            **org/mule/extension/file/api/subset/LocalSubsetList.java,
+            **org/mule/extension/file/api/subset/PathComparator.java,
+            **org/mule/extension/file/api/subset/SizeComparator.java,
+            **org/mule/extension/file/api/subset/SortOrder.java,
+            **org/mule/extension/file/api/LocalFileAttributes.java,
+            **org/mule/extension/file/api/LocalFileMatcher.java,
+            **org/mule/extension/file/api/WatermarkMode.java
+        </sonar.coverage.exclusions>
+        <sonar.exclusions>
+            **org/mule/extension/file/api/subset/AlphabeticalComparator.java,
+            **org/mule/extension/file/api/subset/DateCreatedComparator.java,
+            **org/mule/extension/file/api/subset/DateModifiedComparator.java,
+            **org/mule/extension/file/api/subset/LocalSubsetList.java,
+            **org/mule/extension/file/api/subset/PathComparator.java,
+            **org/mule/extension/file/api/subset/SizeComparator.java,
+            **org/mule/extension/file/api/subset/SortOrder.java,
+            **org/mule/extension/file/api/LocalFileAttributes.java,
+            **org/mule/extension/file/api/LocalFileMatcher.java,
+            **org/mule/extension/file/api/WatermarkMode.java
+        </sonar.exclusions>
     </properties>
 
     <build>
