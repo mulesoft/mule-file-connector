@@ -57,7 +57,7 @@
             **org/mule/extension/file/api/LocalFileMatcher.java,
             **org/mule/extension/file/api/WatermarkMode.java,
             **org/mule/extension/file/integration/**,
-            **org/mule/extension/file/internal/**
+            **org/mule/extension/file/internal/FileInputStreamTestCase.java
         </sonar.coverage.exclusions>
         <sonar.exclusions>
             **org/mule/extension/file/api/subset/AlphabeticalComparator.java,
@@ -71,7 +71,7 @@
             **org/mule/extension/file/api/LocalFileMatcher.java,
             **org/mule/extension/file/api/WatermarkMode.java,
             **org/mule/extension/file/integration/**,
-            **org/mule/extension/file/internal/**
+            **org/mule/extension/file/internal/FileInputStreamTestCase.java
         </sonar.exclusions>
     </properties>
 
