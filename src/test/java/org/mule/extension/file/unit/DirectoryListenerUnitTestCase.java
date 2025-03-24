@@ -7,7 +7,6 @@
 package org.mule.extension.file.unit;
 
 import static java.util.Optional.empty;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -23,7 +22,6 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.internal.FileConnector;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.extension.file.internal.source.DirectoryListener;
-import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
@@ -44,7 +42,6 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
-import static org.junit.Assert.assertThat;
 
 public class DirectoryListenerUnitTestCase {
 
