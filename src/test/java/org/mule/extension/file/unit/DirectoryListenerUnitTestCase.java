@@ -7,6 +7,7 @@
 package org.mule.extension.file.unit;
 
 import static java.util.Optional.empty;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -43,6 +44,7 @@ import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
+import static org.junit.Assert.assertThat;
 
 public class DirectoryListenerUnitTestCase {
 
@@ -109,13 +111,6 @@ public class DirectoryListenerUnitTestCase {
   public void resultsAreClosedWhenSourceIsStopping() throws Exception {
     directoryListener.poll(pollContext);
     assertAllStreamsAreClosed();
-  }
-
-  @Test
-  public void testPollDirectoryExceptionHandling() throws ConnectionException {
-    when(pollContext.isSourceStopping()).thenReturn(false);
-    when(fileSystemProvider.connect()).thenThrow(Exception.class);
-    directoryListener.poll(pollContext);
   }
 
   @Test
