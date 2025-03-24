@@ -22,6 +22,7 @@ import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.internal.FileConnector;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.extension.file.internal.source.DirectoryListener;
+import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionProvider;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
@@ -108,6 +109,13 @@ public class DirectoryListenerUnitTestCase {
   public void resultsAreClosedWhenSourceIsStopping() throws Exception {
     directoryListener.poll(pollContext);
     assertAllStreamsAreClosed();
+  }
+
+  @Test
+  public void testPollDirectoryExceptionHandling() throws ConnectionException {
+    when(pollContext.isSourceStopping()).thenReturn(false);
+    when(fileSystemProvider.connect()).thenThrow(Exception.class);
+    directoryListener.poll(pollContext);
   }
 
   @Test
