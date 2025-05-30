@@ -27,6 +27,7 @@ import org.mule.extension.file.common.api.exceptions.FileReadErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileRenameErrorTypeProvider;
 import org.mule.extension.file.common.api.exceptions.FileWriteErrorTypeProvider;
 import org.mule.runtime.api.message.Message;
+import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.ConfigOverride;
@@ -72,24 +73,25 @@ public final class FileOperations extends BaseFileSystemOperations {
   @Summary("List all the files from given directory")
   @MediaType(value = ANY, strict = false)
   @Throws(FileListErrorTypeProvider.class)
-  public PagingProvider<LocalFileSystem, Result<Object, LocalFileAttributes>> list(@Config FileConnectorConfig config,
-                                                                                   @Path(type = DIRECTORY,
-                                                                                       location = EXTERNAL) String directoryPath,
-                                                                                   @Optional(
-                                                                                       defaultValue = "false") boolean recursive,
-                                                                                   @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
-                                                                                   @ConfigOverride @Placement(
-                                                                                       tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
-                                                                                   @ConfigOverride @Placement(
-                                                                                       tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
-                                                                                   StreamingHelper streamingHelper,
-                                                                                   @Optional @Placement(
-                                                                                       tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
-    PagingProvider result =
-        doPagedList(config, directoryPath, recursive, matcher,
-                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
-                    streamingHelper, subset);
-    return result;
+  // java:S3740 => Remove the suppression once we have resolved the same in mule-file-commons api
+  // java:S107 => is public method and hence cannot change its contract without breaking the contract
+  @SuppressWarnings({"java:S107", "java:S3740"})
+  public PagingProvider<FileSystem, Result<CursorProvider, FileAttributes>> list(@Config FileConnectorConfig config,
+                                                                                 @Path(type = DIRECTORY,
+                                                                                     location = EXTERNAL) String directoryPath,
+                                                                                 @Optional(
+                                                                                     defaultValue = "false") boolean recursive,
+                                                                                 @Optional @DisplayName("File Matching Rules") @Summary("Matcher to filter the listed files") LocalFileMatcher matcher,
+                                                                                 @ConfigOverride @Placement(
+                                                                                     tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                                                 @ConfigOverride @Placement(
+                                                                                     tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit,
+                                                                                 StreamingHelper streamingHelper,
+                                                                                 @Optional @Placement(
+                                                                                     tab = ADVANCED_TAB) @Summary("Limit and sort the number of files returned") LocalSubsetList subset) {
+    return doPagedList(config, directoryPath, recursive, matcher,
+                       config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null),
+                       streamingHelper, subset);
   }
 
   /**
@@ -118,19 +120,18 @@ public final class FileOperations extends BaseFileSystemOperations {
   @Summary("Obtains the content and metadata of a file at a given path")
   @Throws(FileReadErrorTypeProvider.class)
   @MediaType(value = ANY, strict = false)
-  public Result<InputStream, LocalFileAttributes> read(@Config FileConnectorConfig config,
-                                                       @Connection FileSystem fileSystem,
-                                                       @DisplayName("File Path") @Path(type = FILE,
-                                                           location = EXTERNAL) String path,
-                                                       @Optional(defaultValue = "false") @Placement(
-                                                           tab = ADVANCED_TAB) boolean lock,
-                                                       @ConfigOverride @Placement(
-                                                           tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
-                                                       @ConfigOverride @Placement(
-                                                           tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
-    Result result = doRead(config, fileSystem, path, lock,
-                           config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
-    return (Result<InputStream, LocalFileAttributes>) result;
+  public Result<InputStream, FileAttributes> read(@Config FileConnectorConfig config,
+                                                  @Connection FileSystem<? extends FileAttributes> fileSystem,
+                                                  @DisplayName("File Path") @Path(type = FILE,
+                                                      location = EXTERNAL) String path,
+                                                  @Optional(defaultValue = "false") @Placement(
+                                                      tab = ADVANCED_TAB) boolean lock,
+                                                  @ConfigOverride @Placement(
+                                                      tab = ADVANCED_TAB) Long timeBetweenSizeCheck,
+                                                  @ConfigOverride @Placement(
+                                                      tab = ADVANCED_TAB) TimeUnit timeBetweenSizeCheckUnit) {
+    return doRead(config, fileSystem, path, lock,
+                  config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit).orElse(null));
   }
 
   /**
@@ -155,7 +156,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Writes the given \"Content\" in the file pointed by \"Path\"")
   @Throws(FileWriteErrorTypeProvider.class)
-  public void write(@Config FileConnectorConfig config, @Connection FileSystem fileSystem,
+  public void write(@Config FileConnectorConfig config, @Connection FileSystem<? extends FileAttributes> fileSystem,
                     @Path(type = FILE, location = EXTERNAL) String path,
                     @Content @Summary("Content to be written into the file") InputStream content,
                     @Optional(defaultValue = "true") boolean createParentDirectories,
@@ -188,7 +189,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Copies a file")
   @Throws(FileCopyErrorTypeProvider.class)
-  public void copy(@Config FileConnectorConfig config, @Connection FileSystem fileSystem,
+  public void copy(@Config FileConnectorConfig config, @Connection FileSystem<? extends FileAttributes> fileSystem,
                    @Path(location = EXTERNAL) String sourcePath, @Path(location = EXTERNAL) String targetPath,
                    @Optional(defaultValue = "true") boolean createParentDirectories,
                    @Optional(defaultValue = "false") boolean overwrite, @Optional String renameTo) {
@@ -219,7 +220,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Moves a file")
   @Throws(FileCopyErrorTypeProvider.class)
-  public void move(@Config FileConnectorConfig config, @Connection FileSystem fileSystem,
+  public void move(@Config FileConnectorConfig config, @Connection FileSystem<? extends FileAttributes> fileSystem,
                    @Path(location = EXTERNAL) String sourcePath, @Path(type = DIRECTORY, location = EXTERNAL) String targetPath,
                    @Optional(defaultValue = "true") boolean createParentDirectories,
                    @Optional(defaultValue = "false") boolean overwrite, @Optional String renameTo) {
@@ -236,7 +237,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Deletes a file")
   @Throws(FileDeleteErrorTypeProvider.class)
-  public void delete(@Connection FileSystem fileSystem, @Path(location = EXTERNAL) String path) {
+  public void delete(@Connection FileSystem<? extends FileAttributes> fileSystem, @Path(location = EXTERNAL) String path) {
     super.doDelete(fileSystem, path);
   }
 
@@ -252,7 +253,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Renames a file")
   @Throws(FileRenameErrorTypeProvider.class)
-  public void rename(@Connection FileSystem fileSystem, @Path(location = EXTERNAL) String path,
+  public void rename(@Connection FileSystem<? extends FileAttributes> fileSystem, @Path(location = EXTERNAL) String path,
                      @DisplayName("New Name") String to, @Optional(defaultValue = "false") boolean overwrite) {
     super.doRename(fileSystem, path, to, overwrite);
   }
@@ -265,7 +266,7 @@ public final class FileOperations extends BaseFileSystemOperations {
    */
   @Summary("Creates a new directory")
   @Throws(FileRenameErrorTypeProvider.class)
-  public void createDirectory(@Connection FileSystem fileSystem,
+  public void createDirectory(@Connection FileSystem<? extends FileAttributes> fileSystem,
                               @Path(type = DIRECTORY, location = EXTERNAL) String directoryPath) {
     super.doCreateDirectory(fileSystem, directoryPath);
   }
