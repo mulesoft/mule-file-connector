@@ -239,6 +239,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     return readPathAsString(file.getAbsolutePath());
   }
 
+  @SuppressWarnings({"java:S2925"})
   public static InputStream getContentStream() {
     return (new InputStream() {
 

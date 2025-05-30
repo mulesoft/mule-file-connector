@@ -52,6 +52,7 @@ public final class LocalWriteCommand extends LocalFileCommand implements WriteCo
 
   /**
    * {@inheritDoc}
+   * @deprecated (do not use this method)
    */
   @Deprecated
   @Override
