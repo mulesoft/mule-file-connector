@@ -9,15 +9,16 @@ package org.mule.extension.file.unit;
 import static java.util.Optional.empty;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mule.runtime.extension.api.runtime.source.PollContext.PollItemStatus.SOURCE_STOPPING;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.mockito.Mockito;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.internal.FileConnector;
 import org.mule.extension.file.internal.LocalFileSystem;
@@ -27,6 +28,7 @@ import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.source.PollContext;
 import org.mule.runtime.extension.api.runtime.source.SourceCallback;
 import org.mule.runtime.extension.api.runtime.source.SourceCallbackContext;
+import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -50,19 +52,16 @@ public class DirectoryListenerUnitTestCase {
 
   private FileConnector config = mock(FileConnector.class);
   private ConnectionProvider<LocalFileSystem> fileSystemProvider = mock(ConnectionProvider.class);
-  private LocalFileSystem localFileSystem = mock(LocalFileSystem.class);
-  private List<Result<InputStream, LocalFileAttributes>> listResult;
   private PollContext pollContext = mock(PollContext.class);
   private DirectoryListener directoryListener;
+  private LocalFileSystem localFileSystemMock;
 
   @Before
   public void setup() throws Exception {
     directoryListener = new DirectoryListener(config, fileSystemProvider);
-    when(config.getTimeBetweenSizeCheckInMillis(anyLong(), any())).thenReturn(empty());
-    when(fileSystemProvider.connect()).thenReturn(localFileSystem);
-    setupListResult();
-    when(localFileSystem.list(any(), any(), anyBoolean(), any(), any(), any())).thenReturn(listResult);
-    when(localFileSystem.getBasePath()).thenReturn(".");
+    when(config.getTimeBetweenSizeCheckInMillis(any(), any())).thenReturn(empty());
+    localFileSystemMock = getLocalFileSystemMock();
+    when(fileSystemProvider.connect()).thenReturn(localFileSystemMock);
     when(pollContext.accept(any())).then((Answer<PollContext.PollItemStatus>) invocationOnMock -> {
       Consumer<PollContext.PollItem> pollItemConsumer = (Consumer<PollContext.PollItem>) invocationOnMock.getArguments()[0];
       PollContext.PollItem pollItem = new RejectPollItem();
@@ -73,52 +72,117 @@ public class DirectoryListenerUnitTestCase {
     directoryListener.onStart(mock(SourceCallback.class));
   }
 
-  private void setupListResult() throws IllegalAccessException {
-    listResult = new LinkedList<>();
-    for (int i = 0; i < AMOUNT_OF_MOCK_RESULTS; i++) {
-      listResult.add(createMockResult("test_file_" + i + ".txt"));
+  private List<Result<InputStream, LocalFileAttributes>> getFileStreams(List<LocalFileAttributes> localFileAttributesList)
+      throws IllegalAccessException {
+    List<Result<InputStream, LocalFileAttributes>> fileStreams = new LinkedList<>();
+    for (LocalFileAttributes localFileAttributes : localFileAttributesList) {
+      fileStreams.add(createMockResult(localFileAttributes));
     }
+    return fileStreams;
   }
 
-  private Result<InputStream, LocalFileAttributes> createMockResult(final String fileName) throws IllegalAccessException {
+  private List<LocalFileAttributes> getLocalFileAttributesList(BasicFileAttributes basicFileAttributes)
+      throws IllegalAccessException {
+    List<LocalFileAttributes> localFileAttributesList = new LinkedList<>();
+    for (int i = 0; i < AMOUNT_OF_MOCK_RESULTS; i++) {
+      String fileName = "test_file_" + i + ".txt";
+      LocalFileAttributes localFileAttributes = getLocalFileAttributes(fileName, basicFileAttributes);
+      localFileAttributesList.add(localFileAttributes);
+    }
+    return localFileAttributesList;
+  }
+
+  private LocalFileSystem getLocalFileSystemMock() throws IllegalAccessException {
+    LocalFileSystem localFileSystem = mock(LocalFileSystem.class);
+    when(localFileSystem.getBasePath()).thenReturn(".");
+    return localFileSystem;
+  }
+
+  private Result<InputStream, LocalFileAttributes> createMockResult(LocalFileAttributes attributes)
+      throws IllegalAccessException {
     return Result.<InputStream, LocalFileAttributes>builder().output(createMockedInputStream())
-        .attributes(createMockedAttributes(fileName)).build();
+        .attributes(attributes).build();
   }
 
   private InputStream createMockedInputStream() {
     return mock(InputStream.class);
   }
 
-  private LocalFileAttributes createMockedAttributes(final String fileName) throws IllegalAccessException {
-    BasicFileAttributes basicFileAttributes = Mockito.mock(BasicFileAttributes.class);
+  private BasicFileAttributes getBasicFileAttributesMock() {
+    BasicFileAttributes basicFileAttributes = mock(BasicFileAttributes.class);
     FileTime now = FileTime.from(Instant.now());
     when(basicFileAttributes.lastModifiedTime()).thenReturn(now);
     when(basicFileAttributes.creationTime()).thenReturn(now);
     when(basicFileAttributes.lastAccessTime()).thenReturn(now);
+    return basicFileAttributes;
+  }
 
+  private LocalFileAttributes getLocalFileAttributes(final String fileName, BasicFileAttributes basicFileAttributes)
+      throws IllegalAccessException {
     LocalFileAttributes attributes = new LocalFileAttributes(Paths.get(FILE_PATH + "/" + fileName), basicFileAttributes);
-
     FieldUtils.writeField(attributes, "fileName", fileName, true);
     FieldUtils.writeField(attributes, "directory", false, true);
-
     return attributes;
   }
 
   @Test
   public void resultsAreClosedWhenSourceIsStopping() throws Exception {
+    BasicFileAttributes basicFileAttributes = getBasicFileAttributesMock();
+    when(basicFileAttributes.size()).thenReturn(100L);
+    List<Result<InputStream, LocalFileAttributes>> fileStreams = getFileStreams(getLocalFileAttributesList(basicFileAttributes));
+    when(localFileSystemMock.list(any(), any(), anyBoolean(), any(), any(), any())).thenReturn(fileStreams);
+
     directoryListener.poll(pollContext);
-    assertAllStreamsAreClosed();
+    assertAllStreamsAreClosed(fileStreams);
   }
 
   @Test
   public void filesAreProcessOneTime() throws Exception {
-    when(config.getTimeBetweenSizeCheckInMillis(anyLong(), any())).thenReturn(Optional.of(25L));
+    BasicFileAttributes basicFileAttributes = getBasicFileAttributesMock();
+    when(basicFileAttributes.size()).thenReturn(100L);
+    List<Result<InputStream, LocalFileAttributes>> fileStreams = getFileStreams(getLocalFileAttributesList(basicFileAttributes));
+    when(localFileSystemMock.list(any(), any(), anyBoolean(), any(), any(), any())).thenReturn(fileStreams);
+
+    when(config.getTimeBetweenSizeCheckInMillis(any(), any())).thenReturn(Optional.of(25L));
+
     directoryListener.poll(pollContext);
-    assertAllStreamsAreClosed();
+    assertAllStreamsAreClosed(fileStreams);
   }
 
-  private void assertAllStreamsAreClosed() throws Exception {
-    for (Result<InputStream, LocalFileAttributes> result : listResult) {
+  @Test
+  public void allFilesAreAttemptedToBeProcessedAtleastThreeTimes() throws Exception {
+    Logger mockLogger = mock(Logger.class);
+    Field loggerField = DirectoryListener.class.getDeclaredField("LOGGER");
+    loggerField.setAccessible(true);
+
+    // Remove the 'final' modifier
+    Field modifiersField = Field.class.getDeclaredField("modifiers");
+    modifiersField.setAccessible(true);
+    modifiersField.setInt(loggerField, loggerField.getModifiers() & ~Modifier.FINAL);
+
+    // Set the static field to the mock
+    loggerField.set(null, mockLogger);
+
+    BasicFileAttributes basicFileAttributes = getBasicFileAttributesMock();
+    when(basicFileAttributes.size()).thenReturn(100L);
+    List<Result<InputStream, LocalFileAttributes>> fileStreams =
+        getFileStreams(getLocalFileAttributesList(basicFileAttributes));
+    BasicFileAttributes basicFileAttributesWithDifferentSize = getBasicFileAttributesMock();
+    when(basicFileAttributesWithDifferentSize.size()).thenReturn(200L);
+    List<Result<InputStream, LocalFileAttributes>> fileStreamsWithDifferentSizes =
+        getFileStreams(getLocalFileAttributesList(basicFileAttributesWithDifferentSize));
+    when(localFileSystemMock.list(any(), any(), anyBoolean(), any(), any(), any())).thenReturn(fileStreams)
+        .thenReturn(fileStreamsWithDifferentSizes);
+
+    when(config.getTimeBetweenSizeCheckInMillis(any(), any())).thenReturn(Optional.of(25L));
+
+    directoryListener.poll(pollContext);
+
+    verify(mockLogger, times(30)).warn(anyString(), any(String.class));
+  }
+
+  private void assertAllStreamsAreClosed(List<Result<InputStream, LocalFileAttributes>> streams) throws Exception {
+    for (Result<InputStream, LocalFileAttributes> result : streams) {
       assertStreamIsClosed(result);
     }
   }

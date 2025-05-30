@@ -169,6 +169,7 @@ public abstract class FileConnectorTestCase extends MuleArtifactFunctionalTestCa
     }
   }
 
+  // java:S2925 => Thread.sleep is a crucial part of the test and cannot be removed
   @SuppressWarnings({"java:S2925"})
   protected void writeByteByByteAsync(String path, String content, long delayBetweenCharacters) throws Exception {
     path = path.startsWith("/") ? path : temporaryFolder.getRoot().getPath() + File.separator + path;

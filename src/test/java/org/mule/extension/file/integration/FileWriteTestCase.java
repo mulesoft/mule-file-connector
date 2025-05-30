@@ -239,6 +239,7 @@ public class FileWriteTestCase extends FileConnectorTestCase {
     return readPathAsString(file.getAbsolutePath());
   }
 
+  // java:S2925 => Thread.sleep is a crucial part of the test and cannot be removed
   @SuppressWarnings({"java:S2925"})
   public static InputStream getContentStream() {
     return (new InputStream() {
