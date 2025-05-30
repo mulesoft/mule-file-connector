@@ -54,6 +54,7 @@ public final class LocalListCommand extends LocalFileCommand implements ListComm
 
   /**
    * {@inheritDoc}
+   * @deprecated (do not use this method)
    */
   @Deprecated
   @Override

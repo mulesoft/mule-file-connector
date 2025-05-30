@@ -187,7 +187,9 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
   }
 
   @OnTerminate
-  public void onTerminate() {}
+  public void onTerminate() {
+    // Nothing to do
+  }
 
   @Override
   public void poll(PollContext<InputStream, LocalFileAttributes> pollContext) {
@@ -196,9 +198,9 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       return;
     }
 
-    LocalFileSystem fileSystem;
+    LocalFileSystem localFileSystem;
     try {
-      fileSystem = fileSystemProvider.connect();
+      localFileSystem = fileSystemProvider.connect();
     } catch (Exception e) {
       LOGGER.error(format("Could not obtain connection while trying to poll directory '%s'. %s", directoryPath.toString(),
                           e.getMessage()),
@@ -217,8 +219,8 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
                           directoryPath.toString(), e.getMessage()),
                    e);
     } finally {
-      if (fileSystem != null) {
-        fileSystemProvider.disconnect(fileSystem);
+      if (localFileSystem != null) {
+        fileSystemProvider.disconnect(localFileSystem);
       }
     }
 
@@ -243,10 +245,10 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         if (watermarkMode != DISABLED) {
           item.setWatermark(getWatermarkTimestamp(attributes));
         }
-      } catch (Throwable t) {
+      } catch (Exception e) {
         LOGGER.error(format("Found file '%s' but found exception trying to dispatch it for processing. %s",
-                            fullPath, t.getMessage()),
-                     t);
+                            fullPath, e.getMessage()),
+                     e);
         onRejectedItem(file, ctx);
       }
     });
@@ -256,29 +258,6 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
     ctx.<LocalFileAttributes>getVariable(ATTRIBUTES_CONTEXT_VAR).ifPresent(attrs -> {
       postAction.apply(fileSystem, attrs, config);
     });
-  }
-
-  private Result<InputStream, LocalFileAttributes> createResult(Path path, LocalFileAttributes attributes) {
-    InputStream payload = null;
-    FileChannel channel = null;
-
-    try {
-      channel = FileChannel.open(path);
-      payload = new FileInputStream(channel, new NullPathLock(path), path,
-                                    config.getTimeBetweenSizeCheckInMillis(timeBetweenSizeCheck, timeBetweenSizeCheckUnit)
-                                        .orElse(null),
-                                    attributes);
-
-      return Result.<InputStream, LocalFileAttributes>builder()
-          .output(payload)
-          .mediaType(fileSystem.getFileMessageMediaType(attributes))
-          .attributes(attributes).build();
-    } catch (Exception e) {
-      closeQuietly(payload);
-      closeQuietly(channel);
-
-      throw new MuleRuntimeException(e);
-    }
   }
 
   @Override
@@ -378,30 +357,38 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
         closeResultQuietly(file.getValue());
         continue;
       }
+      status = processFileAndGetStatus(pollContext, pendingFilesByTimeCheck, currentFilesMap, file);
+    }
+  }
 
-      Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
-      java.util.Optional<LocalFileAttributes> currentAttributesOpt = currentInputStreamLocalFileAttributesResult.getAttributes();
-      java.util.Optional<LocalFileAttributes> oldAttributesOpt = file.getValue().getAttributes();
-      if (currentAttributesOpt.isPresent() && oldAttributesOpt.isPresent()) {
-        LocalFileAttributes currentAttributes = currentAttributesOpt.get();
-        LocalFileAttributes oldAttributes = oldAttributesOpt.get();
-        if (matcher.test(currentAttributes)) {
-          if (currentAttributes.getSize() == oldAttributes.getSize()) {
-            status =
-                processFile(file.getValue(), currentAttributes, pollContext);
-          } else {
-            LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
-            pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
-          }
+  private PollContext.PollItemStatus processFileAndGetStatus(PollContext<InputStream, LocalFileAttributes> pollContext,
+                                                             Map<String, Result<InputStream, LocalFileAttributes>> pendingFilesByTimeCheck,
+                                                             Map<String, Result<InputStream, LocalFileAttributes>> currentFilesMap,
+                                                             final Map.Entry<String, Result<InputStream, LocalFileAttributes>> file) {
+    Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
+    java.util.Optional<LocalFileAttributes> currentAttributesOpt = currentInputStreamLocalFileAttributesResult.getAttributes();
+    java.util.Optional<LocalFileAttributes> oldAttributesOpt = file.getValue().getAttributes();
+    if (currentAttributesOpt.isPresent() && oldAttributesOpt.isPresent()) {
+      LocalFileAttributes currentAttributes = currentAttributesOpt.get();
+      LocalFileAttributes oldAttributes = oldAttributesOpt.get();
+      if (matcher.test(currentAttributes)) {
+        if (currentAttributes.getSize() == oldAttributes.getSize()) {
+          return processFile(file.getValue(), currentAttributes, pollContext);
         } else {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
-          }
+          LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
+          pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
         }
       } else {
-        LOGGER.warn("File attributes not present for file: {}", file.getKey());
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
+        }
+      }
+    } else {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("File attributes not present");
       }
     }
+    return null;
   }
 
 

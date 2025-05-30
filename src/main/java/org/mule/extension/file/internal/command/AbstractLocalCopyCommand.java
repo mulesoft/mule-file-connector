@@ -13,6 +13,7 @@ import org.mule.extension.file.common.api.FileSystem;
 import org.mule.extension.file.common.api.exceptions.IllegalPathException;
 import org.mule.extension.file.internal.LocalFileSystem;
 
+import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -113,7 +114,7 @@ abstract class AbstractLocalCopyCommand extends LocalFileCommand {
    * @param overwrite whether to overwrite existing target paths
    * @param options an array of {@link CopyOption} which configure the copying operation
    */
-  protected abstract void doExecute(Path source, Path targetPath, boolean overwrite, CopyOption[] options) throws Exception;
+  protected abstract void doExecute(Path source, Path targetPath, boolean overwrite, CopyOption[] options) throws IOException;
 
   /**
    * @return The name of the action that the implementation is actually doing. Useful for logging and exception messages
