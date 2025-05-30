@@ -363,6 +363,7 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       processFiles(pollContext, pendingFilesByTimeCheck, currentFilesMap, filteredOldMap);
       return pendingFilesByTimeCheck;
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new MuleRuntimeException(createStaticMessage("Execution was interrupted while waiting to recheck file sizes"), e);
     }
   }
@@ -379,20 +380,26 @@ public class DirectoryListener extends PollingSource<InputStream, LocalFileAttri
       }
 
       Result<InputStream, LocalFileAttributes> currentInputStreamLocalFileAttributesResult = currentFilesMap.get(file.getKey());
-      LocalFileAttributes currentAttributes = currentInputStreamLocalFileAttributesResult.getAttributes().get();
-      LocalFileAttributes oldAttributes = file.getValue().getAttributes().get();
-      if (matcher.test(currentAttributes)) {
-        if (currentAttributes.getSize() == oldAttributes.getSize()) {
-          status =
-              processFile(file.getValue(), currentAttributes, pollContext);
+      java.util.Optional<LocalFileAttributes> currentAttributesOpt = currentInputStreamLocalFileAttributesResult.getAttributes();
+      java.util.Optional<LocalFileAttributes> oldAttributesOpt = file.getValue().getAttributes();
+      if (currentAttributesOpt.isPresent() && oldAttributesOpt.isPresent()) {
+        LocalFileAttributes currentAttributes = currentAttributesOpt.get();
+        LocalFileAttributes oldAttributes = oldAttributesOpt.get();
+        if (matcher.test(currentAttributes)) {
+          if (currentAttributes.getSize() == oldAttributes.getSize()) {
+            status =
+                processFile(file.getValue(), currentAttributes, pollContext);
+          } else {
+            LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
+            pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
+          }
         } else {
-          LOGGER.warn("File on path {} is still being written.", currentAttributes.getPath());
-          pendingFilesByTimeCheck.put(file.getKey(), file.getValue());// tracking files that fails for size check
+          if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
+          }
         }
       } else {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Skipping file '{}' because the matcher rejected it", currentAttributes.getPath());
-        }
+        LOGGER.warn("File attributes not present for file: {}", file.getKey());
       }
     }
   }
