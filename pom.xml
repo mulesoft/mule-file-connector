@@ -45,10 +45,61 @@
         <mtf.javaopts></mtf.javaopts>
         <mule-sdk-api.version>0.7.0</mule-sdk-api.version>
         <mule.scripting.module>2.1.0</mule.scripting.module>
+        <sonar.coverage.exclusions>
+            **org/mule/extension/file/api/**
+        </sonar.coverage.exclusions>
+        <sonar.exclusions>
+            **org/mule/extension/file/api/**
+        </sonar.exclusions>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <destFile>${session.executionRootDirectory}/target/jacoco-java.exec</destFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>merge</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <destFile>${session.executionRootDirectory}/target/jacoco.exec</destFile>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${session.executionRootDirectory}/target</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${session.executionRootDirectory}/target/jacoco.exec</dataFile>
+                            <outputDirectory>${session.executionRootDirectory}/target/jacoco</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
