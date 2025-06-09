@@ -35,6 +35,7 @@ import org.mule.tck.size.SmallTest;
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 @SmallTest
 @Feature(FILE_EXTENSION)
@@ -85,7 +86,12 @@ public class PostActionGroupTestCase extends AbstractMuleTestCase {
 
     ConcreteFileSystem fileSystem = new ConcreteFileSystem("");
     fileSystem.setCanMove(true);
+
+    // Execute the action - test passes if no exception is thrown
     new PostActionGroupChild("someDir", null, false, true).apply(fileSystem, fileAttributes, fileConnectorConfig);
+
+    // Verify the move operation was executed
+    assertEquals("Move operation should have been executed", MOVE, fileSystem.getActionExecuted());
   }
 
   private class PostActionGroupChild extends AbstractPostActionGroup {

@@ -125,5 +125,7 @@ public class LocalFileSystem extends AbstractFileSystem<LocalFileAttributes> {
    * No-op implementation.
    */
   @Override
-  public void changeToBaseDir() {}
+  public void changeToBaseDir() {
+    // No-op implementation
+  }
 }
