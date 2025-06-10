@@ -13,6 +13,7 @@ import org.mule.extension.file.internal.LocalFileSystem;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.IOException;
 
 import static org.apache.commons.io.FileUtils.copyDirectory;
 
@@ -48,7 +49,7 @@ public final class LocalCopyCommand extends AbstractLocalCopyCommand implements 
    * @param options an array of {@link CopyOption} which configure the copying operation
    */
   @Override
-  protected void doExecute(Path source, Path targetPath, boolean overwrite, CopyOption[] options) throws Exception {
+  protected void doExecute(Path source, Path targetPath, boolean overwrite, CopyOption[] options) throws IOException {
     if (Files.isDirectory(source)) {
       copyDirectory(source.toFile(), targetPath.toFile());
     } else {

@@ -11,7 +11,6 @@ import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isReadable;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
 import org.mule.extension.file.api.LocalFileAttributes;
 import org.mule.extension.file.common.api.FileConnectorConfig;
 import org.mule.extension.file.common.api.command.ReadCommand;
@@ -21,6 +20,7 @@ import org.mule.extension.file.common.api.lock.PathLock;
 import org.mule.extension.file.internal.FileInputStream;
 import org.mule.extension.file.internal.LocalFileSystem;
 import org.mule.runtime.api.util.LazyValue;
+import org.mule.runtime.core.api.util.IOUtils;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 
 import java.io.IOException;
@@ -45,6 +45,7 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
 
   /**
    * {@inheritDoc}
+   * @deprecated (do not use this method)
    */
   @Deprecated
   @Override
@@ -119,9 +120,9 @@ public final class LocalReadCommand extends LocalFileCommand implements ReadComm
   }
 
   private void onException(InputStream payload, LazyValue<FileChannel> lazyChannel, PathLock lock) {
-    closeQuietly(payload);
+    IOUtils.closeQuietly(payload);
     if (lazyChannel != null) {
-      lazyChannel.ifComputed(channel -> closeQuietly(channel));
+      lazyChannel.ifComputed(IOUtils::closeQuietly);
     }
     if (lock != null) {
       lock.release();

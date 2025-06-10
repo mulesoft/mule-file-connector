@@ -6,7 +6,7 @@
  */
 package org.mule.extension.file.internal;
 
-import static org.mule.runtime.core.api.util.IOUtils.closeQuietly;
+import org.mule.runtime.core.api.util.IOUtils;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.mule.extension.file.api.LocalFileAttributes;
@@ -64,7 +64,7 @@ public final class FileInputStream extends AbstractNonFinalizableFileInputStream
 
   @Override
   protected void doClose() throws IOException {
-    lazyChannel.ifComputed(channel -> closeQuietly(channel));
+    lazyChannel.ifComputed(IOUtils::closeQuietly);
   }
 
   protected static final class LocalFileInputStreamSupplier extends AbstractFileInputStreamSupplier {
