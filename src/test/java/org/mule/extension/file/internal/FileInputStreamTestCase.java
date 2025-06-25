@@ -42,6 +42,7 @@ public class FileInputStreamTestCase extends AbstractMuleTestCase {
     FileInputStream fileInputStream = new FileInputStream(spyFileChannel, pathLock, path, 10L, fileAttributes);
     fileInputStream.close();
 
+    
     verify(spyFileChannel).close();
   }
 
